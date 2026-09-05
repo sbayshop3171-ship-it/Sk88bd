@@ -161,10 +161,10 @@ export default function AviatorCanvas({
       <div className="av-stage__hud">
         {waiting ? (
           <>
-            <div className="av-hud__label">সিগন্যাল প্রকাশিত — বেটিং শুরু হবে</div>
-            <div className="av-hud__count">{Math.ceil(bettingLeft / 1000)}s</div>
+            <div className="av-hud__label">পরবর্তী রাউন্ড প্রস্তুত হচ্ছে</div>
+            <div className="av-hud__count">{(bettingLeft / 1000).toFixed(1)}s</div>
             <div className="av-hud__bar">
-              <i style={{ width: `${Math.max(8, Math.min(100, 100 - (bettingLeft / 50_000) * 100))}%` }} />
+              <i style={{ width: `${Math.max(0, Math.min(100, 100 - (bettingLeft / bettingTotal) * 100))}%` }} />
             </div>
           </>
         ) : betting ? (

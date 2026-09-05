@@ -23,7 +23,7 @@ export const HOUSE_EDGE = 0.03;
 
 export type Phase = 'waiting' | 'betting' | 'flying' | 'crashed';
 
-export const BETTING_MS = 10_000;
+export const BETTING_MS = 6_000;
 export const CRASHED_MS = 3500;
 
 /** Multiplier as a function of elapsed flight time. Slow, then steep —

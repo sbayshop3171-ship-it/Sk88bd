@@ -44,7 +44,7 @@ type SignalRound = {
 
 export default function AviatorSignalControl({ initialState }: { initialState: AdminSignalPayload }) {
   const [state, setState] = useState(initialState);
-  const [target, setTarget] = useState(initialState.round.targetX.toFixed(2));
+  const [target, setTarget] = useState(initialState.appSignalRound.targetX.toFixed(2));
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
 
@@ -56,8 +56,8 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
   }, []);
 
   useEffect(() => {
-    if (!busy) setTarget(state.round.targetX.toFixed(2));
-  }, [busy, state.round.id, state.round.targetX]);
+    if (!busy) setTarget(state.appSignalRound.targetX.toFixed(2));
+  }, [busy, state.appSignalRound.id, state.appSignalRound.targetX]);
 
   const clock = useMemo(() => {
     const now = Date.parse(state.serverTime);
@@ -65,7 +65,7 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
     const bettingAt = Date.parse(state.round.bettingAt);
     const crashAt = Date.parse(state.round.crashAtTime);
 
-    if (now < bettingAt) return `Signal shown, betting starts in ${seconds(bettingAt - now)}s`;
+    if (now < bettingAt) return `Quick prep, betting opens in ${seconds(bettingAt - now)}s`;
     if (now < flyAt) return `Betting countdown ${seconds(flyAt - now)}s`;
     if (now < crashAt) return `Flying, crash locked at ${fmtX(state.round.targetX)}`;
     return 'Round crashed, next schedule loading';
@@ -94,7 +94,7 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
       if (!res.ok) throw new Error(`API ${res.status}`);
       const next = (await res.json()) as AdminSignalPayload;
       setState(next);
-      setTarget(next.round.targetX.toFixed(2));
+      setTarget(next.appSignalRound.targetX.toFixed(2));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Update failed');
     } finally {
@@ -109,8 +109,8 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
           <p className="adm-signal__eyebrow">DEMO CONTROLLED BACKEND</p>
           <h1 className="adm__h1">Aviator Signal Brain</h1>
           <p className="adm__sub">
-            App আগে current signal দেখায়। Website একই backend round পরে চালায়,
-            তাই app-এর value আর website crash target সবসময় match করবে।
+            App আগে next signal দেখায়। Website current round শেষ করে ওই
+            next signal-টা পরের quick round-এ চালাবে।
           </p>
         </div>
         <div className={`adm-signal__status is-${state.round.status}`}>
@@ -122,10 +122,10 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
       {error && <div className="adm__warn">{error}</div>}
 
       <div className="adm__tiles">
-        <div className="adm__tile"><b>#{state.round.id}</b><small>Signal round</small></div>
-        <div className="adm__tile"><b>{fmtX(state.round.targetX)}</b><small>App signal target</small></div>
-        <div className="adm__tile"><b>#{state.appSignalRound.id}</b><small>Website same round</small></div>
-        <div className="adm__tile"><b>{fmtX(state.appSignalRound.targetX)}</b><small>Website crash target</small></div>
+        <div className="adm__tile"><b>#{state.round.id}</b><small>Website current round</small></div>
+        <div className="adm__tile"><b>{fmtX(state.round.targetX)}</b><small>Website current target</small></div>
+        <div className="adm__tile"><b>#{state.appSignalRound.id}</b><small>App next signal</small></div>
+        <div className="adm__tile"><b>{fmtX(state.appSignalRound.targetX)}</b><small>Next crash target</small></div>
         <div className="adm__tile"><b>{state.settings.accuracy}%</b><small>Accuracy stat</small></div>
         <div className="adm__tile"><b>{state.settings.win_rate}%</b><small>Win rate stat</small></div>
       </div>
@@ -140,7 +140,7 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
         >
           <h2 className="adm__h2">Manual Signal</h2>
           <label className="adm-signal__field">
-            <span>Target multiplier for signal round #{state.round.id}</span>
+            <span>Target multiplier for app next signal #{state.appSignalRound.id}</span>
             <input
               type="number"
               min="1.01"
@@ -154,8 +154,8 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
             {busy === 'set-manual' ? 'Saving...' : 'Set signal'}
           </button>
           <div className="adm-signal__hint">
-            Manual set করলে app gauge সাথে সাথে update হবে। Website betting/fly
-            শুরু হলে একই value crash target হিসেবে follow করবে।
+            Manual set করলে app gauge সাথে সাথে update হবে। Website current
+            round শেষ হলে এই next signal value crash target হিসেবে follow করবে।
           </div>
         </form>
 
@@ -184,12 +184,12 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
               Regenerate target
             </button>
             <button type="button" className="btn btn--ghost" onClick={() => send('speed-demo')} disabled={Boolean(busy)}>
-              20s test round
+              6s test round
             </button>
           </div>
           <div className="adm-signal__hint">
-            20s test একই signal round দ্রুত চালায়। App আগে value দেখাবে,
-            তারপর website countdown/fly/crash একই target follow করবে।
+            6s test current website round দ্রুত চালায়। App next value আগেই
+            দেখাবে, তারপর website পরের round-এ একই target follow করবে।
           </div>
         </div>
       </section>
@@ -205,7 +205,7 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
       </section>
 
       <section>
-        <h2 className="adm__h2">App Signal Timeline</h2>
+        <h2 className="adm__h2">App Next Signal Timeline</h2>
         <div className="adm-signal__timeline">
           <span><b>Round</b>#{state.appSignalRound.id}</span>
           <span><b>Betting</b>{timeOnly(state.appSignalRound.bettingAt)}</span>
@@ -225,7 +225,7 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
               >
                 <span>#{round.id}</span>
                 <b>{fmtX(round.targetX)}</b>
-                <small>{round.id === state.appSignalRound.id ? 'current signal' : round.status}</small>
+                <small>{round.id === state.appSignalRound.id ? 'next signal' : round.status}</small>
               </div>
             ))}
           </div>

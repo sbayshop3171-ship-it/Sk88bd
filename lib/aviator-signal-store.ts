@@ -58,9 +58,10 @@ interface SignalStore {
 }
 
 export const SIGNAL_LEAD_MS = 60_000;
-export const BETTING_LEAD_MS = 10_000;
+export const BETTING_LEAD_MS = 6_000;
 export const CRASHED_HOLD_MS = 3_500;
 const PREVIEW_ROUNDS = 5;
+const SCHEDULE_DRIFT_MS = 500;
 
 const STORE_FILE = path.join(process.cwd(), '.data', 'aviator-signal-store.json');
 const CLIENT_SEED = 'prime-vai-devx-LIVE';
@@ -81,7 +82,7 @@ export async function getSignalTerminalSnapshot(game: SignalGame = 'aviator') {
   const state = await getAviatorSignalState();
   const now = Date.parse(state.serverTime);
   const websiteRound = state.currentRound;
-  const round = state.currentRound;
+  const round = state.appSignalRound;
   const flyAt = Date.parse(round.fly_at);
   const bettingAt = Date.parse(round.betting_at);
   const signalVisible = state.settings.signal_active;
@@ -122,8 +123,8 @@ export async function getSignalTerminalSnapshot(game: SignalGame = 'aviator') {
       crashAt: item.target_x,
       happenedAt: item.crash_at,
     })),
-    notice: signalVisible ? 'সিগন্যাল রেডি' : 'সিগন্যাল অফ',
-    signalLeadMode: 'signal-first-same-round',
+    notice: signalVisible ? 'নেক্সট সিগন্যাল রেডি' : 'সিগন্যাল অফ',
+    signalLeadMode: 'app-next-round-preview',
     demoControlled: true,
   };
 }
@@ -170,9 +171,9 @@ export async function updateAviatorSignal(input: {
 
     if (input.action === 'speed-demo') {
       const current = getCurrentRound(store, now);
-      moveRound(current, now + 20_000);
+      moveRound(current, now + BETTING_LEAD_MS, now);
       current.updated_at = iso(now);
-      addLog(store, 'speed-demo', `Round #${current.round_id} moved to a 20s demo countdown`, now);
+      addLog(store, 'speed-demo', `Round #${current.round_id} moved to a quick ${BETTING_LEAD_MS / 1000}s countdown`, now);
     }
 
     syncStore(store, now);
@@ -238,46 +239,65 @@ function createInitialStore(now: number): SignalStore {
     const flyAt = now - (i + 1) * 18_000;
     store.rounds.push(makeRound(store.next_round_id++, HISTORY_TARGETS[i], flyAt, 'auto', now - (i + 1) * 18_000));
   }
-  scheduleNextRound(store, now + SIGNAL_LEAD_MS, now);
+  scheduleNextRound(store, now + BETTING_LEAD_MS, now);
   addLog(store, 'init', 'Local demo signal backend created', now);
   return store;
 }
 
 function syncStore(store: SignalStore, now: number) {
-  for (const round of store.rounds) {
-    round.status = statusFor(round, now);
-  }
-
   store.rounds = store.rounds
     .sort((a, b) => a.round_id - b.round_id)
     .slice(-40);
 
-  let current = findPlayableRound(store, now);
-  if (!current) {
-    current = scheduleNextRound(store, now + SIGNAL_LEAD_MS, now);
+  for (const round of store.rounds) {
+    round.status = statusFor(round, now);
   }
 
-  let futureRounds = store.rounds
-    .filter((round) => Date.parse(round.fly_at) > now)
-    .sort((a, b) => Date.parse(a.fly_at) - Date.parse(b.fly_at));
+  let current = findPlayableRound(store, now);
+  if (!current) {
+    current = scheduleNextRound(store, now + BETTING_LEAD_MS, now);
+  }
 
-  if (futureRounds.length === 0 && Date.parse(current.crash_at) + CRASHED_HOLD_MS <= now) {
-    futureRounds = [scheduleNextRound(store, now + SIGNAL_LEAD_MS, now)];
+  if (Date.parse(current.betting_at) - now > BETTING_LEAD_MS + SCHEDULE_DRIFT_MS) {
+    moveRound(current, now + BETTING_LEAD_MS, now);
+    addLog(store, 'compact-schedule', `Round #${current.round_id} moved to quick ${BETTING_LEAD_MS / 1000}s countdown`, now);
+  }
+
+  const futureRounds = getFutureRoundsAfter(store, current, now);
+  let anchor = current;
+  for (const round of futureRounds) {
+    const flyAt = nextFlyAfter(anchor);
+    if (Math.abs(Date.parse(round.fly_at) - flyAt) > SCHEDULE_DRIFT_MS) {
+      moveRound(round, flyAt, now);
+    }
+    anchor = round;
   }
 
   while (futureRounds.length < PREVIEW_ROUNDS) {
-    const anchor = futureRounds[futureRounds.length - 1] ?? current;
-    const nextFlyAt = Math.max(
-      now + SIGNAL_LEAD_MS,
-      Date.parse(anchor.crash_at) + CRASHED_HOLD_MS + SIGNAL_LEAD_MS,
-    );
-    futureRounds.push(scheduleNextRound(store, nextFlyAt, now));
+    const nextFlyAt = nextFlyAfter(anchor);
+    const round = scheduleNextRound(store, nextFlyAt, now);
+    futureRounds.push(round);
+    anchor = round;
   }
+
+  for (const round of store.rounds) {
+    round.status = statusFor(round, now);
+  }
+}
+
+function getFutureRoundsAfter(store: SignalStore, current: StoredAviatorRound, now: number) {
+  return store.rounds
+    .filter((round) => round.round_id > current.round_id && Date.parse(round.crash_at) + CRASHED_HOLD_MS > now)
+    .sort((a, b) => a.round_id - b.round_id);
+}
+
+function nextFlyAfter(round: StoredAviatorRound) {
+  return Date.parse(round.crash_at) + CRASHED_HOLD_MS + BETTING_LEAD_MS;
 }
 
 function buildState(store: SignalStore, now: number): AviatorSignalState {
   const currentRound = getCurrentRound(store, now);
-  const appSignalRound = currentRound;
+  const appSignalRound = getQueuedSignalRound(store, now);
   const previewRounds = store.rounds
     .filter((round) => Date.parse(round.fly_at) >= now || round.round_id === currentRound.round_id)
     .sort((a, b) => a.round_id - b.round_id)
@@ -299,7 +319,7 @@ function buildState(store: SignalStore, now: number): AviatorSignalState {
 }
 
 function getCurrentRound(store: SignalStore, now: number): StoredAviatorRound {
-  return findPlayableRound(store, now) ?? scheduleNextRound(store, now + SIGNAL_LEAD_MS, now);
+  return findPlayableRound(store, now) ?? scheduleNextRound(store, now + BETTING_LEAD_MS, now);
 }
 
 function getQueuedSignalRound(store: SignalStore, now: number): StoredAviatorRound {
@@ -310,16 +330,10 @@ function getQueuedSignalRound(store: SignalStore, now: number): StoredAviatorRou
 
   if (queued) return queued;
 
-  const flyAt = Math.max(
-    now + SIGNAL_LEAD_MS,
-    Date.parse(current.crash_at) + CRASHED_HOLD_MS + SIGNAL_LEAD_MS,
-  );
-  return scheduleNextRound(store, flyAt, now);
+  return scheduleNextRound(store, nextFlyAfter(current), now);
 }
 
 function getEditableSignalRound(store: SignalStore, now: number): StoredAviatorRound {
-  const current = getCurrentRound(store, now);
-  if (now < Date.parse(current.fly_at)) return current;
   return getQueuedSignalRound(store, now);
 }
 
@@ -384,11 +398,14 @@ function applyTarget(round: StoredAviatorRound, targetX: number, now: number, so
   round.status = statusFor(round, now);
 }
 
-function moveRound(round: StoredAviatorRound, flyAt: number) {
+function moveRound(round: StoredAviatorRound, flyAt: number, updatedAt?: number) {
   round.signal_reveal_at = iso(flyAt - SIGNAL_LEAD_MS);
   round.betting_at = iso(flyAt - BETTING_LEAD_MS);
   round.fly_at = iso(flyAt);
   round.crash_at = iso(flyAt + timeToReach(round.target_x));
+  if (updatedAt) {
+    round.updated_at = iso(updatedAt);
+  }
 }
 
 function statusFor(round: StoredAviatorRound, now: number): AviatorRoundStatus {

@@ -50,7 +50,7 @@ class SignalGauge extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'CURRENT SIGNAL',
+                        'NEXT SIGNAL',
                         style: TextStyle(
                           color: NeonPalette.muted,
                           fontSize: 10 * scale,
