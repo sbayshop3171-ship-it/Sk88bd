@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import Field from '@/components/Field';
 import PageHeader from '@/components/PageHeader';
@@ -17,6 +17,15 @@ export default function RegisterPage() {
   const { signUp, backendReady } = useAuth();
 
   const [f, setF] = useState({ phone: '', pass: '', confirm: '', ref: '' });
+
+  // A shared referral link lands here as /register?ref=CODE; seed the field
+  // so the friend is credited without having to type the code. Read from
+  // location in an effect: useSearchParams would force a Suspense boundary
+  // on this statically prerendered page for no gain.
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref')?.trim();
+    if (ref) setF((cur) => (cur.ref ? cur : { ...cur, ref }));
+  }, []);
   const [err, setErr] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
