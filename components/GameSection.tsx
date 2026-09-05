@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
 import { CATALOGUE, PLAYABLE_IDS, type CategoryKey, type Game } from '@/lib/catalogue';
+import { applyOverrides } from '@/lib/game-control';
 import { CATEGORY_LABEL, t } from '@/lib/strings';
 import GameArt from './GameArt';
 import { FlameIcon, HeartIcon, LeftIcon, RightIcon } from './Icons';
 import { useFavourites } from './useFavourites';
+import { useGameOverrides } from './useGameOverrides';
 
 const TAG_LABEL = { hot: 'HOT', new: 'NEW', top: 'TOP' } as const;
 
@@ -91,7 +93,12 @@ export default function GameSection({
      actually open already leads the page in its own rail (demoGames()), and
      floating those few to the front of every category as well put the handful
      of games with no pack artwork ahead of the real tiles. */
-  const list = games ?? (category ? CATALOGUE[category] : []);
+  const source = games ?? (category ? CATALOGUE[category] : []);
+  // What the admin hid, re-badged or pinned at /admin/games. Empty on the
+  // first paint, so this renders the static build's own HTML and settles a
+  // moment later.
+  const overrides = useGameOverrides();
+  const list = useMemo(() => applyOverrides(source, overrides), [source, overrides]);
   const pages = useMemo(() => paginate(list, PER_PAGE), [list]);
   const heading = title ?? (category ? CATEGORY_LABEL[category] : '');
   const railRef = useRef<HTMLDivElement>(null);

@@ -1,54 +1,60 @@
-import DataTable from '@/components/admin/DataTable';
+import GameControl from '@/components/admin/GameControl';
 import { getCurrentAdminSession } from '@/lib/admin-auth-next';
-import { CATALOGUE, HOME_SECTIONS } from '@/lib/catalogue';
+import { CATALOGUE, HOME_SECTIONS, PLAYABLE_IDS } from '@/lib/catalogue';
+import { listOverrides } from '@/lib/game-control-store';
 import { CATEGORY_LABEL } from '@/lib/strings';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 /**
- * Until the `games` table is live this lists what ships in lib/catalogue.ts,
- * so the screen is useful for auditing coverage today — in particular which
- * games still have no artwork.
+ * lib/catalogue.ts stays the list of what exists — it is regenerated from the
+ * icon pack. This screen layers the operator's decisions on top: hide a game,
+ * change its badge, pin it to the front of its category.
  */
 export default async function AdminGames() {
   if (!(await getCurrentAdminSession())) return null;
 
-  // flatten once, then derive both the table and the counters from it
-  const games = HOME_SECTIONS.flatMap((cat) =>
-    CATALOGUE[cat].map((g) => ({ ...g, categoryLabel: CATEGORY_LABEL[cat] })),
-  );
+  // 35 of the 209 games sit in more than one category (Aviator is both hot and
+  // jackpot). An override applies to the game, not to one of its listings, so
+  // collapse to one row per id and show every category it appears in.
+  const rows = new Map<string, {
+    id: string; name: string; provider: string; category: string;
+    catalogueTag: string | null; thumb: string | null; hasArt: boolean; playable: boolean;
+  }>();
 
-  const rows = games.map((g) => [
-    g.name,
-    g.provider,
-    g.categoryLabel,
-    g.thumb
-      ? <span className="adm__ok">আছে</span>
-      : <span className="adm__miss">জেনারেটেড আর্ট</span>,
-    g.id === 'aviator'
-      ? <span className="adm__ok">চালু</span>
-      : <span className="adm__muted">শুধু তালিকায়</span>,
-    g.tag ?? '—',
-  ]);
+  for (const cat of HOME_SECTIONS) {
+    for (const g of CATALOGUE[cat]) {
+      const existing = rows.get(g.id);
+      if (existing) {
+        existing.category += `, ${CATEGORY_LABEL[cat]}`;
+        continue;
+      }
+      rows.set(g.id, {
+        id: g.id,
+        name: g.name,
+        provider: g.provider,
+        category: CATEGORY_LABEL[cat],
+        catalogueTag: g.tag ?? null,
+        thumb: g.thumb ?? null,
+        hasArt: Boolean(g.thumb),
+        playable: PLAYABLE_IDS.includes(g.id),
+      });
+    }
+  }
 
-  const withArt = games.filter((g) => Boolean(g.thumb)).length;
-  const playable = games.filter((g) => g.id === 'aviator').length;
+  const games = [...rows.values()];
 
   return (
     <>
       <h1 className="adm__h1">গেম</h1>
       <p className="adm__sub">
-        আর্ট আসে <code>public/games/icons/</code> থেকে; তালিকাটি{' '}
-        <code>scripts/sync_icons.sh</code> দিয়ে <code>lib/catalogue.ts</code> এ
-        রি-জেনারেট হয়। ডেটাবেস যুক্ত হলে এখান থেকেই আপলোড করা যাবে।
+        কোন গেম সাইটে দেখা যাবে, কোনটায় HOT/NEW ব্যাজ বসবে আর কোনটা তালিকার
+        উপরে থাকবে — সব এখান থেকে। তালিকাটি নিজে আসে{' '}
+        <code>lib/catalogue.ts</code> থেকে, আর আর্ট{' '}
+        <code>public/games/icons/</code> থেকে।
       </p>
-      <div className="adm__tiles" style={{ marginBottom: 14 }}>
-        <div className="adm__tile"><b>{games.length}</b><small>মোট গেম</small></div>
-        <div className="adm__tile"><b>{withArt}</b><small>আর্ট বসানো</small></div>
-        <div className="adm__tile"><b>{playable}</b><small>চালু গেম</small></div>
-      </div>
-      <DataTable
-        columns={['গেম', 'প্রোভাইডার', 'ক্যাটাগরি', 'আর্ট', 'অবস্থা', 'ট্যাগ']}
-        rows={rows}
-      />
+      <GameControl games={games} initialOverrides={await listOverrides()} />
     </>
   );
 }

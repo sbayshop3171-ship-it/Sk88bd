@@ -7,6 +7,7 @@ import { useEffect, useRef } from 'react';
 import { t } from '@/lib/strings';
 import { LeftIcon } from './Icons';
 import { Wordmark } from './Header';
+import PlayBalance from './PlayBalance';
 
 /* ============================================================
    Fullscreen game player.
@@ -83,8 +84,10 @@ export default function GamePlayer({
         </button>
         <span className="player__name">{name}</span>
         <span className="player__prov">{provider}</span>
-        {/* the art now opens this screen directly, so the way in has to live
-            here rather than on a sheet the visitor no longer passes through */}
+        {/* Balance stays in view while playing; the art now opens this screen
+            directly, so the way to top up has to live here rather than on a
+            sheet the visitor no longer passes through. */}
+        <PlayBalance />
         <Link href="/deposit" className="btn btn--gold player__cta">{t.deposit}</Link>
       </div>
 

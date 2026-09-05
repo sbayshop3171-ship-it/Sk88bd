@@ -8,6 +8,7 @@ const TABS = [
   { href: '/admin/deposits', label: 'ডিপোজিট' },
   { href: '/admin/withdrawals', label: 'উইথড্র' },
   { href: '/admin/users', label: 'ইউজার' },
+  { href: '/admin/payments', label: 'পেমেন্ট' },
   { href: '/admin/games', label: 'গেম' },
   { href: '/admin/aviator-signal', label: 'সিগন্যাল' },
   { href: '/admin/app-keys', label: 'অ্যাপ কী' },

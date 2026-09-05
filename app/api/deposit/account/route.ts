@@ -1,0 +1,26 @@
+import { NextResponse } from 'next/server';
+import { isKnownChannel, pickDepositAccount } from '@/lib/payment-accounts-store';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+/**
+ * One operator account for the player to send money to, drawn at random from
+ * the numbers the admin added for that channel. Called once per channel pick
+ * on the deposit screen, so a reload rotates the player onto another number.
+ */
+export async function GET(req: Request) {
+  const channelId = new URL(req.url).searchParams.get('channel')?.trim() ?? '';
+  if (!isKnownChannel(channelId)) {
+    return json({ ok: false, reason: 'unknown-channel' }, 400);
+  }
+
+  const account = await pickDepositAccount(channelId);
+  if (!account) return json({ ok: false, reason: 'no-account' }, 404);
+
+  return json({ ok: true, account });
+}
+
+function json(data: unknown, status = 200) {
+  return NextResponse.json(data, { status, headers: { 'cache-control': 'no-store' } });
+}

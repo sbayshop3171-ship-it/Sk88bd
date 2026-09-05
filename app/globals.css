@@ -1039,6 +1039,10 @@ ul{margin:0;padding:0;list-style:none}
 }
 .adm__tile b{display:block;font-size:22px;color:var(--gold);font-variant-numeric:tabular-nums}
 .adm__tile small{font-size:11px;color:var(--muted)}
+.adm__tile--link{display:block;transition:border-color .15s,transform .15s}
+.adm__tile--link:hover{border-color:rgba(63,224,189,.45);transform:translateY(-1px)}
+.adm__tile--off{opacity:.6}
+.adm__tile--off b{color:var(--muted)}
 
 .adm__tablewrap{
   overflow-x:auto;border-radius:var(--r-md);
@@ -1055,6 +1059,68 @@ ul{margin:0;padding:0;list-style:none}
 .adm__ok{color:#6fe6cb;font-weight:700}
 .adm__miss{color:#ffb547;font-weight:700}
 .adm__muted{color:var(--muted)}
+
+/* --- admin editor cards (payments, banners, game control) --------------- */
+.adm__card{
+  padding:16px;margin:0 0 16px;border-radius:var(--r-md);
+  background:linear-gradient(180deg,var(--surface),rgba(15,74,68,.45));
+  border:1px solid var(--line);
+}
+.adm__cardh{margin:0 0 13px;font-size:14px;font-weight:800;color:var(--mint)}
+.adm__formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:11px;margin-bottom:13px}
+.adm__f{display:flex;flex-direction:column;gap:5px;min-width:0}
+.adm__f--wide{grid-column:1/-1}
+.adm__f>span{font-size:11px;font-weight:700;color:var(--mint)}
+.adm__f input,.adm__f select,.adm__f textarea{
+  width:100%;padding:9px 11px;border-radius:var(--r-sm);
+  border:1px solid var(--line);background:rgba(0,0,0,.32);
+  color:var(--text);font-size:13px;font-family:inherit;
+}
+.adm__f input:focus,.adm__f select:focus,.adm__f textarea:focus{
+  outline:none;border-color:rgba(63,224,189,.55);
+}
+.adm__f input:disabled,.adm__f select:disabled,.adm__f textarea:disabled{opacity:.55}
+.adm__f textarea{resize:vertical;min-height:66px;line-height:1.6}
+.adm__actions{display:flex;flex-wrap:wrap;gap:8px}
+.adm__actions .btn{font-size:12.5px;padding:9px 20px}
+.adm__err{
+  margin:0 0 10px;padding:9px 12px;border-radius:var(--r-sm);font-size:12px;
+  background:rgba(255,90,90,.12);border:1px solid rgba(255,90,90,.4);color:#ffb2b2;
+}
+.adm__note{
+  margin:0 0 10px;padding:9px 12px;border-radius:var(--r-sm);font-size:12px;
+  background:rgba(63,224,189,.12);border:1px solid rgba(63,224,189,.38);color:#8ff0d8;
+}
+.adm__hint{margin:11px 0 0;font-size:11.5px;color:var(--muted);line-height:1.7}
+.adm__rowacts{display:flex;gap:5px;white-space:nowrap}
+.adm__rowacts .btn{font-size:11px;padding:5px 11px}
+.adm__danger{color:#ff9d9d;border-color:rgba(255,90,90,.35)}
+.adm__seg{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
+.adm__seg button{
+  padding:8px 16px;border-radius:var(--r-pill);border:1px solid var(--line);
+  background:rgba(0,0,0,.24);color:#a8cdc7;font-size:12.5px;font-weight:700;
+  font-family:inherit;cursor:pointer;
+}
+.adm__seg button.on{
+  background:linear-gradient(180deg,#ffd95e,#ff9d0b);color:#4a2900;
+  border-color:transparent;font-weight:800;
+}
+.adm__mini{
+  padding:5px 8px;border-radius:var(--r-sm);border:1px solid var(--line);
+  background:rgba(0,0,0,.32);color:var(--text);font-size:11.5px;font-family:inherit;
+}
+.adm__mini:focus{outline:none;border-color:rgba(63,224,189,.55)}
+.adm__mini:disabled{opacity:.5}
+.adm__icon{
+  position:relative;width:42px;height:42px;padding:2px;border-radius:var(--r-sm);
+  border:1px dashed var(--line);background:rgba(0,0,0,.3);cursor:pointer;
+  display:grid;place-items:center;overflow:hidden;
+}
+.adm__icon:hover{border-color:rgba(63,224,189,.55);border-style:solid}
+.adm__icon img{width:100%;height:100%;object-fit:cover;border-radius:5px;display:block}
+.adm__icon-none{color:var(--muted);font-size:17px;line-height:1}
+.adm__icon input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.adm__icon:has(input:disabled){opacity:.5;cursor:default}
 
 .adm-auth{
   min-height:100vh;display:grid;place-items:center;padding:22px;
@@ -1598,3 +1664,86 @@ body.aviator-immersive .app{padding-bottom:0}
 .av-prop{transform-box:fill-box;transform-origin:center;animation:av-prop .13s linear infinite}
 @keyframes av-prop{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.av-prop{animation-duration:.6s}}
+
+/* --- deposit: the operator number the player pays into ------------------ */
+.paybox{
+  padding:13px;border-radius:var(--r-md);
+  background:linear-gradient(180deg,rgba(15,74,68,.7),rgba(4,33,31,.75));
+  border:1px solid rgba(63,224,189,.3);
+}
+.paybox--wait,.paybox--empty{
+  font-size:12px;color:var(--muted);line-height:1.7;
+  border-style:dashed;border-color:var(--line);
+}
+.paybox__top{display:flex;align-items:center;gap:7px;margin-bottom:9px}
+.paybox__kind{
+  font-size:10px;font-weight:800;letter-spacing:.4px;padding:3px 9px;
+  border-radius:var(--r-pill);background:rgba(63,224,189,.16);color:#8ff0d8;
+}
+.paybox__ch{font-size:11px;font-weight:700;color:var(--muted)}
+.paybox__row{display:flex;align-items:center;gap:9px}
+.paybox__num{
+  flex:1;min-width:0;font-size:20px;font-weight:900;letter-spacing:.8px;
+  font-variant-numeric:tabular-nums;color:var(--gold);overflow-wrap:anywhere;
+}
+.paybox__copy{flex:0 0 auto;font-size:12px;padding:8px 18px}
+.paybox__holder{margin-top:6px;font-size:12.5px;font-weight:700;color:#cfe9e4}
+.paybox__note{margin:8px 0 0;font-size:11.5px;color:var(--muted);line-height:1.65}
+
+/* --- games are for signed-in players ------------------------------------ */
+.gate{
+  min-height:70vh;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center;padding:32px 22px;gap:4px;
+}
+.gate__lock{font-size:40px;line-height:1;margin-bottom:6px}
+.gate__title{margin:0;font-size:19px;font-weight:900}
+.gate__note{
+  margin:8px 0 20px;font-size:13px;color:var(--muted);
+  line-height:1.75;max-width:34ch;
+}
+.gate__acts{display:flex;flex-direction:column;gap:9px;width:min(280px,100%)}
+.gate__back{margin-top:18px;font-size:12.5px;color:var(--muted)}
+.gate__wait{margin:12px 0 0;font-size:12.5px;color:var(--muted)}
+.gate__spin{
+  width:26px;height:26px;border-radius:50%;
+  border:2px solid var(--line);border-top-color:var(--mint);
+  animation:gate-spin .7s linear infinite;
+}
+@keyframes gate-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.gate__spin{animation-duration:2s}}
+
+/* aviator carries two figures: the real wallet and the demo credit it bets */
+.av-bals{display:flex;align-items:center;gap:6px}
+.bal-pill--demo{opacity:.85}
+
+/* the player bar's balance sits left of the deposit button */
+.player__bar .bal-pill{flex:0 0 auto;margin-left:auto}
+.player__bar .bal-pill+.player__cta{margin-left:8px}
+
+/* --- cashier review rows ------------------------------------------------ */
+.adm__review{display:flex;flex-direction:column;gap:6px;min-width:190px}
+.adm__review .adm__mini{width:100%}
+.adm__subrow td{background:rgba(0,0,0,.25)}
+.adm__adjust{display:flex;flex-wrap:wrap;align-items:flex-end;gap:11px}
+.adm__adjust .adm__f{min-width:140px}
+
+/* --- player's own cashier history --------------------------------------- */
+.hist{display:flex;flex-direction:column;gap:8px;padding:12px}
+.hist__row{
+  padding:12px 13px;border-radius:var(--r-md);
+  background:linear-gradient(180deg,var(--surface),rgba(15,74,68,.45));
+  border:1px solid var(--line);display:grid;
+  grid-template-columns:1fr auto;gap:4px 10px;
+}
+.hist__main{display:flex;align-items:baseline;gap:8px;min-width:0}
+.hist__main b{font-size:16px;color:var(--gold);font-variant-numeric:tabular-nums}
+.hist__ch{font-size:11.5px;color:var(--muted);text-transform:capitalize}
+.hist__side{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.hist__side small{font-size:10.5px;color:var(--muted)}
+.hist__state{font-size:11px;font-weight:800;padding:2px 9px;border-radius:var(--r-pill)}
+.hist__state--pending{background:rgba(255,196,46,.14);color:#ffc42e}
+.hist__state--approved{background:rgba(63,224,189,.14);color:#6fe6cb}
+.hist__state--rejected,.hist__state--cancelled{background:rgba(255,90,90,.13);color:#ff9d9d}
+.hist__note{
+  grid-column:1/-1;margin:2px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6;
+}

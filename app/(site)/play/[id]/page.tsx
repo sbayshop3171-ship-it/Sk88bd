@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import GameGate from '@/components/GameGate';
 import GamePlayer from '@/components/GamePlayer';
 import { CATALOGUE, findGame } from '@/lib/catalogue';
 import { resolveLaunch } from '@/lib/launch';
@@ -22,13 +23,15 @@ export default async function PlayPage({ params }: { params: Promise<{ id: strin
   const launch = await resolveLaunch(game, 'demo');
 
   return (
-    <GamePlayer
-      name={game.name}
-      provider={game.provider}
-      url={launch.ok ? launch.url : undefined}
-      thumb={game.thumb}
-      reason={launch.ok ? undefined : launch.reason}
-    />
+    <GameGate>
+      <GamePlayer
+        name={game.name}
+        provider={game.provider}
+        url={launch.ok ? launch.url : undefined}
+        thumb={game.thumb}
+        reason={launch.ok ? undefined : launch.reason}
+      />
+    </GameGate>
   );
 }
 

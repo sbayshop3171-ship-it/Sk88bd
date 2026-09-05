@@ -7,7 +7,9 @@ import BetPanel, { MIN_STAKE, emptySlot, type Slot } from '@/components/aviator/
 import HistoryStrip from '@/components/aviator/HistoryStrip';
 import LiveBets from '@/components/aviator/LiveBets';
 import { useAviatorRound } from '@/components/aviator/useAviatorRound';
+import GameGate from '@/components/GameGate';
 import PageHeader from '@/components/PageHeader';
+import PlayBalance from '@/components/PlayBalance';
 import { useUI } from '@/components/UIProvider';
 import { BETTING_MS, fmtX, randomHex } from '@/lib/aviator';
 import { money } from '@/lib/brand';
@@ -135,10 +137,21 @@ export default function AviatorPage() {
   };
 
   return (
-    <>
+    <GameGate>
       <PageHeader
         title={<img className="av-wordmark" src="/games/aviator/wordmark.png" alt="Aviator" />}
-        action={<span className="bal-pill"><b>{money(balance)}</b><i className="av" aria-hidden>👤</i></span>}
+        action={
+          <span className="av-bals">
+            {/* the signed-in player's real wallet; renders nothing while there
+                is no session. The pill beside it is the demo credit this
+                screen bets with — the two are deliberately separate until
+                wallet-backed betting exists. */}
+            <PlayBalance />
+            <span className="bal-pill bal-pill--demo" title="ডেমো ক্রেডিট">
+              <b>{money(balance)}</b><i className="av" aria-hidden>🎮</i>
+            </span>
+          </span>
+        }
       />
 
       <div className="av-skin">
@@ -198,6 +211,6 @@ export default function AviatorPage() {
         </div>
       </section>
       </div>
-    </>
+    </GameGate>
   );
 }
