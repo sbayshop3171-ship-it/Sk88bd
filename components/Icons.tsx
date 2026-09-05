@@ -87,3 +87,41 @@ export const HeartIcon = ({ filled, ...p }: P & { filled?: boolean }) => (
     <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7z" />
   </svg>
 );
+
+/* --- member centre ---------------------------------------------------- */
+export const CopyIcon = (p: P) => (
+  <svg {...base} {...p}><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" /></svg>
+);
+export const PencilIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+);
+export const RefreshIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M21 12a9 9 0 1 1-3-6.7" /><path d="M21 3v6h-6" /></svg>
+);
+export const BankIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M3 10 12 4l9 6" /><path d="M5 10v8M10 10v8M14 10v8M19 10v8" /><path d="M3 20h18" /></svg>
+);
+export const RecordIcon = (p: P) => (
+  <svg {...base} {...p}><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" /></svg>
+);
+export const TrendIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M3 17l6-6 4 4 7-7" /><path d="M14 8h6v6" /></svg>
+);
+export const LedgerIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M6 3h10l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" /><path d="M15 3v5h5" /><path d="M9 13h6M9 17h4" /></svg>
+);
+export const ShieldIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6z" /><path d="m9 12 2 2 4-4" /></svg>
+);
+export const TargetIcon = (p: P) => (
+  <svg {...base} {...p}><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="4" /><circle cx="12" cy="12" r="1" fill="currentColor" /></svg>
+);
+export const RebateIcon = (p: P) => (
+  <svg {...base} {...p}><ellipse cx="12" cy="6" rx="8" ry="3" /><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6" /><path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6" /></svg>
+);
+export const DownloadIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M12 3v12" /><path d="m7 11 5 5 5-5" /><path d="M4 20h16" /></svg>
+);
+export const LogoutIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M15 3h4a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-4" /><path d="M10 17l5-5-5-5" /><path d="M15 12H3" /></svg>
+);

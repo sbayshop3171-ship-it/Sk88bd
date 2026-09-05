@@ -7,22 +7,27 @@ import BetPanel, { MIN_STAKE, emptySlot, type Slot } from '@/components/aviator/
 import HistoryStrip from '@/components/aviator/HistoryStrip';
 import LiveBets from '@/components/aviator/LiveBets';
 import { useAviatorRound } from '@/components/aviator/useAviatorRound';
+import { useAuth } from '@/components/AuthProvider';
 import GameGate from '@/components/GameGate';
 import PageHeader from '@/components/PageHeader';
-import PlayBalance from '@/components/PlayBalance';
 import { useUI } from '@/components/UIProvider';
 import { BETTING_MS, fmtX, randomHex } from '@/lib/aviator';
+import { BET_ERROR, type BetReason } from '@/lib/aviator-bets';
+import { toPaisa, toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 
-const BALANCE_KEY = 'sk88bd:demo-balance';
 const SEED_KEY = 'sk88bd:client-seed';
-const START_BALANCE = 5000;
 
 export default function AviatorPage() {
   const { toast } = useUI();
+  const { wallet, refresh } = useAuth();
 
-  // demo wallet — replaced by the Supabase balance once deposits are wired
-  const [balance, setBalance] = useState(START_BALANCE);
+  /* The seat balance IS the player's wallet — there is no separate game
+     credit. Bets are placed and settled by /api/aviator/play, which moves the
+     money and then this refetches, so the number on screen is always what the
+     ledger says. */
+  const balance = toTaka(wallet?.balance ?? 0);
+  const [busySlot, setBusySlot] = useState<number | null>(null);
   const [clientSeed, setClientSeed] = useState('');
   /** two independent seats, exactly like the reference game */
   const [slots, setSlots] = useState<[Slot, Slot]>([emptySlot(100), emptySlot(500)]);
@@ -30,8 +35,6 @@ export default function AviatorPage() {
   // storage and crypto only exist on the client
   useEffect(() => {
     try {
-      const b = localStorage.getItem(BALANCE_KEY);
-      if (b !== null) setBalance(Number(b) || 0);
       let seed = localStorage.getItem(SEED_KEY);
       if (!seed) { seed = randomHex(8); localStorage.setItem(SEED_KEY, seed); }
       setClientSeed(seed);
@@ -39,10 +42,6 @@ export default function AviatorPage() {
       setClientSeed(randomHex(8));
     }
   }, []);
-
-  useEffect(() => {
-    try { localStorage.setItem(BALANCE_KEY, String(balance)); } catch { /* private mode */ }
-  }, [balance]);
 
   /* Immersive: while Aviator is open the site chrome (bottom nav, floating
      buttons) is hidden and the column fills the screen, so the game stands
@@ -77,37 +76,77 @@ export default function AviatorPage() {
 
   const { phase, round, multiplier, bettingLeft, history } = useAviatorRound(clientSeed, onCrash);
 
+  /* Every bet and cash-out goes through the server: it owns the wallet and it
+     alone decides what multiplier was actually reached. The screen just asks,
+     then refetches the balance from the answer. */
+  const send = useCallback(async (
+    action: 'bet' | 'cashout',
+    i: 0 | 1,
+    stake?: number,
+  ) => {
+    setBusySlot(i);
+    try {
+      const res = await fetch('/api/aviator/play', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action, slot: i, stake: stake === undefined ? undefined : toPaisa(stake) }),
+      });
+      const data = (await res.json()) as
+        | { ok: true; cashedAt?: number; payout?: number }
+        | { ok: false; reason: BetReason };
+
+      await refresh();
+      if (!data.ok) {
+        toast(BET_ERROR[data.reason] ?? 'সমস্যা হয়েছে');
+        return null;
+      }
+      return data;
+    } catch {
+      toast('সার্ভারে পৌঁছানো গেল না');
+      return null;
+    } finally {
+      setBusySlot(null);
+    }
+  }, [refresh, toast]);
+
   // queued seats go live the moment the next betting window opens
   useEffect(() => {
     if (phase !== 'betting') return;
-    setSlots((s) => {
-      let spend = 0;
-      const next = s.map((x) => {
-        if (!x.queued && !x.auto) return x;
-        if (x.stake < MIN_STAKE || x.stake > balance - spend) {
-          return { ...x, queued: false };
-        }
-        spend += x.stake;
-        return { ...x, staked: x.stake, cashedAt: null, queued: false };
-      }) as [Slot, Slot];
-      if (spend > 0) setBalance((v) => v - spend);
-      return next;
+
+    slotsRef.current.forEach((slot, i) => {
+      if (!slot.queued && !slot.auto) return;
+      if (slot.staked !== null) return;
+      if (slot.stake < MIN_STAKE || slot.stake > balance) {
+        patch(i as 0 | 1, { queued: false });
+        return;
+      }
+      void send('bet', i as 0 | 1, slot.stake).then((res) => {
+        patch(i as 0 | 1, res
+          ? { staked: slot.stake, cashedAt: null, queued: false }
+          : { queued: false });
+      });
     });
   }, [phase]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const cashOut = useCallback((i: 0 | 1, at?: number) => {
-    setSlots((s) => {
-      const slot = s[i];
-      if (slot.staked === null || slot.cashedAt !== null) return s;
-      const m = at ?? multiplier;
-      const won = Math.floor(slot.staked * m);
-      setBalance((v) => v + won);
-      toast(`${fmtX(m)} — ${money(won)} জিতেছেন`);
-      const next: [Slot, Slot] = [{ ...s[0] }, { ...s[1] }];
-      next[i] = { ...slot, cashedAt: m };
-      return next;
-    });
-  }, [multiplier, toast]);
+  const cashOut = useCallback(async (i: 0 | 1) => {
+    const slot = slotsRef.current[i];
+    if (slot.staked === null || slot.cashedAt !== null) return;
+
+
+    // Claim the seat straight away so a fast second tap — or the auto
+    // cash-out firing on the next frame — cannot send two requests.
+    patch(i, { cashedAt: 0 });
+
+    const res = await send('cashout', i);
+    if (!res) {
+      patch(i, { cashedAt: null });
+      return;
+    }
+
+    const m = res.cashedAt ?? 0;
+    patch(i, { cashedAt: m });
+    if (m > 0) toast(`${fmtX(m)} — ${money(toTaka(res.payout ?? 0))} জিতেছেন`);
+  }, [patch, send, toast]);
 
   // auto cash-out, checked per seat
   useEffect(() => {
@@ -116,24 +155,25 @@ export default function AviatorPage() {
       if (s.staked === null || s.cashedAt !== null) return;
       const target = Number(s.autoAt);
       if (Number.isFinite(target) && target > 1 && multiplier >= target) {
-        cashOut(i as 0 | 1, target);
+        void cashOut(i as 0 | 1);
       }
     });
   }, [phase, multiplier, slots, cashOut]);
 
-  const place = (i: 0 | 1) => {
+  const place = async (i: 0 | 1) => {
+    if (busySlot !== null) return;   // a request is already in flight
     const slot = slots[i];
-    const committed = slots.reduce((a, s) => a + (s.staked ?? 0), 0);
     if (slot.stake < MIN_STAKE) { toast(`সর্বনিম্ন বেট ${money(MIN_STAKE)}`); return; }
     if (slot.stake > balance) { toast('ব্যালেন্স যথেষ্ট নয়'); return; }
-    if (phase === 'betting') {
-      setBalance((v) => v - slot.stake);
-      patch(i, { staked: slot.stake, cashedAt: null, queued: false });
-    } else {
+
+    if (phase !== 'betting') {
       patch(i, { queued: true });
       toast('পরের রাউন্ডে বেট বসবে');
+      return;
     }
-    void committed;
+
+    const res = await send('bet', i, slot.stake);
+    if (res) patch(i, { staked: slot.stake, cashedAt: null, queued: false });
   };
 
   return (
@@ -141,16 +181,9 @@ export default function AviatorPage() {
       <PageHeader
         title={<img className="av-wordmark" src="/games/aviator/wordmark.png" alt="Aviator" />}
         action={
-          <span className="av-bals">
-            {/* the signed-in player's real wallet; renders nothing while there
-                is no session. The pill beside it is the demo credit this
-                screen bets with — the two are deliberately separate until
-                wallet-backed betting exists. */}
-            <PlayBalance />
-            <span className="bal-pill bal-pill--demo" title="ডেমো ক্রেডিট">
-              <b>{money(balance)}</b><i className="av" aria-hidden>🎮</i>
-            </span>
-          </span>
+          <Link href="/deposit" className="bal-pill" title="ডিপোজিট করুন">
+            <b>{money(balance)}</b><i className="av" aria-hidden>＋</i>
+          </Link>
         }
       />
 

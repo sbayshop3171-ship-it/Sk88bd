@@ -78,7 +78,7 @@ export async function listCashier(
     .from(table)
     .select(
       `id, user_id, channel_id, amount, state, admin_note, created_at, reviewed_at, ${extra}, `
-      + 'profiles!inner (phone, display_name)',
+      + 'profiles!user_id (phone, display_name)',
     )
     .order('created_at', { ascending: false })
     .limit(limit);

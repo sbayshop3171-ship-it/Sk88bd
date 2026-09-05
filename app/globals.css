@@ -1704,6 +1704,7 @@ body.aviator-immersive .app{padding-bottom:0}
 .gate__acts{display:flex;flex-direction:column;gap:9px;width:min(280px,100%)}
 .gate__back{margin-top:18px;font-size:12.5px;color:var(--muted)}
 .gate__wait{margin:12px 0 0;font-size:12.5px;color:var(--muted)}
+.gate__bal{margin:0 0 18px;font-size:13px;font-weight:800;color:var(--gold)}
 .gate__spin{
   width:26px;height:26px;border-radius:50%;
   border:2px solid var(--line);border-top-color:var(--mint);
@@ -1747,3 +1748,108 @@ body.aviator-immersive .app{padding-bottom:0}
 .hist__note{
   grid-column:1/-1;margin:2px 0 0;font-size:11.5px;color:var(--muted);line-height:1.6;
 }
+
+/* --- member centre -----------------------------------------------------
+
+   This screen is deliberately light while the rest of the site is dark: it is
+   the account desk, not the casino floor. All the colour lives on .mc so the
+   header, bottom nav and every other page are untouched.
+   ---------------------------------------------------------------------- */
+.mc{
+  --mc-bg:#f4f1ec;
+  --mc-card:#ffffff;
+  --mc-ink:#1f2430;
+  --mc-soft:#6f7480;
+  --mc-line:rgba(31,36,48,.1);
+  --mc-tile:#f7e3ca;
+  --mc-tile-ink:#a96b16;
+
+  background:var(--mc-bg);
+  /* fill down to the bottom nav so the light panel does not stop mid-screen */
+  min-height:calc(100dvh - var(--hdr-h) - var(--nav-h) - 18px);
+  padding-bottom:18px;
+}
+
+.mc__card{
+  margin:0 0 4px;padding:16px 15px 15px;position:relative;overflow:hidden;
+  background:linear-gradient(160deg,#5d6470,#3d434e 62%,#343a44);
+  border-radius:0 0 var(--r-md) var(--r-md);
+}
+/* the faint trophy watermark the reference lobby carries in this corner */
+.mc__card::after{
+  content:'';position:absolute;right:-26px;top:-14px;width:180px;height:180px;
+  background:radial-gradient(closest-side,rgba(255,255,255,.16),transparent 70%);
+  border-radius:50%;pointer-events:none;
+}
+
+.mc__top{display:flex;gap:13px;align-items:flex-start;position:relative;z-index:1}
+.mc__av{
+  flex:0 0 66px;width:66px;height:66px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(180deg,#e9edf2,#c9d0da);
+  border:3px solid rgba(255,255,255,.85);color:#5d6470;
+}
+.mc__av svg{width:32px;height:32px}
+.mc__who{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
+.mc__vip{
+  align-self:flex-start;font-size:10.5px;font-weight:800;letter-spacing:.3px;
+  padding:3px 11px;border-radius:var(--r-pill);color:#f7e3ca;
+  background:rgba(0,0,0,.42);
+}
+.mc__id{display:flex;align-items:center;gap:7px;min-width:0}
+.mc__id b{
+  font-size:19px;font-weight:900;color:#fff;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.mc__id button{color:rgba(255,255,255,.7);display:grid;place-items:center;padding:2px}
+.mc__id button svg{width:15px;height:15px}
+.mc__id button:active{color:#fff}
+.mc__meta{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.72)}
+.mc__meta a{color:rgba(255,255,255,.72);display:grid;place-items:center}
+.mc__meta svg{width:13px;height:13px}
+
+.mc__balrow{
+  display:flex;align-items:center;gap:10px;position:relative;z-index:1;
+  margin:14px 0 13px;
+}
+.mc__bal{font-size:29px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+.mc__refresh{margin-left:auto;color:rgba(255,255,255,.85);display:grid;place-items:center;padding:5px}
+.mc__refresh svg{width:20px;height:20px}
+.mc__refresh.is-spin svg{animation:mc-spin .7s linear infinite}
+@keyframes mc-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.mc__refresh.is-spin svg{animation-duration:2.4s}}
+
+.mc__acts{display:flex;gap:8px;position:relative;z-index:1}
+.mc__acts a{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:11px 6px;border-radius:var(--r-pill);font-size:12px;font-weight:800;
+  background:rgba(255,255,255,.92);color:var(--mc-ink);
+  white-space:nowrap;min-width:0;
+}
+.mc__acts a svg{width:15px;height:15px;color:var(--mc-tile-ink);flex:0 0 15px}
+.mc__acts a:active{transform:translateY(1px)}
+.mc__acts a.is-gold{background:linear-gradient(180deg,#ffd95e,#ff9d0b);color:#4a2900}
+
+.mc__sechd{display:flex;align-items:center;gap:11px;margin:16px 14px 2px}
+.mc__sechd span{
+  font-size:12px;font-weight:700;color:var(--mc-soft);padding:5px 14px;
+  border-radius:var(--r-pill);background:rgba(31,36,48,.06);
+}
+.mc__sechd i{flex:1;height:1px;background:var(--mc-line)}
+
+.mc__grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 0;padding:12px 6px 4px}
+.mc__tile{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding:10px 4px;border-radius:var(--r-sm);text-align:center;min-width:0;
+}
+.mc__tile:active{background:rgba(31,36,48,.05)}
+.mc__ico{
+  position:relative;width:50px;height:50px;border-radius:50%;display:grid;place-items:center;
+  background:var(--mc-tile);color:var(--mc-tile-ink);
+}
+.mc__ico svg{width:23px;height:23px}
+.mc__badge{
+  position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;padding:0 5px;
+  border-radius:9px;background:#e5484d;color:#fff;font-size:10px;font-weight:800;
+  display:grid;place-items:center;font-style:normal;border:2px solid var(--mc-bg);
+}
+.mc__lbl{font-size:11px;line-height:1.35;color:#4a5060;font-weight:600}
