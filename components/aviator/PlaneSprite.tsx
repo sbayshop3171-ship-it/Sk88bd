@@ -1,49 +1,56 @@
 /* ============================================================
-   The aircraft on the board. PlaneVector draws it (our own paths,
-   in the 150:74 proportions the reference board's plane keeps);
-   this wrapper scales it to canvas units, rotates it along the
-   flight path, and whirls a propeller disc over the nose so the
-   plane reads as running, not a still.
+   The aircraft on the board: the client's own plane artwork
+   (public/games/aviator/plane.png, a flat red silhouette with
+   the propeller already drawn in). One image for every phase.
+
+   The art is drawn climbing (~18° nose-up), so it is rotated
+   level here and the canvas applies the flight angle on top.
+   A faint two-blade blur spins over the nose so the painted
+   propeller reads as turning.
    ============================================================ */
 
-import PlaneVector, { PLANE_H, PLANE_HUB, PLANE_W } from './PlaneVector';
+const BASE = '/games/aviator';
+
+/** plane.png is 535×328 — keep that ratio so nothing squashes. */
+const ART_W = 535;
+const ART_H = 328;
+/** the art's own nose-up tilt, undone here so the canvas owns the angle */
+const ART_TILT = -17.7;
+/** propeller hub, as a fraction of the art box */
+const HUB_FX = 0.91;
+const HUB_FY = 0.50;
 
 /** width in canvas units (the canvas is 100 wide) */
 const SPRITE_W = 27;
-const SCALE = SPRITE_W / PLANE_W;
-const SPRITE_H = PLANE_H * SCALE;
+const SPRITE_H = SPRITE_W * (ART_H / ART_W);
 
 type Mode = 'idle' | 'fly' | 'wreck';
 
 export default function PlaneSprite({ mode }: { mode: Mode }) {
   const spinning = mode !== 'wreck';
-  const [hubX, hubY] = PLANE_HUB;
+  const hubX = (HUB_FX - 0.5) * SPRITE_W;
+  const hubY = (HUB_FY - 0.5) * SPRITE_H;
 
   return (
-    <g className={`av-plane av-plane--${mode}`}>
-      {/* centre the drawing on the origin so rotation pivots on the plane */}
-      <g transform={`translate(${-SPRITE_W / 2} ${-SPRITE_H / 2}) scale(${SCALE})`}>
-        <PlaneVector dim={mode === 'wreck'} />
-      </g>
+    <g transform={`rotate(${-ART_TILT})`}>
+      <image
+        href={`${BASE}/plane.png`}
+        x={-SPRITE_W / 2}
+        y={-SPRITE_H / 2}
+        width={SPRITE_W}
+        height={SPRITE_H}
+        preserveAspectRatio="xMidYMid meet"
+        className={`av-plane av-plane--${mode}`}
+      />
       {spinning && (
         /* the spin lives on the inner group so the hub translate is not reset */
-        <g transform={`translate(${hubX * SCALE - SPRITE_W / 2} ${hubY * SCALE - SPRITE_H / 2})`}>
+        <g transform={`translate(${hubX} ${hubY})`}>
           <g className="av-prop">
-            {/* the whirl: a translucent disc the size of the prop's sweep,
-                then three blades. Spun by CSS, they smear into the disc and
-                the plane reads as running. */}
-            <circle r="4.6" fill="#fff" opacity=".1" />
-            <circle r="4.6" fill="none" stroke="#fff" strokeWidth=".2" opacity=".28" />
-            {[0, 120, 240].map((a) => (
-              <path
-                key={a}
-                d="M -0.55 0 Q -0.4 -4.3 0 -4.6 Q 0.4 -4.3 0.55 0 Z"
-                fill="#f3f0ea"
-                opacity=".8"
-                transform={`rotate(${a})`}
-              />
-            ))}
-            <circle r=".9" fill="#1b1c1f" />
+            <path
+              d="M -0.4 0 Q -0.28 -4.1 0 -4.3 Q 0.28 -4.1 0.4 0 Q 0.28 4.1 0 4.3 Q -0.28 4.1 -0.4 0 Z"
+              fill="#ffd6dc"
+              opacity=".26"
+            />
           </g>
         </g>
       )}
