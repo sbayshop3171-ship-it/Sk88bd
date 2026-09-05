@@ -78,13 +78,13 @@ jobs:
       - name: Run Flutter tests
         run: flutter test
 
-      - name: Build debug APK
-        run: flutter build apk --debug --dart-define=SIGNAL_API_BASE_URL=http://127.0.0.1:3000
+      - name: Build live debug APK
+        run: flutter build apk --debug --dart-define=SIGNAL_API_BASE_URL=https://sk88bd.com
 
-      - name: Upload debug APK
+      - name: Upload live debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: prime-signal-debug-apk
+          name: prime-signal-live-debug-apk
           path: mobile/signal_app/build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
           retention-days: 7
