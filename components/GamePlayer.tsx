@@ -50,23 +50,17 @@ export default function GamePlayer({
   const router = useRouter();
   const shell = useRef<HTMLDivElement>(null);
 
-  /* Ask for real fullscreen and landscape once the frame is up. Both are
-     best-effort — iOS Safari has neither — and the layout already fills the
-     viewport on its own, so a refusal costs nothing. */
+  /* Ask for real fullscreen once the frame is up — best-effort, iOS Safari
+     has none, and the fixed layout already fills the viewport so a refusal
+     costs nothing. The phone is deliberately NOT rotated: the game keeps
+     whatever orientation the player is holding it in. */
   useEffect(() => {
     if (!url) return;
     const el = shell.current;
-    const go = async () => {
-      try { await el?.requestFullscreen?.(); } catch { /* iOS Safari */ }
-      const o = screen.orientation as ScreenOrientation & { lock?: (s: string) => Promise<void> };
-      try { await o?.lock?.('landscape'); } catch { /* desktop, iOS */ }
-    };
     /* Chrome only grants fullscreen from a gesture; the tap that opened this
        page usually still counts, and when it does not the layout stands in. */
-    void go();
+    el?.requestFullscreen?.().catch(() => { /* iOS Safari, or no gesture */ });
     return () => {
-      const o = screen.orientation as ScreenOrientation & { unlock?: () => void };
-      try { o?.unlock?.(); } catch { /* ignore */ }
       if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
     };
   }, [url]);
