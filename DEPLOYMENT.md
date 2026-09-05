@@ -16,6 +16,17 @@ git commit -m "Prepare Sk88bd live server build"
 git push -u origin main
 ```
 
+GitHub Actions workflow name: `CI - Build And Test`.
+
+After every push, open:
+
+```text
+https://github.com/sbayshop3171-ship-it/Sk88bd/actions/workflows/ci.yml
+```
+
+If both `Web / Next.js` and `Mobile / Flutter APK` are green, the project is
+ready to deploy from that commit.
+
 ## 2. VPS / Persistent Node Server
 
 Use Node 20+.
