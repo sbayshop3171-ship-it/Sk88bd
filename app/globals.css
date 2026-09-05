@@ -799,16 +799,17 @@ ul{margin:0;padding:0;list-style:none}
 /* --- the aircraft --- */
 /* SVG transforms need an explicit box before transform-origin means anything */
 .av-craft,.av-blast > *{transform-box:fill-box;transform-origin:center}
-.av-craft--idle{animation:av-idle 2.4s ease-in-out infinite}
-/* once it stops climbing across the frame, it hangs there and floats */
-.av-craft--cruise{animation:av-float 3.2s ease-in-out infinite}
+.av-craft--idle{animation:av-idle 2.2s ease-in-out infinite}
+/* once it stops climbing across the frame, it hangs there and rides the air:
+   a clear up-and-down swell with a touch of pitch, like the reference plane */
+.av-craft--cruise{animation:av-float 2.6s ease-in-out infinite}
 @keyframes av-float{
-  0%,100%{transform:translate(0,-.3px) rotate(-.4deg)}
-  50%{transform:translate(.2px,-1.8px) rotate(1deg)}
+  0%,100%{transform:translate(0,1.6px) rotate(1.2deg)}
+  50%{transform:translate(.3px,-3.2px) rotate(-1.4deg)}
 }
 @keyframes av-idle{
   0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-.6px)}
+  50%{transform:translateY(-1.4px)}
 }
 .av-thrust{animation:av-burn .22s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:right center}
 @keyframes av-burn{from{transform:scaleX(.82);opacity:.9}to{transform:scaleX(1.25);opacity:.55}}

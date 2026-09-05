@@ -26,14 +26,19 @@ export type Phase = 'waiting' | 'betting' | 'flying' | 'crashed';
 export const BETTING_MS = 6_000;
 export const CRASHED_MS = 3500;
 
-/** Multiplier as a function of elapsed flight time. Slow, then steep —
-    2x lands near 11s, 10x near 37s. */
-export const GROWTH = 0.0625;
+/** Multiplier as a function of elapsed flight time: m = e^(k·t^p).
+    Slow off the line, then steepening harder than a plain exponential —
+    2x lands near 9s, 10x near 26s, 100x near 47s. The same two functions
+    drive the screen, the canvas path, the round schedule and the server's
+    cash-out, so they always agree. */
+export const GROWTH = 0.0553;
+export const GROWTH_CURVE = 1.15;
 export const multiplierAt = (elapsedMs: number) =>
-  Math.exp(GROWTH * (elapsedMs / 1000));
+  Math.exp(GROWTH * Math.pow(Math.max(0, elapsedMs) / 1000, GROWTH_CURVE));
 
 /** Inverse: flight time needed to reach a multiplier. */
-export const timeToReach = (m: number) => (Math.log(m) / GROWTH) * 1000;
+export const timeToReach = (m: number) =>
+  Math.pow(Math.log(Math.max(1, m)) / GROWTH, 1 / GROWTH_CURVE) * 1000;
 
 /* ---------- hashing ---------- */
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { GROWTH, fmtX, multiplierAt, type Phase } from '@/lib/aviator';
+import { fmtX, multiplierAt, timeToReach, type Phase } from '@/lib/aviator';
 import PlaneSprite from './PlaneSprite';
 
 const W = 100, H = 62;
@@ -27,7 +27,7 @@ function travelOf(multiplier: number) {
  */
 function path(multiplier: number, travel: number) {
   const span = Math.max(multiplier - 1, 0.0001);
-  const total = (Math.log(multiplier) / GROWTH) * 1000;
+  const total = timeToReach(multiplier);
   const spanX = travel * TIP_X;
   const spanY = travel * (FLOOR - TIP_Y);
   const pts: [number, number][] = [];
