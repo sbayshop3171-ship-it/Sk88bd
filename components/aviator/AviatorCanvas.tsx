@@ -8,13 +8,16 @@ const W = 100, H = 62;
 const TIP_X = 76, TIP_Y = 12, FLOOR = 55;
 const STEPS = 34;
 
-/** Multiplier by which the aircraft has finished climbing into frame. */
-const CRUISE_AT = 3.6;
+/** Multiplier by which the aircraft has finished climbing into frame. The
+    reference board's plane is parked top-right by roughly 2.5x. */
+const CRUISE_AT = 2.4;
 
-/** 0 on the runway, 1 once the nose reaches cruise. */
+/** 0 on the runway, 1 once the nose reaches cruise — eased out, so the
+    plane leaps off the corner and settles rather than crawling up. */
 function travelOf(multiplier: number) {
   if (multiplier <= 1) return 0;
-  return Math.min(1, Math.log(multiplier) / Math.log(CRUISE_AT));
+  const t = Math.min(1, Math.log(multiplier) / Math.log(CRUISE_AT));
+  return 1 - (1 - t) * (1 - t);
 }
 
 /**
@@ -38,9 +41,6 @@ function path(multiplier: number, travel: number) {
   }
   return pts;
 }
-
-/** Wedge rays fanning out of the launch corner. */
-const RAYS = Array.from({ length: 22 }, (_, i) => i * (90 / 22));
 
 export default function AviatorCanvas({
   phase,
@@ -81,6 +81,11 @@ export default function AviatorCanvas({
 
   return (
     <div className={`av-stage av-stage--${phase}`}>
+      {/* the rays: a huge conic-gradient disc whose centre sits on the launch
+          corner, turning all the time — the same construction the reference
+          board uses, so the light flows the same way whatever the phase */}
+      <div className="av-stage__rays" aria-hidden><i /></div>
+
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="av-stage__sky" aria-hidden>
         <defs>
           <radialGradient id="av-bloom" cx="46%" cy="40%" r="55%">
@@ -100,23 +105,7 @@ export default function AviatorCanvas({
           </filter>
         </defs>
 
-        <rect width={W} height={H} fill="#0D0D0D" />
-
-        {/* rays out of the launch corner — the structural backdrop */}
-        <g className={`av-rays${flying ? ' is-turning' : ''}`} transform={`translate(0 ${FLOOR})`}>
-          {RAYS.map((a, i) => {
-            const r = 190;
-            const rad = (deg: number) => (deg * Math.PI) / 180;
-            const w = 2.1;
-            return (
-              <polygon
-                key={a}
-                fill={i % 2 ? '#161616' : '#0a0a0a'}
-                points={`0,0 ${(r * Math.cos(rad(-a - w))).toFixed(2)},${(r * Math.sin(rad(-a - w))).toFixed(2)} ${(r * Math.cos(rad(-a + w))).toFixed(2)},${(r * Math.sin(rad(-a + w))).toFixed(2)}`}
-              />
-            );
-          })}
-        </g>
+        <rect width={W} height={H} fill="#000" fillOpacity="0" />
 
         {/* the violet glow belongs to the flight; while the board waits it is
             plain black and grey, the way the reference board sits */}

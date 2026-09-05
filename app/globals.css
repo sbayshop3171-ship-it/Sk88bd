@@ -1302,10 +1302,23 @@ ul{margin:0;padding:0;list-style:none}
 .av-prop.is-spinning .av-prop__blades{animation:av-spin .11s linear infinite}
 @keyframes av-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
-/* --- beams sweeping out of the launch corner --- */
-.av-rays{transform-box:view-box;transform-origin:0 55px}
-.av-rays.is-turning{animation:av-sweep 26s linear infinite}
-@keyframes av-sweep{from{transform:rotate(0deg)}to{transform:rotate(-90deg)}}
+/* --- beams sweeping out of the launch corner ---
+   A square far larger than the board, centred on its bottom-left corner,
+   striped with a repeating conic gradient (6° light / 6° dark) and turned a
+   full circle every 20s. Only the quadrant inside the board shows, so the
+   rays flow across it continuously. */
+.av-stage__rays{
+  position:absolute;left:0;bottom:0;width:0;height:0;z-index:0;pointer-events:none;
+  transform:translate(0,3px);
+}
+.av-stage__rays i{
+  position:absolute;left:-1400px;top:-1400px;width:2800px;height:2800px;border-radius:50%;
+  background:repeating-conic-gradient(#1e1e1e 0deg 6deg,#0f0f0f 6deg 12deg);
+  opacity:.5;animation:av-rays-flow 20s linear infinite;will-change:transform;
+}
+@keyframes av-rays-flow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.av-stage__rays i{animation-duration:120s}}
+.av-stage__sky{z-index:1}
 
 /* --- runway dashes streaming past --- */
 .av-runway.is-moving line{animation:av-dash .55s linear infinite}
