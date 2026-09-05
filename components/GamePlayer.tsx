@@ -71,6 +71,14 @@ export default function GamePlayer({
     };
   }, [url]);
 
+  /* The player is a fixed overlay, but the page under it can still scroll on
+     a phone's rubber-band; lock the body while the game is up. */
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   const back = () => {
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
     router.back();
