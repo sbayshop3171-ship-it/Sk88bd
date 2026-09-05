@@ -1,0 +1,119 @@
+'use client';
+
+import Link from 'next/link';
+import { useMemo, useRef, useState } from 'react';
+import { CATALOGUE, PLAYABLE_IDS, type CategoryKey, type Game } from '@/lib/catalogue';
+import { CATEGORY_LABEL, t } from '@/lib/strings';
+import GameArt from './GameArt';
+import { FlameIcon, HeartIcon, LeftIcon, RightIcon } from './Icons';
+import { useFavourites } from './useFavourites';
+
+const TAG_LABEL = { hot: 'HOT', new: 'NEW', top: 'TOP' } as const;
+
+
+export function GameCard({ game }: { game: Game; index?: number }) {
+  /* Tapping the art opens the game and nothing else — its own engine if it has
+     one, otherwise the fullscreen player. There is no interstitial and no
+     deposit prompt on the way: the player always has something to show, a
+     clip or a provider frame or the game's own art, and the deposit button
+     lives in its bar. */
+  const own = PLAYABLE_IDS.includes(game.id);
+  const href = own ? `/game/${game.id}` : `/play/${game.id}`;
+  const { isFavourite, toggle } = useFavourites();
+  const faved = isFavourite(game.id);
+
+  /* The press animation has to outlive the press — a finger lifts long before
+     the squash-and-pop finishes, and :active would cut it off mid-way. The
+     class is set on pointerdown and cleared when the card's own keyframes end
+     (children animate too, hence the currentTarget check). */
+  const [tapped, setTapped] = useState(false);
+
+  return (
+    <div className="game-cell">
+      <Link
+        className={`game${tapped ? ' game--tap' : ''}`}
+        href={href}
+        onPointerDown={() => setTapped(true)}
+        onAnimationEnd={(e) => { if (e.target === e.currentTarget) setTapped(false); }}
+      >
+        <GameArt id={game.id} thumb={game.thumb} name={game.name} provider={game.provider} />
+        {game.tag && (
+          <i className={`tag tag--${game.tag}`}>
+            {game.tag === 'hot' && <FlameIcon />}
+            {TAG_LABEL[game.tag!]}
+          </i>
+        )}
+        {/* The generated tiles already letter the game name across the bottom;
+            only the supplied artwork needs the provider mark added. */}
+        {game.thumb && <span className="game__mark">{game.provider}</span>}
+        <span className="game__shine" aria-hidden />
+      </Link>
+
+      <button
+        type="button"
+        className={`game__fav${faved ? ' is-on' : ''}`}
+        aria-pressed={faved}
+        aria-label={`${game.name} — ${t.favourite}`}
+        onClick={() => toggle(game.id)}
+      >
+        <HeartIcon filled={faved} />
+      </button>
+    </div>
+  );
+}
+
+/** Rails page a screenful at a time rather than scrolling game by game: six
+    tiles, 3 x 2, snapped so a swipe always lands on a whole page. */
+const PER_PAGE = 6;
+
+function paginate<T>(items: T[], size: number): T[][] {
+  const pages: T[][] = [];
+  for (let i = 0; i < items.length; i += size) pages.push(items.slice(i, i + size));
+  return pages;
+}
+
+export default function GameSection({
+  category,
+  games,
+  title,
+}: {
+  category?: CategoryKey;
+  games?: Game[];
+  title?: string;
+}) {
+  /* Category rails keep the catalogue's own order. Everything a visitor can
+     actually open already leads the page in its own rail (demoGames()), and
+     floating those few to the front of every category as well put the handful
+     of games with no pack artwork ahead of the real tiles. */
+  const list = games ?? (category ? CATALOGUE[category] : []);
+  const pages = useMemo(() => paginate(list, PER_PAGE), [list]);
+  const heading = title ?? (category ? CATEGORY_LABEL[category] : '');
+  const railRef = useRef<HTMLDivElement>(null);
+
+  if (!list.length) return null;
+
+  const nudge = (dir: 1 | -1) => {
+    const el = railRef.current;
+    if (el) el.scrollBy({ left: dir * el.clientWidth, behavior: 'smooth' });
+  };
+
+  return (
+    <section className="sec" id={category ? `sec-${category}` : undefined}>
+      <div className="sec__hd">
+        <h2 className="sec__title">{heading}</h2>
+        <div className="sec__ctrl">
+          {category && <Link href={`/casino?category=${category}`}>{t.all}</Link>}
+          <button type="button" aria-label={t.previous} onClick={() => nudge(-1)}><LeftIcon /></button>
+          <button type="button" aria-label={t.next} onClick={() => nudge(1)}><RightIcon /></button>
+        </div>
+      </div>
+      <div className="rail" ref={railRef}>
+        {pages.map((page, i) => (
+          <div className="rail__page" key={i}>
+            {page.map((g) => <GameCard key={g.id} game={g} />)}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}

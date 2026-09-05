@@ -1,0 +1,8 @@
+# Only the Next.js app at the repo root is deployed here. The Laravel port and
+# the old static build are carried in the same tree but are not part of this
+# build, and laravel/vendor alone is ~96M of upload for nothing.
+laravel
+legacy
+docs
+scripts
+supabase

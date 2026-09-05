@@ -1,0 +1,39 @@
+node_modules
+.next
+out
+.vercel
+.data
+.DS_Store
+.env*
+!.env.example
+!.env.production.example
+*.tsbuildinfo
+next-env.d.ts
+
+# Flutter / mobile app generated files
+mobile/signal_app/.dart_tool/
+mobile/signal_app/.flutter-plugins
+mobile/signal_app/.flutter-plugins-dependencies
+mobile/signal_app/build/
+mobile/signal_app/android/local.properties
+mobile/signal_app/android/app/debug/
+mobile/signal_app/android/app/profile/
+mobile/signal_app/android/app/release/
+
+# Signing keys must stay outside git
+*.keystore
+*.jks
+*.p12
+
+# Laravel
+laravel/vendor
+laravel/storage/*.key
+laravel/storage/framework/cache/*
+laravel/storage/framework/sessions/*
+laravel/storage/framework/testing/*
+laravel/storage/framework/views/*
+laravel/storage/logs/*
+laravel/bootstrap/cache/*
+laravel/public/build
+laravel/public/hot
+laravel/.phpunit.result.cache

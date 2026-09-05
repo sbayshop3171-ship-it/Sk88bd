@@ -1,0 +1,278 @@
+import 'dart:async';
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+
+import '../config/api_config.dart';
+import '../models/signal_snapshot.dart';
+import '../services/signal_api_client.dart';
+import '../widgets/auto_signal_bar.dart';
+import '../widgets/brand_terminal.dart';
+import '../widgets/game_switcher.dart';
+import '../widgets/neon_background.dart';
+import '../widgets/recent_rounds_strip.dart';
+import '../widgets/signal_gauge.dart';
+import '../widgets/stat_grid.dart';
+import '../widgets/status_alert.dart';
+
+class SignalTerminalScreen extends StatefulWidget {
+  const SignalTerminalScreen({
+    super.key,
+    required this.apiBaseUrl,
+    required this.accessToken,
+    required this.onUnauthorized,
+  });
+
+  final String apiBaseUrl;
+  final String accessToken;
+  final Future<String?> Function() onUnauthorized;
+
+  @override
+  State<SignalTerminalScreen> createState() => _SignalTerminalScreenState();
+}
+
+class _SignalTerminalScreenState extends State<SignalTerminalScreen>
+    with SingleTickerProviderStateMixin {
+  late final SignalApiClient _api;
+  late final AnimationController _pulse;
+  late String _accessToken;
+  late SignalSnapshot _snapshot;
+  SignalGame _game = SignalGame.aviator;
+  DateTime _now = DateTime.now();
+  Timer? _clockTimer;
+  Timer? _pollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _api = SignalApiClient(baseUrl: widget.apiBaseUrl);
+    _accessToken = widget.accessToken;
+    _snapshot = SignalSnapshot.demo(_game, now: _now);
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat(reverse: true);
+
+    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      setState(() => _now = DateTime.now());
+    });
+    _pollTimer = Timer.periodic(signalPollInterval, (_) => _loadSnapshot());
+    _loadSnapshot();
+  }
+
+  @override
+  void didUpdateWidget(covariant SignalTerminalScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.accessToken != widget.accessToken) {
+      _accessToken = widget.accessToken;
+    }
+  }
+
+  @override
+  void dispose() {
+    _clockTimer?.cancel();
+    _pollTimer?.cancel();
+    _pulse.dispose();
+    _api.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadSnapshot() async {
+    try {
+      final next = await _api.fetchSnapshot(
+        _game,
+        accessToken: _accessToken,
+      );
+      if (!mounted) return;
+      setState(() => _snapshot = next);
+    } on SignalUnauthorizedException {
+      final refreshedToken = await widget.onUnauthorized();
+      if (refreshedToken == null || !mounted) return;
+      _accessToken = refreshedToken;
+      await _loadSnapshot();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _snapshot = _snapshot.copyWith(
+          targetMultiplier: 1,
+          timestamp: DateTime.now(),
+          signalActive: false,
+          signalLabel: 'SERVER OFFLINE',
+          autoSignalActive: false,
+          notice: 'সার্ভার সংযোগ নেই',
+        );
+      });
+    }
+  }
+
+  void _selectGame(SignalGame game) {
+    if (game == _game) return;
+    setState(() {
+      _game = game;
+      _snapshot = SignalSnapshot.demo(game, now: _now);
+    });
+    _loadSnapshot();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBody: true,
+      body: NeonBackground(
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final layout = _SignalLayout.from(constraints);
+
+              return SizedBox.expand(
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: EdgeInsets.fromLTRB(
+                    layout.horizontalPadding,
+                    layout.topPadding,
+                    layout.horizontalPadding,
+                    layout.bottomPadding,
+                  ),
+                  child: ConstrainedBox(
+                    constraints:
+                        BoxConstraints(minHeight: layout.contentHeight),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            GameSwitcher(
+                              selected: _game,
+                              height: layout.switcherHeight,
+                              scale: layout.scale,
+                              onChanged: _selectGame,
+                            ),
+                            SizedBox(height: layout.gapSm),
+                            BrandTerminal(
+                              snapshot: _snapshot,
+                              scale: layout.scale,
+                            ),
+                            SizedBox(height: layout.gapSm),
+                            StatGrid(
+                              stats: _snapshot.stats,
+                              cardHeight: layout.statHeight,
+                              gap: layout.statGap,
+                              scale: layout.scale,
+                            ),
+                          ],
+                        ),
+                        SignalGauge(
+                          multiplier: _snapshot.targetMultiplier,
+                          timestamp: _now,
+                          active: _snapshot.signalActive,
+                          label: _snapshot.signalLabel,
+                          pulse: _pulse,
+                          size: layout.gaugeSize,
+                          scale: layout.scale,
+                        ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            AutoSignalBar(
+                              active: _snapshot.autoSignalActive,
+                              onTap: _loadSnapshot,
+                              height: layout.autoBarHeight,
+                              scale: layout.scale,
+                            ),
+                            SizedBox(height: layout.gapSm),
+                            RecentRoundsStrip(
+                              rounds: _snapshot.recentRounds,
+                              scale: layout.scale,
+                            ),
+                            SizedBox(height: layout.gapSm),
+                            StatusAlert(
+                              text: _snapshot.notice,
+                              scale: layout.scale,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SignalLayout {
+  const _SignalLayout({
+    required this.scale,
+    required this.horizontalPadding,
+    required this.topPadding,
+    required this.bottomPadding,
+    required this.contentHeight,
+    required this.switcherHeight,
+    required this.statHeight,
+    required this.statGap,
+    required this.gaugeSize,
+    required this.autoBarHeight,
+    required this.gapSm,
+    required this.gapLg,
+  });
+
+  final double scale;
+  final double horizontalPadding;
+  final double topPadding;
+  final double bottomPadding;
+  final double contentHeight;
+  final double switcherHeight;
+  final double statHeight;
+  final double statGap;
+  final double gaugeSize;
+  final double autoBarHeight;
+  final double gapSm;
+  final double gapLg;
+
+  factory _SignalLayout.from(BoxConstraints constraints) {
+    final width = constraints.maxWidth.isFinite ? constraints.maxWidth : 390.0;
+    final height =
+        constraints.maxHeight.isFinite ? constraints.maxHeight : 760.0;
+    final widthScale = (width / 393).clamp(0.86, 1.18).toDouble();
+    final heightScale = (height / 820).clamp(0.82, 1.12).toDouble();
+    final scale = math.min(widthScale, heightScale);
+    const horizontalPadding = 0.0;
+    const topPadding = 0.0;
+    const bottomPadding = 0.0;
+    final gaugeSize = math
+        .min(width - horizontalPadding * 2 - 6, height * 0.27)
+        .clamp(188.0, 252.0)
+        .toDouble();
+    final gapSm = (12 * scale).clamp(8.0, 14.0).toDouble();
+    final gapLg = (18 * scale).clamp(12.0, 22.0).toDouble();
+    final switcherHeight = (38 * scale).clamp(34.0, 44.0).toDouble();
+    final statHeight = (70 * scale).clamp(58.0, 78.0).toDouble();
+    final autoBarHeight = (50 * scale).clamp(44.0, 56.0).toDouble();
+    final contentHeight =
+        math.max(0, height - topPadding - bottomPadding).toDouble();
+
+    return _SignalLayout(
+      scale: scale,
+      horizontalPadding: horizontalPadding,
+      topPadding: topPadding,
+      bottomPadding: bottomPadding,
+      contentHeight: contentHeight,
+      switcherHeight: switcherHeight,
+      statHeight: statHeight,
+      statGap: (8 * scale).clamp(6.0, 10.0).toDouble(),
+      gaugeSize: gaugeSize,
+      autoBarHeight: autoBarHeight,
+      gapSm: gapSm,
+      gapLg: gapLg,
+    );
+  }
+}
