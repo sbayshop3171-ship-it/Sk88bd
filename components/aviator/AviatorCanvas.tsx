@@ -195,7 +195,7 @@ export default function AviatorCanvas({
       <div className="av-stage__hud">
         {waiting ? (
           <>
-            <div className="av-hud__label">পরবর্তী রাউন্ড প্রস্তুত হচ্ছে</div>
+            <div className="av-hud__label">WAITING FOR NEXT ROUND</div>
             <div className="av-hud__count">{(bettingLeft / 1000).toFixed(1)}s</div>
             <div className="av-hud__bar">
               <i style={{ width: `${Math.max(0, Math.min(100, 100 - (bettingLeft / bettingTotal) * 100))}%` }} />
@@ -203,7 +203,7 @@ export default function AviatorCanvas({
           </>
         ) : betting ? (
           <>
-            <div className="av-hud__label">পরবর্তী রাউন্ড শুরু হচ্ছে</div>
+            <div className="av-hud__label">NEXT ROUND STARTS IN</div>
             <div className="av-hud__count">{(bettingLeft / 1000).toFixed(1)}s</div>
             <div className="av-hud__bar">
               <i style={{ width: `${Math.max(0, Math.min(100, (bettingLeft / bettingTotal) * 100))}%` }} />
@@ -211,16 +211,16 @@ export default function AviatorCanvas({
           </>
         ) : (
           <>
-            {crashed && <div className="av-hud__flew">উড়ে গেছে!</div>}
+            {crashed && <div className="av-hud__flew">FLEW AWAY!</div>}
             <div className={`av-hud__mult${crashed ? ' is-crashed' : ''}`}>{fmtX(multiplier)}</div>
           </>
         )}
       </div>
 
-      <span className="av-stage__fair">লাইভ সিগন্যাল</span>
+      <span className="av-stage__fair">LIVE SIGNAL</span>
 
       {players > 0 && (
-        <span className="av-stage__crowd" aria-label={`${players} জন খেলছে`}>
+        <span className="av-stage__crowd" aria-label={`${players} players`}>
           <i /><i /><i />
           <b>{players.toLocaleString('en-IN')}</b>
         </span>
