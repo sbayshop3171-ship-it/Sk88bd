@@ -25,7 +25,8 @@ export default function CategoryTabs() {
         const visible = entries.filter((e) => e.isIntersecting);
         if (!visible.length) return;
         const top = visible.reduce((a, b) => (a.boundingClientRect.top < b.boundingClientRect.top ? a : b));
-        setActive(top.target.id.replace('sec-', '') as CategoryKey);
+        const next = top.target.id.replace('sec-', '') as CategoryKey;
+        setActive((current) => (current === next ? current : next));
       },
       { rootMargin: '-120px 0px -60% 0px', threshold: 0 },
     );

@@ -51,7 +51,7 @@ ul{margin:0;padding:0;list-style:none}
   background:
     radial-gradient(120% 60% at 50% 0%, #0d4c45 0%, transparent 60%),
     linear-gradient(180deg,var(--bg-1) 0%, var(--bg) 100%);
-  background-attachment:fixed;
+  background-attachment:scroll;
   padding-bottom:calc(var(--nav-h) + 18px);
   box-shadow:0 0 60px rgba(0,0,0,.8);
   overflow-x:hidden;
@@ -100,8 +100,7 @@ ul{margin:0;padding:0;list-style:none}
   position:sticky;top:0;z-index:60;
   display:flex;align-items:center;gap:10px;
   height:var(--hdr-h);padding:0 12px;
-  background:rgba(9,58,53,.92);
-  backdrop-filter:blur(12px);
+  background:rgba(9,58,53,.98);
   border-bottom:1px solid var(--line);
 }
 .icon-btn{
@@ -232,8 +231,7 @@ ul{margin:0;padding:0;list-style:none}
 .cats{
   position:sticky;top:var(--hdr-h);z-index:50;
   display:flex;gap:4px;padding:10px 12px;
-  background:linear-gradient(180deg,rgba(7,46,43,.97),rgba(7,46,43,.88));
-  backdrop-filter:blur(10px);
+  background:linear-gradient(180deg,rgba(7,46,43,.99),rgba(7,46,43,.94));
   overflow-x:auto;scrollbar-width:none;
 }
 .cats button{
@@ -245,7 +243,10 @@ ul{margin:0;padding:0;list-style:none}
 .cats button.on{color:var(--gold);border-bottom-color:var(--gold)}
 
 /* ---------- Sections ---------- */
-.sec{margin:16px 12px 0;scroll-margin-top:calc(var(--hdr-h) + 52px)}
+.sec{
+  margin:16px 12px 0;scroll-margin-top:calc(var(--hdr-h) + 52px);
+  content-visibility:auto;contain-intrinsic-size:430px;
+}
 .sec__hd{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 .sec__title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:900;letter-spacing:.3px;color:var(--mint);margin:0}
 .sec__title::before{content:"";width:4px;height:16px;border-radius:2px;background:linear-gradient(180deg,var(--gold),var(--gold-2));flex:0 0 4px}
@@ -278,7 +279,6 @@ ul{margin:0;padding:0;list-style:none}
 .game{
   position:relative;border-radius:var(--r-md);overflow:hidden;
   background:var(--surface);border:1px solid rgba(255,255,255,.1);display:block;
-  transform:translateZ(0);
   transition:transform .22s cubic-bezier(.22,.9,.3,1.2),
              box-shadow .22s ease, border-color .22s ease;
 }
@@ -337,7 +337,6 @@ ul{margin:0;padding:0;list-style:none}
   font-size:8px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;
   color:rgba(255,255,255,.94);
   background:rgba(2,26,24,.72);border:1px solid rgba(255,255,255,.14);
-  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   box-shadow:0 2px 8px rgba(0,0,0,.55);
 }
@@ -385,7 +384,10 @@ ul{margin:0;padding:0;list-style:none}
 .a9{background:linear-gradient(145deg,#0c4a6e,#38bdf8)}
 
 /* ---------- Winners feed ---------- */
-.winners{margin:16px 12px 0}
+.winners{
+  margin:16px 12px 0;
+  content-visibility:auto;contain-intrinsic-size:280px;
+}
 .winners__box{
   border-radius:var(--r-md);background:rgba(0,0,0,.24);border:1px solid var(--line);
   height:216px;overflow:hidden;position:relative;padding:4px 0;
@@ -416,7 +418,10 @@ ul{margin:0;padding:0;list-style:none}
 }
 
 /* ---------- Footer ---------- */
-.ftr{margin:24px 12px 0;padding-top:16px;border-top:1px solid var(--line);text-align:center}
+.ftr{
+  margin:24px 12px 0;padding-top:16px;border-top:1px solid var(--line);text-align:center;
+  content-visibility:auto;contain-intrinsic-size:220px;
+}
 .ftr__grp{margin-bottom:16px}
 .ftr__ttl{font-size:10px;letter-spacing:1.4px;color:var(--mint);font-weight:800;margin-bottom:8px}
 .ftr__row{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
@@ -429,7 +434,7 @@ ul{margin:0;padding:0;list-style:none}
   position:fixed;bottom:0;left:50%;transform:translateX(-50%);
   width:100%;max-width:var(--app-w);height:var(--nav-h);z-index:70;
   display:grid;grid-template-columns:repeat(5,1fr);
-  background:rgba(10,60,55,.96);backdrop-filter:blur(14px);
+  background:rgba(10,60,55,.98);
   border-top:1px solid var(--line);
   padding-bottom:env(safe-area-inset-bottom);
 }
@@ -558,7 +563,7 @@ ul{margin:0;padding:0;list-style:none}
 .page-hd{
   position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:10px;
   height:var(--hdr-h);padding:0 12px;
-  background:rgba(9,58,53,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
+  background:rgba(9,58,53,.98);border-bottom:1px solid var(--line);
 }
 .page-hd h1{margin:0;font-size:16px;font-weight:800;flex:1;min-width:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -648,12 +653,11 @@ ul{margin:0;padding:0;list-style:none}
 .game__art svg{position:absolute;inset:0;width:100%;height:100%}
 /* the flat overlay is baked into the SVG now */
 .game__art::after{content:none}
-/* The icon pack mixes square, 3:4 and 3:2 artwork, so the art is fitted whole
-   into the 4:5 tile and the blurred copy underneath takes the leftover strip —
-   nothing is cropped and nothing reads as a letterbox bar. */
-.game__art--img{overflow:hidden;background:var(--surface)}
-.game__art--img .game__blur{
-  object-fit:cover;transform:scale(1.4);filter:blur(18px) saturate(1.35) brightness(.6);
+/* One real image layer only. Per-tile blur/shimmer was the main home-scroll
+   hotspot on mobile GPUs. */
+.game__art--img{
+  overflow:hidden;
+  background:linear-gradient(160deg,#082e2b,var(--surface));
 }
 .game__art--img .game__fit{
   object-fit:contain;z-index:1;
@@ -672,17 +676,8 @@ ul{margin:0;padding:0;list-style:none}
     var(--surface) 0%, rgba(15,74,68,.8) 20%, rgba(15,74,68,.45) 42%,
     rgba(15,74,68,.18) 66%, rgba(15,74,68,.05) 86%, transparent 100%);
 }
-/* A slow light sweep across the art. Transform-only so it stays on the
-   compositor, and offset per game (GameArt sets the delay from the id) so a
-   grid of tiles does not flash in unison. */
 .game__shimmer{
-  position:absolute;top:0;bottom:0;left:-30%;right:-30%;z-index:2;pointer-events:none;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);
-  transform:translateX(-100%) skewX(-12deg);
-  /* no mix-blend-mode: blending has to be re-painted every frame, and with a
-     couple of hundred tiles on the home page this needs to stay a pure
-     compositor transform */
-  animation:game-shimmer 7s linear infinite;
+  display:none;
 }
 @keyframes game-shimmer{
   0%{transform:translateX(-100%) skewX(-12deg)}

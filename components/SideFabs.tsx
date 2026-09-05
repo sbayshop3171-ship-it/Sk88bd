@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BRAND } from '@/lib/brand';
 import { ChatIcon, FacebookIcon, TelegramIcon, UpIcon, WhatsAppIcon } from './Icons';
 
@@ -10,12 +10,27 @@ import { ChatIcon, FacebookIcon, TelegramIcon, UpIcon, WhatsAppIcon } from './Ic
 export default function SideFabs() {
   const path = usePathname();
   const [showTop, setShowTop] = useState(false);
+  const showTopRef = useRef(false);
 
   useEffect(() => {
-    const onScroll = () => setShowTop(window.scrollY > 400);
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const next = window.scrollY > 400;
+      if (showTopRef.current !== next) {
+        showTopRef.current = next;
+        setShowTop(next);
+      }
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   // a game screen is its own surface: these float directly over the bet

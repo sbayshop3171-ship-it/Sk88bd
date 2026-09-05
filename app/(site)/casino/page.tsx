@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { GameCard } from '@/components/GameSection';
 import PageHeader from '@/components/PageHeader';
+import { useFavourites } from '@/components/useFavourites';
 import { CATALOGUE, HOME_SECTIONS, type CategoryKey } from '@/lib/catalogue';
 import { CATEGORY_LABEL } from '@/lib/strings';
 
@@ -14,6 +15,7 @@ const GLYPH: Record<CategoryKey, string> = {
 export default function CasinoLobbyPage() {
   const [active, setActive] = useState<CategoryKey>('hot');
   const games = CATALOGUE[active];
+  const { isFavourite, toggle } = useFavourites();
 
   return (
     <>
@@ -34,7 +36,14 @@ export default function CasinoLobbyPage() {
           <div className="sec__ctrl"><span>{games.length} গেম</span></div>
         </div>
         <div className="grid">
-          {games.map((g) => <GameCard key={g.id} game={g} />)}
+          {games.map((g) => (
+            <GameCard
+              key={g.id}
+              game={g}
+              faved={isFavourite(g.id)}
+              onToggleFavourite={toggle}
+            />
+          ))}
         </div>
       </section>
     </>

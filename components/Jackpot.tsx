@@ -12,7 +12,11 @@ export default function Jackpot() {
   const [value, setValue] = useState(SEED);
 
   useEffect(() => {
-    const id = setInterval(() => setValue((v) => v + Math.random() * 260), 900);
+    const id = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        setValue((v) => v + Math.random() * 900);
+      }
+    }, 4000);
     return () => clearInterval(id);
   }, []);
 

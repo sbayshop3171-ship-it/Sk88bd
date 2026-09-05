@@ -11,7 +11,15 @@ import { useFavourites } from './useFavourites';
 const TAG_LABEL = { hot: 'HOT', new: 'NEW', top: 'TOP' } as const;
 
 
-export function GameCard({ game }: { game: Game; index?: number }) {
+export function GameCard({
+  game,
+  faved,
+  onToggleFavourite,
+}: {
+  game: Game;
+  faved: boolean;
+  onToggleFavourite: (id: string) => void;
+}) {
   /* Tapping the art opens the game and nothing else — its own engine if it has
      one, otherwise the fullscreen player. There is no interstitial and no
      deposit prompt on the way: the player always has something to show, a
@@ -19,8 +27,6 @@ export function GameCard({ game }: { game: Game; index?: number }) {
      lives in its bar. */
   const own = PLAYABLE_IDS.includes(game.id);
   const href = own ? `/game/${game.id}` : `/play/${game.id}`;
-  const { isFavourite, toggle } = useFavourites();
-  const faved = isFavourite(game.id);
 
   /* The press animation has to outlive the press — a finger lifts long before
      the squash-and-pop finishes, and :active would cut it off mid-way. The
@@ -54,7 +60,7 @@ export function GameCard({ game }: { game: Game; index?: number }) {
         className={`game__fav${faved ? ' is-on' : ''}`}
         aria-pressed={faved}
         aria-label={`${game.name} — ${t.favourite}`}
-        onClick={() => toggle(game.id)}
+        onClick={() => onToggleFavourite(game.id)}
       >
         <HeartIcon filled={faved} />
       </button>
@@ -89,6 +95,7 @@ export default function GameSection({
   const pages = useMemo(() => paginate(list, PER_PAGE), [list]);
   const heading = title ?? (category ? CATEGORY_LABEL[category] : '');
   const railRef = useRef<HTMLDivElement>(null);
+  const { isFavourite, toggle } = useFavourites();
 
   if (!list.length) return null;
 
@@ -110,7 +117,14 @@ export default function GameSection({
       <div className="rail" ref={railRef}>
         {pages.map((page, i) => (
           <div className="rail__page" key={i}>
-            {page.map((g) => <GameCard key={g.id} game={g} />)}
+            {page.map((g) => (
+              <GameCard
+                key={g.id}
+                game={g}
+                faved={isFavourite(g.id)}
+                onToggleFavourite={toggle}
+              />
+            ))}
           </div>
         ))}
       </div>

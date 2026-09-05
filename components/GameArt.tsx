@@ -48,33 +48,28 @@ export default function GameArt({
   name: string;
   provider: string;
 }) {
-  const h = hash(id);
-
   if (thumb) {
-    /* Four stacked layers, the same lockup the reference lobby uses:
-
-       blur    a zoomed, blurred copy of the art filling the tile edge to edge
-       fit     the art itself, whole. The pack mixes square, 3:4 and 3:2 and
-               every piece has the game's own name baked in, so a cover-crop
-               would shave the lettering off — fitting it and letting the blur
-               take the leftover keeps the art intact with no letterbox bars.
-       shimmer a slow light sweep, offset per game so a grid does not pulse
-               in unison
-       scrim   the bottom half fading into the card colour, so the tile melts
-               into the surface and the provider mark stays readable
-
-       Both images share a src, so it is one download. */
+    /* Keep the real game artwork as a single image layer. The old blurred
+       duplicate looked rich but forced the browser to repaint hundreds of
+       filtered tiles during page scroll, which was too expensive on phones. */
     return (
       <div className="game__art game__art--img">
-        <Image className="game__blur" src={thumb} alt="" aria-hidden fill sizes="150px" />
-        <Image className="game__fit" src={thumb} alt={name} fill sizes="150px" />
-        <span className="game__shimmer" aria-hidden
-              style={{ animationDelay: `${(h % 70) / 10}s` }} />
+        <Image
+          className="game__fit"
+          src={thumb}
+          alt={name}
+          fill
+          sizes="(max-width: 480px) 31vw, 150px"
+          quality={72}
+          loading="lazy"
+          decoding="async"
+        />
         <span className="game__scrim" aria-hidden />
       </div>
     );
   }
 
+  const h = hash(id);
   const hue = h % 360;
   const hue2 = (hue + 40 + (h >> 8) % 60) % 360;
   const motif = MOTIFS[(h >> 16) % MOTIFS.length];
@@ -170,8 +165,6 @@ export default function GameArt({
               stroke="#fff" strokeOpacity=".22" strokeWidth=".8" />
       </svg>
       <GameIcon motif={motifFor(name, provider)} />
-      <span className="game__shimmer" aria-hidden
-            style={{ animationDelay: `${(h % 70) / 10}s` }} />
       <span className="game__wordmark">{name}</span>
     </div>
   );
