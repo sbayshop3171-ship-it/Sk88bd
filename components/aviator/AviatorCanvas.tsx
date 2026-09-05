@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { fmtX, multiplierAt, timeToReach, type Phase } from '@/lib/aviator';
 import PlaneSprite from './PlaneSprite';
 
@@ -11,6 +12,12 @@ const STEPS = 34;
 /** Multiplier by which the aircraft has finished climbing into frame. The
     reference board's plane is parked top-right by roughly 2.5x. */
 const CRUISE_AT = 2.4;
+
+/** the cruise ride: how far the plane (and the line's tip) swell, how fast,
+    and how much the nose pitches with it */
+const BOB_AMPLITUDE = 3.2;
+const BOB_PERIOD_MS = 2600;
+const BOB_PITCH_DEG = 1.4;
 
 /** 0 on the runway, 1 once the nose reaches cruise — eased out, so the
     plane leaps off the corner and settles rather than crawling up. */
@@ -42,6 +49,20 @@ function path(multiplier: number, travel: number) {
   return pts;
 }
 
+/** A timestamp that advances every animation frame while `on`, so a render
+    that depends on the clock re-runs each frame; frozen at 0 otherwise. */
+function useFrameClock(on: boolean) {
+  const [now, setNow] = useState(0);
+  useEffect(() => {
+    if (!on) return;
+    let raf = 0;
+    const loop = () => { setNow(performance.now()); raf = requestAnimationFrame(loop); };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, [on]);
+  return now;
+}
+
 export default function AviatorCanvas({
   phase,
   multiplier,
@@ -63,14 +84,31 @@ export default function AviatorCanvas({
   const idle = waiting || betting;
 
   const travel = travelOf(multiplier);
-  const pts = path(multiplier, travel);
+
+  /* The ride: once the plane is up it swells up and down, and the line's
+     tip rides with it — the curve is bent toward the plane so they never
+     part. Driven off our own frame clock rather than a CSS animation on the
+     plane alone, because the path is drawn by React and the two have to
+     agree; the clock keeps ticking even while the multiplier is pinned at
+     the round's cap, so the plane never freezes mid-air. Scaled by
+     `travel`, so take-off is clean. */
+  const now = useFrameClock(flying);
+  const swell = flying ? Math.sin((now / BOB_PERIOD_MS) * Math.PI * 2) * travel : 0;
+  const bobY = swell * -BOB_AMPLITUDE;
+  const pitch = swell * -BOB_PITCH_DEG;
+
+  const pts = path(multiplier, travel).map(([x, y], i, all) => {
+    // root stays on the runway; the bend grows toward the tip
+    const f = i / (all.length - 1);
+    return [x, Number((y + bobY * f * f * f).toFixed(2))] as [number, number];
+  });
   const [tx, ty] = pts[pts.length - 1];
 
   // The nose angle is a smooth function of how far the plane has climbed, not
   // the slope between two sampled points — that sampling shifted every frame
   // and made the plane tremble. Steeper nose-up at take-off, easing to a gentle
   // climb as it reaches cruise. The wobble on top is a separate CSS layer.
-  const angle = Number((-24 + travel * 14).toFixed(2));
+  const angle = Number((-24 + travel * 14 + pitch).toFixed(2));
 
   // climbing away from the viewer: further along the climb, slightly smaller
   const scale = (1.05 - travel * 0.25).toFixed(3);
@@ -138,7 +176,7 @@ export default function AviatorCanvas({
                 every frame and a CSS animation there would overwrite it. The
                 wobble runs the whole flight, so the plane always has gentle,
                 smooth life rather than snapping to a hold. */}
-            <g className="av-craft av-craft--cruise">
+            <g className="av-craft">
               <PlaneSprite mode="fly" />
             </g>
           </g>
