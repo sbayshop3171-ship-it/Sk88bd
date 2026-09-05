@@ -17,6 +17,9 @@ const SEATS = [
   { user: '*******719', stake: 600 },
 ];
 
+/** seats on the board this round — the canvas shows it in its corner pill */
+export const LIVE_SEATS = SEATS.length;
+
 const TABS = ['সব বেট', 'আগের', 'টপ'] as const;
 
 /** Deterministic per-seat target, so the table does not reshuffle each frame. */
@@ -25,6 +28,10 @@ const targetFor = (i: number) => 1.2 + ((i * 37) % 45) / 10;
 export default function LiveBets({ phase, multiplier }: { phase: Phase; multiplier: number }) {
   const [tab, setTab] = useState(0);
   const rows = tab === 2 ? [...SEATS].sort((a, b) => b.stake - a.stake) : SEATS;
+
+  const settled = phase === 'flying' || phase === 'crashed';
+  const won = SEATS.filter((_, i) => settled && multiplier >= targetFor(i));
+  const totalWin = won.reduce((sum, seat) => sum + Math.round(seat.stake * targetFor(SEATS.indexOf(seat))), 0);
 
   return (
     <section className="sec av-live">
@@ -40,8 +47,16 @@ export default function LiveBets({ phase, multiplier }: { phase: Phase; multipli
         ))}
       </div>
 
-      <div className="av-live__count">
-        <b>{SEATS.length}</b> জন বেট করেছে
+      {/* seats in / seats on the board, a fill bar, and the round's total win */}
+      <div className="av-live__meta">
+        <div>
+          <div className="av-live__count"><b>{SEATS.length}</b>/{SEATS.length} বেট</div>
+          <div className="av-live__fill"><i style={{ width: `${Math.round((won.length / SEATS.length) * 100)}%` }} /></div>
+        </div>
+        <div className="av-live__total">
+          <b>{money(totalWin)}</b>
+          <small>মোট জিত</small>
+        </div>
       </div>
 
       <div className="av-bets">

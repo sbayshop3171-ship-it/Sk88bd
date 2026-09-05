@@ -1569,10 +1569,22 @@ body:has(.gpv) .refer-bubble{display:none}
 .av-skin .av-chip--high{color:var(--hi)}
 .av-skin .av-chip--empty{color:var(--ash)}
 
-/* stage — pure black board */
+/* stage — pure black board, 20px corners, hairline edge */
 .av-skin .av-stage{
-  background:var(--ink);border-color:var(--a-edge);border-radius:14px;
+  background:#000;border:2px solid #1a1a1a;border-radius:20px;box-shadow:none;
 }
+/* who is on the board: three stacked avatars and the count, bottom-right */
+.av-stage__crowd{
+  position:absolute;right:10px;bottom:9px;z-index:4;display:flex;align-items:center;
+  padding:3px 10px 3px 5px;border-radius:var(--r-pill);background:rgba(0,0,0,.6);
+}
+.av-stage__crowd i{
+  width:18px;height:18px;border-radius:50%;border:2px solid #000;margin-right:-7px;
+  background:radial-gradient(circle at 35% 35%,#7be26f,#1f7a2a);
+}
+.av-stage__crowd i:nth-child(2){background:radial-gradient(circle at 35% 35%,#ffc36b,#b3601a)}
+.av-stage__crowd i:nth-child(3){background:radial-gradient(circle at 35% 35%,#7fc8ff,#1f5a9a)}
+.av-stage__crowd b{margin-left:11px;font-size:12px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
 .av-skin .av-stage--crashed{border-color:var(--kill-hi)}
 .av-skin .av-stage__fair{color:#7de3c6}
 
@@ -1580,24 +1592,39 @@ body:has(.gpv) .refer-bubble{display:none}
 .av-plane{transform-box:fill-box;transform-origin:center}
 .av-plane--wreck{filter:grayscale(.5) brightness(.7)}
 
-/* multiplier stays big and white; red on bust matches their kill colour */
-.av-skin .av-hud__mult{letter-spacing:-4px;text-shadow:0 6px 30px rgba(0,0,0,.9)}
-.av-skin .av-hud__mult.is-crashed{color:var(--kill-hi)}
+/* multiplier: 80px, weight 900, tight tracking, white; the board's red on a bust */
+.av-skin .av-hud__mult{
+  font-size:clamp(58px,19vw,80px);letter-spacing:-2px;
+  text-shadow:0 6px 30px rgba(0,0,0,.9);
+}
+.av-skin .av-hud__mult.is-crashed{color:#E10512}
+.av-skin .av-hud__flew{font-size:26px;font-weight:500;letter-spacing:.5px;text-transform:uppercase}
 .av-skin .av-hud__count{color:var(--cash-hi)}
 .av-skin .av-hud__bar i{background:linear-gradient(90deg,var(--cash-hi),var(--cash))}
 .av-skin .av-hud__label--red{color:var(--kill-hi)}
 
 /* bet seats on the dark cards */
 .av-skin .av-slot{
-  background:var(--card);border-color:var(--a-edge);border-radius:14px;
+  background:#1b1c1d;border-color:#1b1c1d;border-radius:10px;padding:10px;
 }
 .av-skin .av-slot.is-live{border-color:var(--bet-hi)}
-.av-skin .av-slot__tabs{background:var(--sunk)}
-.av-skin .av-slot__tabs button{color:var(--ash)}
-.av-skin .av-slot__tabs button.on{background:var(--raised);color:#fff}
-.av-skin .av-stepper,
+/* Bet / Auto pill: 200px wrap, 33px tall halves */
+.av-skin .av-slot__tabs{background:#0f1011;border-radius:20px;width:200px;padding:4px;gap:0}
+.av-skin .av-slot__tabs button{color:#9ea0a3;font-size:14px;font-weight:500;padding:7px 0;border-radius:16px}
+.av-skin .av-slot__tabs button.on{background:#2c2d30;color:#fff}
+/* amount box: black, fully rounded, −/+ in circles */
+.av-skin .av-stepper{background:#000;border-color:#000;border-radius:20px;padding:0 4px}
+.av-skin .av-stepper button{
+  width:22px;height:22px;flex:0 0 22px;border-radius:50%;margin:6px 0;
+  background:#2c2d30;color:#fff;font-size:14px;line-height:1;
+}
+.av-skin .av-stepper input{font-size:16px;font-weight:700}
 .av-skin .av-auto input{background:var(--sunk);border-color:var(--a-edge)}
-.av-skin .av-stepper button{color:#fff}
+/* presets: 30px pills in the sunk grey, muted numerals */
+.av-skin .av-quick button{
+  background:#111214;border-color:#111214;color:#7b7d80;
+  font-size:13px;font-weight:500;padding:0;height:30px;border-radius:10px;
+}
 .av-skin .av-stepper input{color:#fff}
 .av-skin .av-quick button{background:var(--sunk);border-color:var(--a-edge);color:var(--ash)}
 .av-skin .av-quick button:active{color:#fff;background:var(--raised)}
@@ -1657,9 +1684,26 @@ body:has(.gpv) .refer-bubble{display:none}
   font-size:19px;font-weight:800;letter-spacing:.5px;color:#fff;
   text-shadow:0 3px 14px rgba(0,0,0,.9);
 }
-/* the big green action button, sized like the reference board's */
-.av-skin .av-act{min-height:96px;font-size:17px;border-radius:14px}
-.av-skin .av-act--bet{background:var(--bet);box-shadow:inset 0 0 0 1px var(--bet-hi)}
+/* the big green action button: 109px tall, 2px light-green edge, 14px corners,
+   "বেট" at 24px over the stake at 15px */
+.av-skin .av-act{min-height:109px;font-size:24px;font-weight:500;border-radius:14px;gap:4px}
+.av-skin .av-act small{font-size:15px;font-weight:400;opacity:1}
+.av-skin .av-act--bet{background:#31A91B;border:2px solid #96F26D;box-shadow:none;color:#fff}
+.av-skin .av-act--bet:disabled{opacity:.55}
+/* live-bets tab pill and header, the board's greys */
+.av-skin .av-live__tabs button{font-size:13px;border-radius:30px}
+.av-live__meta{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:10px 0 8px}
+.av-live__meta .av-live__count{margin:0;font-size:12px;color:#9ea0a3}
+.av-live__meta .av-live__count b{color:#fff}
+.av-live__fill{width:110px;height:3px;border-radius:2px;background:#2c2d30;margin-top:6px;overflow:hidden}
+.av-live__fill i{display:block;height:100%;background:#31A91B}
+.av-live__total{text-align:right}
+.av-live__total b{display:block;font-size:20px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+.av-live__total small{font-size:11px;color:#9ea0a3}
+
+/* the header balance on the board is plain green text */
+.bal-pill--av{background:none;border:0;padding:0 4px}
+.bal-pill--av b{color:#35C332;font-size:16px;font-weight:900}
 
 /* ---- Aviator immersive: no site chrome, the game fills the screen ---- */
 body.aviator-immersive .nav,

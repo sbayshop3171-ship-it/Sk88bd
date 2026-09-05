@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import AviatorCanvas from '@/components/aviator/AviatorCanvas';
 import BetPanel, { MIN_STAKE, emptySlot, type Slot } from '@/components/aviator/BetPanel';
 import HistoryStrip from '@/components/aviator/HistoryStrip';
-import LiveBets from '@/components/aviator/LiveBets';
+import LiveBets, { LIVE_SEATS } from '@/components/aviator/LiveBets';
 import { useAviatorRound } from '@/components/aviator/useAviatorRound';
 import { useAuth } from '@/components/AuthProvider';
 import GameGate from '@/components/GameGate';
@@ -181,7 +181,7 @@ export default function AviatorPage() {
       <PageHeader
         title={<img className="av-wordmark" src="/games/aviator/wordmark.png" alt="Aviator" />}
         action={
-          <Link href="/deposit" className="bal-pill" title="ডিপোজিট করুন">
+          <Link href="/deposit" className="bal-pill bal-pill--av" title="ডিপোজিট করুন">
             <b>{money(balance)}</b><i className="av" aria-hidden>＋</i>
           </Link>
         }
@@ -195,6 +195,7 @@ export default function AviatorPage() {
         multiplier={multiplier}
         bettingLeft={bettingLeft}
         bettingTotal={BETTING_MS}
+        players={LIVE_SEATS}
       />
 
       <div className="av-slots">

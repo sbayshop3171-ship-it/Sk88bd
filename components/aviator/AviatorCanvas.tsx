@@ -47,11 +47,14 @@ export default function AviatorCanvas({
   multiplier,
   bettingLeft,
   bettingTotal,
+  players = 0,
 }: {
   phase: Phase;
   multiplier: number;
   bettingLeft: number;
   bettingTotal: number;
+  /** how many seats are in this round — shown in the corner pill */
+  players?: number;
 }) {
   const waiting = phase === 'waiting';
   const betting = phase === 'betting';
@@ -85,9 +88,11 @@ export default function AviatorCanvas({
             <stop offset="45%" stopColor="#c017b4" stopOpacity=".3" />
             <stop offset="100%" stopColor="#3a1e6b" stopOpacity="0" />
           </radialGradient>
+          {/* the board's red: a solid line, and a wash under it that fades to
+              nothing at the floor */}
           <linearGradient id="av-area" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#FF3B5C" stopOpacity=".92" />
-            <stop offset="100%" stopColor="#5c0a1f" stopOpacity=".8" />
+            <stop offset="0%" stopColor="#E10512" stopOpacity=".55" />
+            <stop offset="100%" stopColor="#E10512" stopOpacity=".04" />
           </linearGradient>
           <filter id="av-glow" x="-40%" y="-40%" width="180%" height="180%">
             <feGaussianBlur stdDeviation=".9" result="b" />
@@ -106,22 +111,24 @@ export default function AviatorCanvas({
             return (
               <polygon
                 key={a}
-                fill={i % 2 ? '#15151d' : '#0d0d13'}
+                fill={i % 2 ? '#161616' : '#0a0a0a'}
                 points={`0,0 ${(r * Math.cos(rad(-a - w))).toFixed(2)},${(r * Math.sin(rad(-a - w))).toFixed(2)} ${(r * Math.cos(rad(-a + w))).toFixed(2)},${(r * Math.sin(rad(-a + w))).toFixed(2)}`}
               />
             );
           })}
         </g>
 
-        <rect width={W} height={H} fill="url(#av-bloom)" />
+        {/* the violet glow belongs to the flight; while the board waits it is
+            plain black and grey, the way the reference board sits */}
+        {(flying || crashed) && <rect width={W} height={H} fill="url(#av-bloom)" />}
 
         {/* ---- flight path — drawn only while the plane is up; on a bust the
               plane flies off and the board goes bare, the way Aviator does ---- */}
         {flying && (
           <>
             <path d={area} fill="url(#av-area)" />
-            <path d={d} fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
-                  stroke="#FF3B5C" filter="url(#av-glow)" />
+            <path d={d} fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+                  stroke="#E10512" filter="url(#av-glow)" />
           </>
         )}
 
@@ -184,6 +191,13 @@ export default function AviatorCanvas({
       </div>
 
       <span className="av-stage__fair">লাইভ সিগন্যাল</span>
+
+      {players > 0 && (
+        <span className="av-stage__crowd" aria-label={`${players} জন খেলছে`}>
+          <i /><i /><i />
+          <b>{players.toLocaleString('en-IN')}</b>
+        </span>
+      )}
     </div>
   );
 }
