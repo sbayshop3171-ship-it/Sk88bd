@@ -214,7 +214,7 @@ function stateFromBackend(payload: BackendPayload, now: number): RoundState {
   const crashAt = readTime(source.crashAtTime ?? source.crash_at, flyAt + timeToReach(target));
   const serverSeedHash = String(source.serverSeedHash ?? source.server_seed_hash ?? '');
   const nonce = Number(source.nonce ?? id);
-  const backendClientSeed = String(source.clientSeed ?? 'prime-vai-devx-demo');
+  const backendClientSeed = String(source.clientSeed ?? 'prime-vai-devx-LIVE');
 
   let phase: Phase = 'waiting';
   let multiplier = 1;

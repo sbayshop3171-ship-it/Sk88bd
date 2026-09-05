@@ -63,7 +63,7 @@ export const CRASHED_HOLD_MS = 3_500;
 const PREVIEW_ROUNDS = 5;
 
 const STORE_FILE = path.join(process.cwd(), '.data', 'aviator-signal-store.json');
-const CLIENT_SEED = 'prime-vai-devx-demo';
+const CLIENT_SEED = 'prime-vai-devx-LIVE';
 const AUTO_TARGETS = [2.64, 3.02, 2.18, 6.44, 1.21, 3.03, 12.34, 1.83, 4.78, 8.92, 1.55, 15.76];
 const HISTORY_TARGETS = [3.03, 2.38, 1.83, 2.64, 3.02, 2.18, 6.44, 1.21];
 
@@ -195,11 +195,22 @@ async function readStore(): Promise<SignalStore> {
   try {
     const raw = await readFile(STORE_FILE, 'utf8');
     const parsed = JSON.parse(raw) as SignalStore;
-    if (parsed?.version === 1 && Array.isArray(parsed.rounds)) return parsed;
+    if (parsed?.version === 1 && Array.isArray(parsed.rounds)) {
+      normalizeLiveLabels(parsed);
+      return parsed;
+    }
   } catch {
     // First local run: create a fresh demo store below.
   }
   return createInitialStore(Date.now());
+}
+
+function normalizeLiveLabels(store: SignalStore) {
+  for (const round of store.rounds) {
+    if (round.client_seed === 'prime-vai-devx-demo') {
+      round.client_seed = CLIENT_SEED;
+    }
+  }
 }
 
 async function writeStore(store: SignalStore) {

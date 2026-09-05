@@ -183,7 +183,7 @@ export default function AviatorCanvas({
         )}
       </div>
 
-      <span className="av-stage__fair">ডেমো সিগন্যাল</span>
+      <span className="av-stage__fair">লাইভ সিগন্যাল</span>
     </div>
   );
 }

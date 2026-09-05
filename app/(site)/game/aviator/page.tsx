@@ -171,13 +171,13 @@ export default function AviatorPage() {
 
       <section className="sec">
         <div className="sec__hd">
-          <h2 className="sec__title">ডেমো সিগন্যাল অডিট</h2>
+          <h2 className="sec__title">লাইভ সিগন্যাল অডিট</h2>
           <div className="sec__ctrl"><Link href="/game/aviator/fairness">যাচাই</Link></div>
         </div>
         <div className="av-fair">
           <div className="av-fair__row"><span>রাউন্ড</span><b>#{round?.id ?? '—'}</b></div>
           <div className="av-fair__row">
-            <span>সিগন্যাল সোর্স</span><b>Backend controlled demo</b>
+            <span>সিগন্যাল সোর্স</span><b>Backend controlled LIVE</b>
           </div>
           <div className="av-fair__row">
             <span>টার্গেট</span><b style={{ color: 'var(--gold)', fontSize: 16 }}>{round ? fmtX(round.crashAt) : '—'}</b>
@@ -196,17 +196,7 @@ export default function AviatorPage() {
             </b>
           </div>
         </div>
-        <div className="note">
-          এই স্ক্রিনটি controlled demo mode: website শুধু current backend round
-          animate করে। App-এ signal আগে দেখা যায়, তারপর website একই round
-          একই target ধরে countdown, fly এবং crash দেখায়।
-        </div>
       </section>
-
-      <div className="note" style={{ margin: 12 }}>
-        এই ব্যালেন্স রিয়েল টাকা নয়। Supabase-এ ওয়ালেট যুক্ত হলে আসল ব্যালেন্স
-        থেকে বেট কাটা হবে এবং রাউন্ড সার্ভারে তৈরি হবে।
-      </div>
       </div>
     </>
   );
