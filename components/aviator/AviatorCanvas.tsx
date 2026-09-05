@@ -123,7 +123,7 @@ export default function AviatorCanvas({
 
         {/* ---- the aircraft ---- */}
         {idle && (
-          <g transform={`translate(13 ${FLOOR - 3})`}>
+          <g transform={`translate(15 ${FLOOR - 7})`}>
             {/* the bob lives on an inner group: a CSS transform replaces the
                 SVG transform attribute outright, which would reset the
                 position to the origin */}
