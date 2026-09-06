@@ -1791,8 +1791,13 @@ body:has(.gpv) .refer-bubble{display:none}
 body.aviator-immersive .nav,
 body.aviator-immersive .fabs,
 body.aviator-immersive .refer-bubble,
-body.aviator-immersive .side-fabs{display:none!important}
-body.aviator-immersive .app{padding-bottom:0}
+body.aviator-immersive .side-fabs,
+body.game-immersive .nav,
+body.game-immersive .fabs,
+body.game-immersive .refer-bubble,
+body.game-immersive .side-fabs{display:none!important}
+body.aviator-immersive .app,
+body.game-immersive .app{padding-bottom:0}
 
 /* the plane's propeller — a fast whirl at the nose so it reads as running */
 .av-prop{transform-box:fill-box;transform-origin:center;animation:av-prop .13s linear infinite}
@@ -2436,3 +2441,266 @@ body.aviator-immersive .app{padding-bottom:0}
 .dl-card__icon{border-radius:14px;flex:0 0 64px;box-shadow:var(--shadow)}
 .dl-card__b b{display:block;font-size:14px;font-weight:800}
 .dl-card__b small{display:block;margin-top:4px;font-size:11.5px;color:var(--muted);line-height:1.6}
+
+/* ============================================================
+   The house's own games — Crash, JetX, Limbo, Dice, Plinko,
+   Coin Flip. One frame (.mg), one stake bar, one board per game.
+   --mg-accent is set per game on the wrapper.
+   ============================================================ */
+.mg{
+  --mg-accent:#3fe0bd;
+  display:flex;flex-direction:column;min-height:100dvh;
+  padding:0 12px 14px;background:
+    radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--mg-accent) 16%, transparent), transparent 70%);
+}
+
+.mg__top{display:flex;align-items:center;gap:10px;padding:10px 0 8px}
+.mg__back{
+  width:34px;height:34px;flex:0 0 34px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(255,255,255,.08);color:var(--mint);font-size:24px;line-height:1;
+}
+.mg__id{flex:1;min-width:0}
+.mg__id b{display:block;font-size:16px;font-weight:900;letter-spacing:.3px;color:#fff}
+.mg__id small{
+  display:block;font-size:10.5px;line-height:1.5;color:var(--muted);
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+.mg__bal{text-align:right;flex:0 0 auto}
+.mg__bal small{display:block;font-size:10px;color:var(--muted)}
+.mg__bal b{font-size:15px;font-weight:900;color:var(--gold);font-variant-numeric:tabular-nums}
+
+.mg__runs{display:flex;gap:6px;padding:2px 0 10px}
+.mg__run{
+  flex:0 0 auto;padding:4px 10px;border-radius:var(--r-pill);font-size:11px;font-weight:800;
+  background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+.mg__run.win{color:#7ee0c4;border-color:rgba(63,224,189,.4);background:rgba(63,224,189,.12)}
+.mg__run.lose{color:#ff9a9a;border-color:rgba(255,80,80,.3)}
+
+/* --- the board --- */
+.mg-board{
+  position:relative;border-radius:var(--r-lg,18px);padding:16px 14px 14px;
+  background:linear-gradient(180deg,rgba(0,0,0,.42),rgba(0,0,0,.22));
+  border:1px solid var(--line);overflow:hidden;
+}
+.mg-board__line{
+  margin:12px 0 0;text-align:center;font-size:12.5px;line-height:1.6;
+  color:#cfe9e4;font-weight:700;min-height:20px;
+}
+
+/* --- the controls under it --- */
+.mg-panel{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.mg-go{margin-top:2px;font-size:14px;font-weight:900}
+.mg-go--cash{
+  background:linear-gradient(180deg,#ff7a7a,#e5203f);color:#fff;
+  box-shadow:0 8px 22px rgba(229,32,63,.4);animation:mg-pulse 1s ease-in-out infinite;
+}
+@keyframes mg-pulse{50%{transform:scale(.985)}}
+@media (prefers-reduced-motion:reduce){.mg-go--cash{animation:none}}
+
+/* --- stake box --- */
+.mg-stake{display:flex;flex-direction:column;gap:8px}
+.mg-stake__row{display:flex;gap:8px}
+.mg-stake__box{
+  flex:1;display:flex;align-items:center;gap:6px;padding:0 12px;border-radius:var(--r-sm);
+  background:rgba(0,0,0,.3);border:1px solid var(--line);
+}
+.mg-stake__box:focus-within{border-color:var(--mint)}
+.mg-stake__box span{color:var(--muted);font-weight:800}
+.mg-stake__box input{
+  flex:1;min-width:0;padding:12px 0;background:none;border:0;color:#fff;
+  font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;
+}
+.mg-stake__box input:focus{outline:none}
+.mg-stake__row>button{
+  flex:0 0 auto;min-width:52px;padding:0 12px;border-radius:var(--r-sm);
+  background:rgba(255,255,255,.07);border:1px solid var(--line);color:#dff5f0;
+  font-size:12.5px;font-weight:800;
+}
+.mg-stake__chips{display:flex;gap:6px;flex-wrap:wrap}
+.mg-stake__chips button{
+  flex:1 1 0;min-width:64px;padding:9px 4px;border-radius:var(--r-sm);
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:#cfe9e4;
+  font-size:12px;font-weight:800;
+}
+.mg-stake__chips button.on{
+  border-color:var(--gold);background:rgba(255,196,46,.14);color:var(--gold);
+}
+
+/* --- two-way picks and segmented rows --- */
+.mg-pick{display:flex;gap:8px}
+.mg-pick__btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:12px 6px;border-radius:var(--r-md);
+  background:rgba(255,255,255,.05);border:1.5px solid var(--line);color:#dff5f0;
+}
+.mg-pick__btn i{font-style:normal;font-size:20px;line-height:1}
+.mg-pick__btn span{font-size:12px;font-weight:800}
+.mg-pick__btn.on{
+  border-color:var(--mg-accent);color:#fff;
+  background:color-mix(in srgb, var(--mg-accent) 16%, transparent);
+}
+.mg-seg{display:flex;gap:6px}
+.mg-seg button{
+  flex:1;padding:9px 4px;border-radius:var(--r-sm);font-size:12px;font-weight:800;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);color:#cfe9e4;
+}
+.mg-seg button.on{
+  border-color:var(--mg-accent);color:#fff;
+  background:color-mix(in srgb, var(--mg-accent) 18%, transparent);
+}
+
+/* --- the odds read-out every game shares --- */
+.mg-odds{
+  display:flex;gap:8px;margin-top:12px;padding:10px 12px;border-radius:var(--r-sm);
+  background:rgba(0,0,0,.3);border:1px solid var(--line);
+}
+.mg-odds p{flex:1;margin:0;text-align:center}
+.mg-odds span{display:block;font-size:10px;color:var(--muted);margin-bottom:2px}
+.mg-odds b{font-size:14px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+.mg-odds b.gold{color:var(--gold)}
+
+.mg-target{
+  display:flex;align-items:center;gap:10px;padding:0 12px;border-radius:var(--r-sm);
+  background:rgba(0,0,0,.3);border:1px solid var(--line);
+}
+.mg-target>span{flex:0 0 auto;font-size:12.5px;font-weight:800;color:#cfe9e4}
+.mg-target input{
+  flex:1;min-width:0;padding:12px 0;background:none;border:0;color:var(--gold);
+  font-size:16px;font-weight:900;text-align:right;font-variant-numeric:tabular-nums;
+}
+.mg-target input:focus{outline:none}
+
+.mg-auto{
+  display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:var(--r-sm);
+  background:rgba(0,0,0,.28);border:1px solid var(--line);font-size:12.5px;font-weight:700;color:#cfe9e4;
+}
+.mg-auto__at{
+  margin-left:auto;width:74px;padding:7px 8px;border-radius:var(--r-sm);text-align:right;
+  background:rgba(0,0,0,.35);border:1px solid var(--line);color:var(--gold);font-weight:800;
+}
+.mg-auto em{font-style:normal;color:var(--muted)}
+
+/* --- coin flip --- */
+.mg-coin{display:flex;flex-direction:column;align-items:center;padding:26px 14px 16px}
+.mg-coin__coin{
+  position:relative;width:120px;height:120px;transform-style:preserve-3d;
+  transition:transform .5s cubic-bezier(.2,.8,.3,1);
+}
+.mg-coin__coin.tails{transform:rotateY(180deg)}
+.mg-coin__coin.spin{animation:mg-coin 0.42s linear infinite}
+@keyframes mg-coin{to{transform:rotateY(360deg)}}
+.mg-coin__face{
+  position:absolute;inset:0;border-radius:50%;display:grid;place-items:center;
+  font-size:46px;font-weight:900;backface-visibility:hidden;
+  box-shadow:inset 0 -6px 14px rgba(0,0,0,.35), 0 10px 26px rgba(0,0,0,.45);
+}
+.mg-coin__face--h{background:linear-gradient(160deg,#ffe9a3,#e0a419);color:#4a2900}
+.mg-coin__face--t{background:linear-gradient(160deg,#cfe9e4,#5d8f88);color:#0d2a26;transform:rotateY(180deg)}
+
+/* --- dice --- */
+.mg-dice{padding-top:20px}
+.mg-dice__roll{
+  text-align:center;font-size:44px;font-weight:900;letter-spacing:-1px;color:#fff;
+  font-variant-numeric:tabular-nums;line-height:1;
+}
+.mg-dice__roll.win{color:#7ee0c4}
+.mg-dice__roll.lose{color:#ff8f8f}
+.mg-dice__track{
+  position:relative;display:flex;height:12px;margin:22px 0 4px;border-radius:var(--r-pill);
+  overflow:visible;background:rgba(0,0,0,.4);border:1px solid var(--line);
+}
+.mg-dice__zone{background:rgba(255,255,255,.06);border-radius:var(--r-pill) 0 0 var(--r-pill)}
+.mg-dice__zone--r{border-radius:0 var(--r-pill) var(--r-pill) 0}
+.mg-dice__zone.on{background:color-mix(in srgb, var(--mg-accent) 55%, transparent)}
+.mg-dice__cut{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--gold);transform:translateX(-1px)}
+.mg-dice__pin{
+  position:absolute;top:-26px;transform:translateX(-50%);
+  padding:2px 7px;border-radius:var(--r-sm);font-size:11px;font-weight:900;
+  background:#0d2a26;border:1px solid var(--line);color:#fff;white-space:nowrap;
+}
+.mg-dice__pin.win{border-color:#7ee0c4;color:#7ee0c4}
+.mg-dice__pin.lose{border-color:#ff8f8f;color:#ff8f8f}
+.mg-dice__ends{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);padding:0 2px}
+.mg-dice__slider{width:100%;margin-top:10px;accent-color:var(--mg-accent)}
+
+/* --- limbo --- */
+.mg-limbo{padding:30px 14px 16px}
+.mg-limbo__num{
+  text-align:center;font-size:52px;font-weight:900;letter-spacing:-1.5px;line-height:1;
+  color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 6px 24px rgba(0,0,0,.5);
+}
+.mg-limbo__num.win{color:#7ee0c4}
+.mg-limbo__num.lose{color:#ff8f8f}
+
+/* --- plinko --- */
+.mg-plinko{padding:12px 10px 12px}
+.mg-plinko__svg{display:block;width:100%;height:auto}
+.mg-plinko__peg{fill:rgba(255,255,255,.34)}
+.mg-plinko__ball{fill:var(--gold);filter:drop-shadow(0 0 3px rgba(255,196,46,.8))}
+.mg-plinko__buckets{display:flex;gap:2px;margin-top:6px}
+.mg-plinko__bucket{
+  flex:1 1 0;min-width:0;padding:5px 1px;border-radius:4px;text-align:center;
+  font-size:9px;font-weight:800;color:#2a1c00;font-variant-numeric:tabular-nums;
+  background:color-mix(in srgb, var(--gold) calc(30% + var(--heat) * 60%), #0d2a26);
+}
+.mg-plinko__buckets.rows-16 .mg-plinko__bucket{font-size:7.5px;padding:5px 0}
+.mg-plinko__bucket.hit{outline:2px solid #fff;transform:translateY(-3px);transition:transform .15s}
+.mg-plinko__bucket.hit.win{outline-color:#7ee0c4}
+
+/* --- crash / jetx --- */
+.mg-flight{min-height:250px;padding-top:14px}
+.mg-flight__x{
+  text-align:center;font-size:46px;font-weight:900;letter-spacing:-1.5px;line-height:1;
+  color:#fff;font-variant-numeric:tabular-nums;position:relative;z-index:2;
+}
+.mg-flight__x.win{color:#7ee0c4}
+.mg-flight__x.lose{color:#ff8f8f}
+.mg-flight__plot{position:relative;margin-top:10px}
+.mg-flight__svg{display:block;width:100%;height:150px}
+.mg-flight__line{fill:none;stroke:var(--mg-accent);stroke-width:1.4;stroke-linecap:round;vector-effect:non-scaling-stroke}
+.mg-flight__head{fill:#fff}
+.mg-flight__craft{
+  position:absolute;font-size:20px;line-height:1;transform:translate(-40%,-60%);
+  transition:opacity .3s;pointer-events:none;
+}
+.mg-flight.busted .mg-flight__line{stroke:#ff5a5a}
+.mg-flight__craft.gone{opacity:0}
+.mg-flight.busted{animation:mg-shake .35s}
+@keyframes mg-shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@media (prefers-reduced-motion:reduce){.mg-flight.busted{animation:none}}
+
+/* --- the fairness receipt --- */
+.mg__foot{margin-top:auto;padding-top:14px}
+.mg__fairbtn{
+  width:100%;display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:var(--r-sm);
+  background:rgba(255,255,255,.05);border:1px solid var(--line);
+  color:#cfe9e4;font-size:12px;font-weight:800;
+}
+.mg__fair{
+  margin-top:8px;padding:12px 13px;border-radius:var(--r-md);
+  background:rgba(0,0,0,.3);border:1px solid var(--line);
+}
+.mg__fair p{margin:0 0 10px;font-size:11.5px;line-height:1.8;color:#cfe9e4}
+.mg__seed{
+  display:flex;align-items:center;gap:8px;padding:0 10px;border-radius:var(--r-sm);
+  background:rgba(0,0,0,.3);border:1px solid var(--line);margin-bottom:10px;
+}
+.mg__seed span{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--muted)}
+.mg__seed input{
+  flex:1;min-width:0;padding:9px 0;background:none;border:0;color:#fff;
+  font-family:ui-monospace,monospace;font-size:11.5px;
+}
+.mg__seed input:focus{outline:none}
+.mg__seed button{
+  flex:0 0 auto;padding:5px 10px;border-radius:var(--r-pill);font-size:11px;font-weight:800;
+  background:rgba(63,224,189,.16);border:1px solid rgba(63,224,189,.4);color:var(--mint);
+}
+.mg__proof{margin:0 0 8px}
+.mg__proof>div{padding:5px 0;border-top:1px solid rgba(255,255,255,.06)}
+.mg__proof>div:first-child{border-top:0}
+.mg__proof dt{font-size:10px;color:var(--muted);margin-bottom:2px}
+.mg__proof dd{margin:0}
+.mg__proof code{font-size:10.5px;color:#a7d8cf;word-break:break-all}
+.mg__hint{margin:6px 0 0;font-size:10.5px;color:var(--muted);line-height:1.7}

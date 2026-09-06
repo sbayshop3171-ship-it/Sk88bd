@@ -31,6 +31,13 @@ export type Motif =
 /** Keyword → motif. First match wins, so order matters. */
 const RULES: [RegExp, Motif][] = [
   [/aviator/i, 'plane'],
+  /* the house's own games (lib/mini-games.ts) — pinned first so each gets
+     its own drawing instead of falling through to the generic reels */
+  [/^jetx$/i, 'plane'],
+  [/^crash$/i, 'bolt'],
+  [/^limbo$/i, 'gem'],
+  [/^plinko$/i, 'bingo'],
+  [/^coin flip$/i, 'chip'],
   [/counter strike|valorant/i, 'crosshair'],
   [/dota|league of legends/i, 'sword'],
   [/mobile legends|pubg/i, 'mobile'],

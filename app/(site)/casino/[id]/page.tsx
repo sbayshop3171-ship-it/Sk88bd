@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import { findGame } from '@/lib/catalogue';
+import { PLAYABLE_IDS, findGame } from '@/lib/catalogue';
 
 /**
  * A game's old detail page: art in a card, a boxed preview, deposit buttons,
@@ -11,5 +11,6 @@ import { findGame } from '@/lib/catalogue';
 export default async function GamePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!findGame(id)) notFound();
-  redirect(`/play/${id}`);
+  // a game with its own engine here opens that, not the aggregator player
+  redirect(PLAYABLE_IDS.includes(id) ? `/game/${id}` : `/play/${id}`);
 }

@@ -46,9 +46,20 @@ const g = (
 /** hot 39, sports 18, live 30, slot 40, poker 32, fish 31, lottery 35, jackpot 20 */
 export const CATALOGUE: Record<CategoryKey, Game[]> = {
   hot: [
+    /* ---- The house's own games (hand-kept, not generated).
+       They run on our engine in lib/mini-games.ts and open at /game/<id>,
+       so they carry no provider code and need no aggregator. The order
+       here is the order the home rail shows: Aviator, Crazy Time, then
+       ours. Tiles are drawn by GameArt from the id — deliberately no
+       `thumb`, since the artwork for these is ours to make. ---- */
     g('Aviator', 'Spribe', 'hot', '/games/icons/HOT/Spribe__Aviator.jpg', 'aviator', undefined, false),
-    g('Crash', 'PK44', 'hot', '/games/icons/HOT/PK44__Crash.jpg', 'crash', undefined, false),
     g('Crazy Time', 'Evolution', 'hot', '/games/icons/HOT/Evolution__Crazy-Time.png', 'crazy-time', '22870', false),
+    g('Crash', 'Sk88bd', 'hot', undefined, 'crash', undefined, false),
+    g('JetX', 'Sk88bd', 'hot', undefined, 'jetx', undefined, false),
+    g('Limbo', 'Sk88bd', 'new', undefined, 'limbo', undefined, false),
+    g('Dice', 'Sk88bd', 'new', undefined, 'dice', undefined, false),
+    g('Plinko', 'Sk88bd', 'new', undefined, 'plinko', undefined, false),
+    g('Coin Flip', 'Sk88bd', 'new', undefined, 'coin-flip', undefined, false),
     g('3 Charge Buffalo', 'JILI', 'hot', '/games/icons/HOT/JILI__3-Charge-Buffalo.avif', '3-charge-buffalo', '1185', true),
     g('Bikini Paradise', 'PG Soft', 'hot', '/games/icons/HOT/PG-Soft__Bikini-Paradise.avif', 'bikini-paradise', '102', true),
     g('Beer Tycoon', 'JDB', 'hot', '/games/icons/HOT/JDB__Beer-Tycoon.avif', 'beer-tycoon', '817', true),
@@ -285,9 +296,20 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('Scratch Match Deluxe', 'Evoplay', undefined, '/games/icons/LOTTERY/Evoplay__Scratch-Match-Deluxe.png', 'scratch-match-deluxe', '10456', false),
   ],
   jackpot: [
+    /* ---- The house's own games (hand-kept, not generated).
+       They run on our engine in lib/mini-games.ts and open at /game/<id>,
+       so they carry no provider code and need no aggregator. The order
+       here is the order the home rail shows: Aviator, Crazy Time, then
+       ours. Tiles are drawn by GameArt from the id — deliberately no
+       `thumb`, since the artwork for these is ours to make. ---- */
     g('Aviator', 'Spribe', 'hot', '/games/icons/HOT/Spribe__Aviator.jpg', 'aviator', undefined, false),
-    g('Crash', 'PK44', 'hot', '/games/icons/HOT/PK44__Crash.jpg', 'crash', undefined, false),
     g('Crazy Time', 'Evolution', 'hot', '/games/icons/HOT/Evolution__Crazy-Time.png', 'crazy-time', '22870', false),
+    g('Crash', 'Sk88bd', 'hot', undefined, 'crash', undefined, false),
+    g('JetX', 'Sk88bd', 'hot', undefined, 'jetx', undefined, false),
+    g('Limbo', 'Sk88bd', 'new', undefined, 'limbo', undefined, false),
+    g('Dice', 'Sk88bd', 'new', undefined, 'dice', undefined, false),
+    g('Plinko', 'Sk88bd', 'new', undefined, 'plinko', undefined, false),
+    g('Coin Flip', 'Sk88bd', 'new', undefined, 'coin-flip', undefined, false),
     g('3 Charge Buffalo', 'JILI', 'hot', '/games/icons/HOT/JILI__3-Charge-Buffalo.avif', '3-charge-buffalo', '1185', true),
     g('3 Lucky Piggy', 'JILI', 'hot', '/games/icons/HOT/JILI__3-Lucky-Piggy.avif', '3-lucky-piggy', '1026', true),
     g('Crazy Hunter', 'JILI', 'hot', '/games/icons/FISH/JILI__Crazy-Hunter.avif', 'crazy-hunter', '468', true),
@@ -397,7 +419,9 @@ export function findGame(id: string): Game | undefined {
    shows the "aggregator not connected yet" placeholder — so the
    home page floats the previewable ones up and lets the rest sink.
    ============================================================ */
-export const PLAYABLE_IDS = ['aviator'];
+export const PLAYABLE_IDS = [
+  'aviator', 'crash', 'jetx', 'limbo', 'dice', 'plinko', 'coin-flip',
+];
 
 export const hasDemo = (id: string): boolean =>
   PLAYABLE_IDS.includes(id) || id in CLIPS || id in DEMOS;

@@ -1,7 +1,7 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import GameGate from '@/components/GameGate';
 import GamePlayer from '@/components/GamePlayer';
-import { CATALOGUE, findGame } from '@/lib/catalogue';
+import { CATALOGUE, PLAYABLE_IDS, findGame } from '@/lib/catalogue';
 import { resolveLaunch } from '@/lib/launch';
 
 /* The fullscreen player, the way the reference lobby does it: its own route,
@@ -17,6 +17,10 @@ export default async function PlayPage({ params }: { params: Promise<{ id: strin
   const { id } = await params;
   const game = findGame(id);
   if (!game) notFound();
+
+  /* Our own games have a real engine on the site, so a bookmarked or shared
+     /play/<id> link lands there rather than in the aggregator's placeholder. */
+  if (PLAYABLE_IDS.includes(id)) redirect(`/game/${id}`);
 
   /* Resolved on the server: with an aggregator wired up this is a minted,
      one-shot URL, so it must never be baked into a cached page. */

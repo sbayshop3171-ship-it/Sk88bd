@@ -61,17 +61,22 @@ export function randomHex(bytes = 16): string {
 /**
  * Crash point from a round hash.
  *
- * With probability HOUSE_EDGE the round busts instantly at 1.00x.
- * Otherwise the multiplier is drawn so that P(crash ≥ m) ≈ 1/m, which
- * makes every cash-out target equally (un)profitable before the edge —
- * the property players expect from this game type.
+ * Drawn so that P(crash ≥ m) = (1 − HOUSE_EDGE)/m, which makes every
+ * cash-out target equally (un)profitable — the property players expect
+ * from this game type — while leaving the house its edge.
+ *
+ * The edge has to live inside the draw. An earlier version drew 1/(1 − r)
+ * and tried to take the edge with an "instant bust when r < HOUSE_EDGE"
+ * branch instead; that only bites below ~1.03x, so P(crash ≥ m)·m came to
+ * exactly 1 for every real target and the game returned 100% — measured,
+ * not guessed. Scaling the draw by (1 − HOUSE_EDGE) busts at 1.00x on its
+ * own whenever r < HOUSE_EDGE, so the branch is not needed either.
  */
 export function crashFromHash(hashHex: string): number {
   // 52 bits is the most that survives a double without rounding
   const slice = hashHex.slice(0, 13);
   const r = parseInt(slice, 16) / 2 ** 52;
-  if (r < HOUSE_EDGE) return 1.0;
-  const raw = 1 / (1 - r);
+  const raw = (1 - HOUSE_EDGE) / (1 - r);
   return Math.max(1, Math.floor(raw * 100) / 100);
 }
 
