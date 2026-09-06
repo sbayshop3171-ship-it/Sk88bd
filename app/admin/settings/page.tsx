@@ -1,8 +1,12 @@
 import { BRAND } from '@/lib/brand';
-import { DEPOSIT_CHANNELS } from '@/lib/payments';
 import AdminPasswordPanel from '@/components/admin/AdminPasswordPanel';
 import DataTable from '@/components/admin/DataTable';
+import SiteSettingsControl from '@/components/admin/SiteSettingsControl';
 import { getCurrentAdminSession } from '@/lib/admin-auth-next';
+import { getSiteSettings } from '@/lib/site-settings-store';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export default async function AdminSettings() {
   if (!(await getCurrentAdminSession())) return null;
@@ -13,6 +17,13 @@ export default async function AdminSettings() {
 
       <AdminPasswordPanel />
 
+      <h2 className="adm__h2">লিমিট, সাপোর্ট ও নোটিশ</h2>
+      <p className="adm__sub">
+        ডিপোজিট / উইথড্রের সর্বনিম্ন-সর্বোচ্চ, সাপোর্ট বাটনের লিংক আর হোম পেজের
+        চলমান নোটিশ — সেভ করলেই সাইটে বদলে যায়। রিসিভিং নাম্বার “পেমেন্ট” ট্যাবে।
+      </p>
+      <SiteSettingsControl initial={await getSiteSettings()} />
+
       <h2 className="adm__h2">সাইট</h2>
       <DataTable
         columns={['কী', 'মান']}
@@ -21,25 +32,7 @@ export default async function AdminSettings() {
           ['ডোমেইন', BRAND.domain],
           ['কারেন্সি', `${BRAND.currency} BDT`],
           ['সাপোর্ট ইমেইল', BRAND.email],
-          ['WhatsApp', BRAND.social.whatsapp],
-          ['Telegram', BRAND.social.telegram],
         ]}
-      />
-
-      <h2 className="adm__h2">পেমেন্ট চ্যানেল</h2>
-      <p className="adm__sub">
-        অপারেটরের রিসিভিং অ্যাকাউন্ট নাম্বার কখনো ফ্রন্ট-এন্ড কোডে রাখা হয় না —
-        সেগুলো ডেটাবেসে থাকবে এবং শুধু এই স্ক্রিন থেকে সেট হবে।
-      </p>
-      <DataTable
-        columns={['চ্যানেল', 'সর্বনিম্ন', 'সর্বোচ্চ', 'অ্যাকাউন্ট নাম্বার', 'সক্রিয়']}
-        rows={DEPOSIT_CHANNELS.map((c) => [
-          c.name,
-          `${BRAND.currency}${c.min.toLocaleString('en-IN')}`,
-          `${BRAND.currency}${c.max.toLocaleString('en-IN')}`,
-          <span className="adm__miss" key={c.id}>সেট করা হয়নি</span>,
-          <span className="adm__ok" key={`${c.id}-a`}>হ্যাঁ</span>,
-        ])}
       />
     </>
   );

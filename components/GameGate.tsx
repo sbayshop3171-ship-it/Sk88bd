@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useAuth } from './AuthProvider';
+import GameLoading from './GameLoading';
 import { toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import { t } from '@/lib/strings';
@@ -17,7 +18,7 @@ import { t } from '@/lib/strings';
 export default function GameGate({ children }: { children: React.ReactNode }) {
   const { ready, backendReady, session, wallet } = useAuth();
 
-  if (!backendReady) return <>{children}</>;
+  if (!backendReady) return <GameLoading>{children}</GameLoading>;
 
   // Session still resolving: hold the screen rather than flash a prompt at a
   // player who is in fact signed in.
@@ -70,5 +71,6 @@ export default function GameGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <>{children}</>;
+  // Through the gate: every game opens behind the same three-second curtain.
+  return <GameLoading>{children}</GameLoading>;
 }

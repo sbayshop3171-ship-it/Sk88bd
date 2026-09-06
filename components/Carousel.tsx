@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { activeSorted, DEFAULT_BANNERS, type Banner, type BannerInput } from '@/lib/site-content';
 
-/** Promo banners. Gradient + glyph art, so no image assets are needed.
+/** Promo banners. Gradient + glyph art by default; a slide the admin gave a
+    picture shows that picture instead.
 
     The slides ship as DEFAULT_BANNERS so the first paint is instant and the
     page stays static; whatever the admin has saved at /admin/banners then
@@ -52,15 +53,26 @@ export default function Carousel() {
       }}
     >
       <div className="carousel__track" style={{ transform: `translateX(-${i * 100}%)` }}>
-        {slides.map((s, j) => (
-          <div className={`slide ${s.art}`} key={`${s.title}-${j}`}>
-            <span className="slide__emoji" aria-hidden>{s.emoji}</span>
-            <div className="slide__kicker">{s.kicker}</div>
-            <div className="slide__title">{s.title}</div>
-            <div className="slide__amt">{s.amount}</div>
-            <Link className="slide__cta" href={s.href}>{s.cta}</Link>
-          </div>
-        ))}
+        {slides.map((s, j) => {
+          const image = 'imageUrl' in s ? s.imageUrl : null;
+          // An uploaded picture is the whole slide: the artwork already
+          // carries its own words, so the drawn copy stays out of the way and
+          // the whole picture is the link.
+          return image ? (
+            <Link className="slide slide--img" href={s.href} key={`${s.title}-${j}`} aria-label={s.title}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={image} alt={s.title} draggable={false} />
+            </Link>
+          ) : (
+            <div className={`slide ${s.art}`} key={`${s.title}-${j}`}>
+              <span className="slide__emoji" aria-hidden>{s.emoji}</span>
+              <div className="slide__kicker">{s.kicker}</div>
+              <div className="slide__title">{s.title}</div>
+              <div className="slide__amt">{s.amount}</div>
+              <Link className="slide__cta" href={s.href}>{s.cta}</Link>
+            </div>
+          );
+        })}
       </div>
       <div className="dots">
         {slides.map((s, j) => <i key={`${s.title}-${j}`} className={j === i ? 'on' : ''} />)}

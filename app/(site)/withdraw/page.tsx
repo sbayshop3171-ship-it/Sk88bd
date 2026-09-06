@@ -10,8 +10,7 @@ import { toPaisa, toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import { WITHDRAW_CHANNELS } from '@/lib/payments';
 import { t } from '@/lib/strings';
-
-const MIN_WITHDRAW = 500;
+import { useSiteSettings } from '@/components/useSiteSettings';
 
 export default function WithdrawPage() {
   const { toast } = useUI();
@@ -21,6 +20,7 @@ export default function WithdrawPage() {
   const [amount, setAmount] = useState('');
   const [err, setErr] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
+  const { min: MIN_WITHDRAW, max: MAX_WITHDRAW } = useSiteSettings().withdraw;
 
   const balance = toTaka(wallet?.balance ?? 0);
 
@@ -31,6 +31,7 @@ export default function WithdrawPage() {
     if (!/^01\d{9}$/.test(account.trim())) next.account = 'সঠিক ১১ ডিজিটের নাম্বার দিন';
     const n = Number(amount);
     if (!Number.isFinite(n) || n < MIN_WITHDRAW) next.amount = `সর্বনিম্ন ${money(MIN_WITHDRAW)}`;
+    else if (n > MAX_WITHDRAW) next.amount = `এক রিকোয়েস্টে সর্বোচ্চ ${money(MAX_WITHDRAW)}`;
     if (session && n > balance) next.amount = `ব্যালেন্সে আছে ${money(balance)}`;
     setErr(next);
     if (Object.keys(next).length) return;
@@ -105,6 +106,7 @@ export default function WithdrawPage() {
         </button>
 
         <div className="note">
+          উইথড্র লিমিট: {money(MIN_WITHDRAW)} — {money(MAX_WITHDRAW)}।
           রিকোয়েস্ট করার সাথে সাথে টাকা ব্যালেন্স থেকে সরিয়ে রাখা হবে। অ্যাডমিন
           অনুমোদন করলে পাঠানো হবে, বাতিল করলে ব্যালেন্সে ফেরত আসবে।
         </div>

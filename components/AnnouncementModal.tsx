@@ -54,12 +54,19 @@ export default function AnnouncementModal() {
       <div className="ann" role="dialog" aria-modal="true" aria-label={t.announcement}>
         <button className="ann__x" type="button" aria-label={t.close} onClick={close}>×</button>
         <div className="ann__title">{t.announcement}</div>
-        <div className={`ann__card ${s.art}`}>
-          <h3>{s.title}</h3>
-          <div className="amt">{s.amount}</div>
-          <p>{s.note}</p>
-          <span className="site">SITE LINK: {BRAND.domain.toUpperCase()}</span>
-        </div>
+        {'imageUrl' in s && s.imageUrl ? (
+          <div className="ann__card ann__card--img">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={s.imageUrl} alt={s.title} draggable={false} />
+          </div>
+        ) : (
+          <div className={`ann__card ${s.art}`}>
+            <h3>{s.title}</h3>
+            <div className="amt">{s.amount}</div>
+            <p>{s.note}</p>
+            <span className="site">SITE LINK: {BRAND.domain.toUpperCase()}</span>
+          </div>
+        )}
         <div className="ann__nav">
           <button type="button" disabled={i === 0} onClick={() => setI(i - 1)}>‹ {t.previous}</button>
           <button type="button" disabled={i >= cards.length - 1} onClick={() => setI(i + 1)}>{t.next} ›</button>

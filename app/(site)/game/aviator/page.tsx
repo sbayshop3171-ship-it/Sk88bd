@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import AviatorCanvas from '@/components/aviator/AviatorCanvas';
 import BetPanel, { MIN_STAKE, emptySlot, type Slot } from '@/components/aviator/BetPanel';
 import HistoryStrip from '@/components/aviator/HistoryStrip';
-import LiveBets, { LIVE_SEATS } from '@/components/aviator/LiveBets';
+import LiveBets from '@/components/aviator/LiveBets';
+import { useCrowdCount } from '@/components/aviator/useCrowdCount';
 import { useAviatorRound } from '@/components/aviator/useAviatorRound';
 import { useAuth } from '@/components/AuthProvider';
 import GameGate from '@/components/GameGate';
@@ -75,6 +76,7 @@ export default function AviatorPage() {
   }, [toast]);
 
   const { phase, round, multiplier, bettingLeft, history } = useAviatorRound(clientSeed, onCrash);
+  const crowd = useCrowdCount(round?.id, phase);
 
   /* Every bet and cash-out goes through the server: it owns the wallet and it
      alone decides what multiplier was actually reached. The screen just asks,
@@ -195,7 +197,7 @@ export default function AviatorPage() {
         multiplier={multiplier}
         bettingLeft={bettingLeft}
         bettingTotal={BETTING_MS}
-        players={LIVE_SEATS}
+        players={crowd}
       />
 
       <div className="av-slots">
@@ -214,36 +216,7 @@ export default function AviatorPage() {
         ))}
       </div>
 
-      <LiveBets phase={phase} multiplier={multiplier} />
-
-      <section className="sec">
-        <div className="sec__hd">
-          <h2 className="sec__title">লাইভ সিগন্যাল অডিট</h2>
-          <div className="sec__ctrl"><Link href="/game/aviator/fairness">যাচাই</Link></div>
-        </div>
-        <div className="av-fair">
-          <div className="av-fair__row"><span>রাউন্ড</span><b>#{round?.id ?? '—'}</b></div>
-          <div className="av-fair__row">
-            <span>সিগন্যাল সোর্স</span><b>Backend controlled LIVE</b>
-          </div>
-          <div className="av-fair__row">
-            <span>টার্গেট</span><b style={{ color: 'var(--gold)', fontSize: 16 }}>{round ? fmtX(round.crashAt) : '—'}</b>
-          </div>
-          <div className="av-fair__row">
-            <span>সার্ভার সিড হ্যাশ</span>
-            <b className="mono">{round?.serverSeedHash?.slice(0, 24) ?? '—'}…</b>
-          </div>
-          <div className="av-fair__row">
-            <span>ক্লায়েন্ট সিড</span><b className="mono">{round?.clientSeed || clientSeed || '—'}</b>
-          </div>
-          <div className="av-fair__row">
-            <span>সার্ভার সিড</span>
-            <b className="mono">
-              {round?.serverSeed ? `${round.serverSeed.slice(0, 24)}…` : 'রাউন্ড শেষে প্রকাশ হবে'}
-            </b>
-          </div>
-        </div>
-      </section>
+      <LiveBets phase={phase} multiplier={multiplier} players={crowd} roundId={round?.id} />
       </div>
     </GameGate>
   );

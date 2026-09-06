@@ -20,6 +20,9 @@ export type Banner = {
   cta: string;
   href: string;
   art: ArtClass;
+  /** an uploaded picture that replaces the gradient art, served from
+      /api/slide-image/banner/<id>; null keeps the drawn slide */
+  imageUrl: string | null;
   status: SlideStatus;
   sortOrder: number;
   updatedAt: string;
@@ -32,6 +35,8 @@ export type Announcement = {
   amount: string;
   note: string;
   art: ArtClass;
+  /** uploaded picture for the card, served from /api/slide-image/announcement/<id> */
+  imageUrl: string | null;
   status: SlideStatus;
   sortOrder: number;
   updatedAt: string;
@@ -42,15 +47,26 @@ export type SiteContent = {
   announcements: Announcement[];
 };
 
-export type BannerInput = Omit<Banner, 'id' | 'updatedAt'>;
-export type AnnouncementInput = Omit<Announcement, 'id' | 'updatedAt'>;
+export type BannerInput = Omit<Banner, 'id' | 'updatedAt' | 'imageUrl'>;
+export type AnnouncementInput = Omit<Announcement, 'id' | 'updatedAt' | 'imageUrl'>;
 
 export type ContentMutationReason =
   | 'invalid-title'
   | 'invalid-href'
   | 'list-full'
   | 'not-found'
-  | 'invalid-kind';
+  | 'invalid-kind'
+  | 'no-file'
+  | 'bad-type'
+  | 'too-large';
+
+export const SLIDE_IMAGE_MAX_BYTES = 3 * 1024 * 1024;
+export const SLIDE_IMAGE_TYPES: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
 
 export type ContentMutationResult =
   | { ok: true; content: SiteContent }

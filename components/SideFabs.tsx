@@ -3,14 +3,16 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { BRAND } from '@/lib/brand';
 import { ChatIcon, FacebookIcon, TelegramIcon, UpIcon, WhatsAppIcon } from './Icons';
+import { useSiteSettings } from './useSiteSettings';
 
 /** Social + support buttons, plus a back-to-top that appears after scrolling. */
 export default function SideFabs() {
   const path = usePathname();
   const [showTop, setShowTop] = useState(false);
   const showTopRef = useRef(false);
+  // the admin's links; a blank one drops its button
+  const { support } = useSiteSettings();
 
   useEffect(() => {
     let frame = 0;
@@ -45,12 +47,18 @@ export default function SideFabs() {
       </Link>
 
       <div className="fabs">
-        <a className="fab fab--wa" href={BRAND.social.whatsapp} target="_blank"
-           rel="noopener noreferrer" aria-label="WhatsApp"><WhatsAppIcon /></a>
-        <a className="fab fab--fb" href={BRAND.social.facebook} target="_blank"
-           rel="noopener noreferrer" aria-label="Facebook"><FacebookIcon /></a>
-        <a className="fab fab--tg" href={BRAND.social.telegram} target="_blank"
-           rel="noopener noreferrer" aria-label="Telegram"><TelegramIcon /></a>
+        {support.whatsapp && (
+          <a className="fab fab--wa" href={support.whatsapp} target="_blank"
+             rel="noopener noreferrer" aria-label="WhatsApp"><WhatsAppIcon /></a>
+        )}
+        {support.facebook && (
+          <a className="fab fab--fb" href={support.facebook} target="_blank"
+             rel="noopener noreferrer" aria-label="Facebook"><FacebookIcon /></a>
+        )}
+        {support.telegram && (
+          <a className="fab fab--tg" href={support.telegram} target="_blank"
+             rel="noopener noreferrer" aria-label="Telegram"><TelegramIcon /></a>
+        )}
         <Link className="fab fab--chat" href="/support" aria-label="লাইভ চ্যাট"><ChatIcon /></Link>
         <button
           className={`fab fab--top${showTop ? ' show' : ''}`}

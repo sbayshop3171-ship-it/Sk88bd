@@ -11,11 +11,19 @@ import { KIND_LABEL, type PublicDepositAccount } from '@/lib/payment-accounts';
 import { DEPOSIT_CHANNELS, QUICK_AMOUNTS } from '@/lib/payments';
 import { t } from '@/lib/strings';
 import Link from 'next/link';
+import { useSiteSettings } from '@/components/useSiteSettings';
 
 export default function DepositPage() {
   const { toast } = useUI();
   const { backendReady, session, supabase, refresh } = useAuth();
-  const [channel, setChannel] = useState(DEPOSIT_CHANNELS[0]);
+  const settings = useSiteSettings();
+  // Channels the admin switched off drop out; limits come from the admin's
+  // settings too, with the shipped numbers as the first-paint fallback.
+  const channels = DEPOSIT_CHANNELS
+    .filter((c) => settings.deposit[c.id]?.active !== false)
+    .map((c) => ({ ...c, ...settings.deposit[c.id] }));
+  const [channelId, setChannelId] = useState(DEPOSIT_CHANNELS[0].id);
+  const channel = channels.find((c) => c.id === channelId) ?? channels[0] ?? DEPOSIT_CHANNELS[0];
   const [amount, setAmount] = useState('');
   const [sender, setSender] = useState('');
   const [txnId, setTxnId] = useState('');
@@ -112,11 +120,11 @@ export default function DepositPage() {
         <div className="field">
           <label>পেমেন্ট মেথড</label>
           <div className="grid grid--2" style={{ gap: 8 }}>
-            {DEPOSIT_CHANNELS.map((c) => (
+            {channels.map((c) => (
               <button
                 key={c.id}
                 type="button"
-                onClick={() => { setChannel(c); setErr(''); }}
+                onClick={() => { setChannelId(c.id); setErr(''); }}
                 className="game"
                 style={{
                   padding: '10px 8px',

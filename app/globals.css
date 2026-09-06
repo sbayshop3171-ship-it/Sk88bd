@@ -175,6 +175,9 @@ ul{margin:0;padding:0;list-style:none}
 .slide__amt{font-size:28px;font-weight:900;color:#fff8d6;text-shadow:0 3px 0 rgba(0,0,0,.25)}
 .slide__cta{margin-top:8px;justify-self:start;font-size:12px;font-weight:800;padding:6px 14px;border-radius:var(--r-pill);background:#fff;color:#1b1200}
 .slide__emoji{position:absolute;right:-6px;bottom:-14px;font-size:96px;opacity:.9;z-index:0;filter:drop-shadow(0 8px 14px rgba(0,0,0,.35))}
+.slide--img{display:block;padding:0;background:#0b1b1a}
+.slide--img::after{content:none}
+.slide--img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .s1{background:linear-gradient(120deg,#1b3fd6,#7b2ff7)}
 .s2{background:linear-gradient(120deg,#b8151d,#ff6a00)}
 .s3{background:linear-gradient(120deg,#046b4b,#12b886)}
@@ -520,6 +523,8 @@ ul{margin:0;padding:0;list-style:none}
   display:grid;align-content:center;justify-items:center;gap:6px;padding:22px;text-align:center;
   box-shadow:0 20px 60px rgba(0,0,0,.6);
 }
+.ann__card--img{padding:0;display:block;background:#0b1b1a}
+.ann__card--img img{width:100%;height:100%;object-fit:cover;display:block}
 .ann__card h3{margin:0;font-size:22px;font-weight:900;line-height:1.35;text-shadow:0 2px 10px rgba(0,0,0,.4)}
 .ann__card p{margin:0;font-size:13px;opacity:.92}
 .ann__card .amt{font-size:34px;font-weight:900;color:#fff8d6}
@@ -1122,6 +1127,8 @@ ul{margin:0;padding:0;list-style:none}
 .adm__icon-none{color:var(--muted);font-size:17px;line-height:1}
 .adm__icon input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
 .adm__icon:has(input:disabled){opacity:.5;cursor:default}
+.adm__icon--wide{width:96px;height:48px}
+.adm__icon--wide img{border-radius:4px}
 
 .adm-auth{
   min-height:100vh;display:grid;place-items:center;padding:22px;
@@ -1711,6 +1718,7 @@ body:has(.gpv) .refer-bubble{display:none}
 .av-live__meta .av-live__count b{color:#fff}
 .av-live__fill{width:110px;height:3px;border-radius:2px;background:#2c2d30;margin-top:6px;overflow:hidden}
 .av-live__fill i{display:block;height:100%;background:#31A91B}
+.av-bets__scroll{max-height:420px;overflow-y:auto;overscroll-behavior:contain}
 .av-live__total{text-align:right}
 .av-live__total b{display:block;font-size:20px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
 .av-live__total small{font-size:11px;color:#9ea0a3}
@@ -1777,6 +1785,43 @@ body.aviator-immersive .app{padding-bottom:0}
   animation:gate-spin .7s linear infinite;
 }
 @keyframes gate-spin{to{transform:rotate(360deg)}}
+
+/* ---------- Game opening curtain (3 s, over every game) ---------- */
+.gload{
+  position:fixed;inset:0;z-index:1200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:radial-gradient(120% 80% at 50% 40%,#0d4c45,var(--bg) 70%);
+  transition:opacity .45s ease;overflow:hidden;
+}
+.gload--out{opacity:0;pointer-events:none}
+.gload__glow{
+  position:absolute;width:260px;height:260px;border-radius:50%;
+  background:radial-gradient(circle,rgba(63,224,189,.28),transparent 65%);
+  animation:gload-glow 1.6s ease-in-out infinite;
+}
+@keyframes gload-glow{0%,100%{transform:scale(.85);opacity:.6}50%{transform:scale(1.1);opacity:1}}
+.gload__ring{
+  position:relative;width:84px;height:84px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.08);display:grid;place-items:center;
+}
+.gload__ring i{
+  position:absolute;inset:-2px;border-radius:50%;
+  border:2px solid transparent;border-top-color:var(--gold);border-right-color:var(--mint);
+  animation:gate-spin .9s linear infinite;
+}
+.gload .logo__mark{position:relative;font-size:34px;font-weight:900;letter-spacing:-.5px;margin-bottom:10px}
+.gload__bar{
+  position:relative;width:168px;height:5px;border-radius:var(--r-pill);
+  overflow:hidden;background:rgba(255,255,255,.1);margin-top:10px;
+}
+.gload__bar i{
+  display:block;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,var(--mint-dim),var(--mint),var(--gold));
+  box-shadow:0 0 12px rgba(63,224,189,.6);transition:width .12s linear;
+}
+.gload__txt{position:relative;margin:0;font-size:12.5px;color:var(--muted);letter-spacing:.3px}
+.gload__txt b{color:var(--mint);font-weight:800}
+@media (prefers-reduced-motion:reduce){.gload__glow,.gload__ring i{animation:none}}
 @media (prefers-reduced-motion:reduce){.gate__spin{animation-duration:2s}}
 
 /* aviator carries two figures: the real wallet and the demo credit it bets */

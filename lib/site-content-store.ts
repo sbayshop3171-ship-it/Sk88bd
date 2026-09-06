@@ -6,7 +6,7 @@
     and app-key stores. */
 
 import { randomBytes } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   ART_CLASSES,
@@ -34,6 +34,7 @@ type ContentStore = {
 export type SlideKind = 'banner' | 'announcement';
 
 const STORE_FILE = path.join(process.cwd(), '.data', 'site-content-store.json');
+const IMAGE_DIR = path.join(process.cwd(), '.data', 'slide-images');
 
 let writeQueue = Promise.resolve();
 
@@ -54,7 +55,7 @@ export async function addSlide(
     if (list.length >= MAX_SLIDES) return { ok: false, reason: 'list-full' as const };
 
     const now = iso(Date.now());
-    list.push({ id: randomBytes(6).toString('hex'), ...clean, updatedAt: now } as Banner & Announcement);
+    list.push({ id: randomBytes(6).toString('hex'), ...clean, imageUrl: null, updatedAt: now } as Banner & Announcement);
     store.updatedAt = now;
     return { ok: true, content: content(store) };
   });
@@ -92,6 +93,73 @@ export async function removeSlide(kind: SlideKind, id: string): Promise<ContentM
 
 export function isSlideKind(value: unknown): value is SlideKind {
   return value === 'banner' || value === 'announcement';
+}
+
+/**
+ * Save an uploaded picture for a slide and point the slide at it. Files live
+ * in .data/slide-images/ on the same persistent disk as the store; the route
+ * at /api/slide-image/<kind>/<id> serves them back.
+ */
+export async function saveSlideImage(
+  kind: SlideKind,
+  id: string,
+  ext: string,
+  bytes: Buffer,
+): Promise<ContentMutationResult> {
+  await mkdir(IMAGE_DIR, { recursive: true });
+  await removeImageFiles(kind, id);
+  await writeFile(path.join(IMAGE_DIR, `${kind}-${id}.${ext}`), bytes);
+
+  return mutateStore((store) => {
+    const slide = listOf(store, kind).find((s) => s.id === id);
+    if (!slide) return { ok: false, reason: 'not-found' as const };
+    slide.imageUrl = `/api/slide-image/${kind}/${id}`;
+    slide.updatedAt = iso(Date.now());
+    store.updatedAt = slide.updatedAt;
+    return { ok: true, content: content(store) };
+  });
+}
+
+/** Drop the picture so the slide falls back to its drawn art. */
+export async function clearSlideImage(kind: SlideKind, id: string): Promise<ContentMutationResult> {
+  await removeImageFiles(kind, id);
+  return mutateStore((store) => {
+    const slide = listOf(store, kind).find((s) => s.id === id);
+    if (!slide) return { ok: false, reason: 'not-found' as const };
+    slide.imageUrl = null;
+    slide.updatedAt = iso(Date.now());
+    store.updatedAt = slide.updatedAt;
+    return { ok: true, content: content(store) };
+  });
+}
+
+/** The stored picture, or null when the slide has none. */
+export async function readSlideImage(
+  kind: SlideKind,
+  id: string,
+): Promise<{ bytes: Buffer; ext: string } | null> {
+  if (!/^[a-f0-9]{12}$/.test(id)) return null;
+  for (const ext of ['png', 'jpg', 'webp', 'gif']) {
+    try {
+      return { bytes: await readFile(path.join(IMAGE_DIR, `${kind}-${id}.${ext}`)), ext };
+    } catch {
+      // try the next extension
+    }
+  }
+  return null;
+}
+
+async function removeImageFiles(kind: SlideKind, id: string) {
+  try {
+    const files = await readdir(IMAGE_DIR);
+    await Promise.all(
+      files
+        .filter((f) => f.replace(/\.[^.]+$/, '') === `${kind}-${id}`)
+        .map((f) => rm(path.join(IMAGE_DIR, f), { force: true })),
+    );
+  } catch {
+    // no image directory yet
+  }
 }
 
 function content(store: ContentStore): SiteContent {
@@ -163,8 +231,8 @@ function createInitialStore(): ContentStore {
   const now = iso(Date.now());
   return {
     version: 1,
-    banners: DEFAULT_BANNERS.map((b) => ({ ...b, id: randomBytes(6).toString('hex'), updatedAt: now })),
-    announcements: DEFAULT_ANNOUNCEMENTS.map((a) => ({ ...a, id: randomBytes(6).toString('hex'), updatedAt: now })),
+    banners: DEFAULT_BANNERS.map((b) => ({ ...b, id: randomBytes(6).toString('hex'), imageUrl: null, updatedAt: now })),
+    announcements: DEFAULT_ANNOUNCEMENTS.map((a) => ({ ...a, id: randomBytes(6).toString('hex'), imageUrl: null, updatedAt: now })),
     updatedAt: now,
   };
 }

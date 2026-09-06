@@ -9,7 +9,7 @@ import GameSection from '@/components/GameSection';
 import Header from '@/components/Header';
 import Jackpot from '@/components/Jackpot';
 import Winners from '@/components/Winners';
-import { SpeakerIcon } from '@/components/Icons';
+import NoticeBar from '@/components/NoticeBar';
 import { HOME_SECTIONS, PROVIDERS, demoGames } from '@/lib/catalogue';
 import { t } from '@/lib/strings';
 import Link from 'next/link';
@@ -21,10 +21,7 @@ export default function HomePage() {
       <DownloadStrip />
       <Header />
 
-      <div className="notice">
-        <i className="notice__ico"><SpeakerIcon /></i>
-        <div className="notice__track"><span>{t.welcome}</span></div>
-      </div>
+      <NoticeBar />
 
       <Carousel />
 
