@@ -13,6 +13,7 @@ import {
   HOWTO_TILES,
   PAY_TYPE_KINDS,
   PAY_TYPE_LABEL,
+  fillTokens,
   isImageIcon,
   type DepositMethod,
 } from '@/lib/cashier-config';
@@ -168,6 +169,10 @@ export default function DepositPage() {
       </>
     );
   }
+
+  // {min} / {max} in the admin's notice always read the picked method's own
+  // limits, so the line stays true when bank or crypto is selected.
+  const limits = { min: money(method.min), max: money(method.max) };
 
   /* ---------------- step 3: done ---------------- */
   if (step === 'done') {
@@ -339,6 +344,16 @@ export default function DepositPage() {
       />
 
       <div className="cz">
+        {cfg.noticeTitle && (
+          <div className="cz-notice">
+            <span className="cz-notice__ico" aria-hidden>⚠</span>
+            <div className="cz-notice__body">
+              <b>{fillTokens(cfg.noticeTitle, limits)}</b>
+              {cfg.noticeText && <p>{fillTokens(cfg.noticeText, limits)}</p>}
+            </div>
+          </div>
+        )}
+
         <section className="cz-sec">
           <h2 className="cz-sec__h"><i className="cz-dot cz-dot--gold" />{cfg.methodTitle}</h2>
           <div className="cz-methods">

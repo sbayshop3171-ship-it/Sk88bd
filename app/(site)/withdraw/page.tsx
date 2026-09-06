@@ -8,14 +8,37 @@ import { useCashierConfig } from '@/components/useCashierConfig';
 import { useUI } from '@/components/UIProvider';
 import { toPaisa, toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
-import { isImageIcon, type WithdrawMethod } from '@/lib/cashier-config';
+import {
+  chargeBase,
+  fillTokens,
+  isImageIcon,
+  withdrawCharge,
+  type DepositMethod,
+  type WithdrawMethod,
+} from '@/lib/cashier-config';
+import type { PublicDepositAccount } from '@/lib/payment-accounts';
+import { DEPOSIT_CHANNELS } from '@/lib/payments';
 import { t } from '@/lib/strings';
 
 type Wallet = { id: number; channel_id: string; account_no: string; holder: string };
 
-/** Pick a method, pick (or add) one of your saved wallets for it, type the
-    amount and your password, and the request is raised. Copy, methods and
-    the daily rule come from the admin's cashier design. */
+/** The raised request, snapshotted the moment it leaves the form: the wallet
+    is debited straight away, so the balance the charge was worked out on is
+    only true before that point. */
+type Raised = {
+  id: number | null;
+  amount: number;
+  account: string;
+  balance: number;
+  charge: number;
+};
+
+type Step = 'form' | 'summary' | 'pay' | 'done';
+
+/** Four screens. Pick a method, a saved wallet and an amount → read the
+    summary of what the withdrawal will cost → cash the agent charge out to
+    the number shown and hand back its TrxID → done. Every label, rule and
+    the charge rate itself come from the admin's cashier design. */
 export default function WithdrawPage() {
   const { toast } = useUI();
   const { ready, backendReady, session, wallet, supabase, refresh } = useAuth();
@@ -25,6 +48,17 @@ export default function WithdrawPage() {
   const methods = useMemo(() => cfg.methods.filter((m) => m.active), [cfg.methods]);
   const [methodId, setMethodId] = useState('');
   const method: WithdrawMethod | undefined = methods.find((m) => m.id === methodId) ?? methods[0];
+
+  // The charge is cashed out to us, so it is paid the same way a deposit is:
+  // through a method the admin marked as a cash-out in the deposit design.
+  const chargeMethods = useMemo(() => {
+    const active = config.deposit.methods.filter((m) => m.active);
+    const cashout = active.filter((m) => m.payType === 'cashout');
+    return cashout.length ? cashout : active.filter((m) => m.payType !== 'transfer');
+  }, [config.deposit.methods]);
+  const [chargeMethodId, setChargeMethodId] = useState('');
+  const chargeMethod: DepositMethod | undefined =
+    chargeMethods.find((m) => m.id === chargeMethodId) ?? chargeMethods[0];
 
   const [wallets, setWallets] = useState<Wallet[] | null>(null);
   // false once the payout_accounts table turns out to be missing (migration
@@ -41,13 +75,27 @@ export default function WithdrawPage() {
   const [showPass, setShowPass] = useState(false);
   const [err, setErr] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState<{ amount: number; account: string } | null>(null);
+
+  const [step, setStep] = useState<Step>('form');
+  const [raised, setRaised] = useState<Raised | null>(null);
+  const [agent, setAgent] = useState<PublicDepositAccount | null>(null);
+  const [loadingAgent, setLoadingAgent] = useState(false);
+  const [chargeTrx, setChargeTrx] = useState('');
 
   const balance = toTaka(wallet?.balance ?? 0);
   const signedIn = ready && Boolean(session);
   const forMethod = (wallets ?? []).filter((w) => method && w.channel_id === method.channelId);
   const picked = forMethod.find((w) => w.id === walletId) ?? forMethod[0];
   const remaining = cfg.dailyLimit > 0 ? Math.max(0, cfg.dailyLimit - todayCount) : null;
+
+  // What the player will owe on top of the request. It never leaves the
+  // wallet — the admin collects it against the TrxID — so every screen only
+  // has to state it plainly and keep it in step with the amount box.
+  const typed = Number(amount);
+  const typedOk = Number.isFinite(typed) && typed > 0;
+  const previewBase = chargeBase(cfg.chargeBasis, typedOk ? typed : 0, balance);
+  const previewCharge = withdrawCharge(previewBase, cfg.chargePerThousand);
+  const chargeOn = cfg.chargePerThousand > 0;
 
   const loadWallets = useCallback(async () => {
     if (!supabase || !session) return;
@@ -78,6 +126,30 @@ export default function WithdrawPage() {
     void loadWallets();
     void loadToday();
   }, [loadWallets, loadToday]);
+
+  // One agent number per visit to the charge screen, drawn from the numbers
+  // the admin added for that channel — the same pool the deposit screen uses.
+  useEffect(() => {
+    if (step !== 'pay' || !chargeMethod) return;
+    let live = true;
+    setLoadingAgent(true);
+    setAgent(null);
+    const url = `/api/deposit/account?channel=${encodeURIComponent(chargeMethod.channelId)}`;
+    const pick = async () => {
+      for (const query of [`${url}&kinds=agent`, url]) {
+        const res = await fetch(query, { cache: 'no-store' }).catch(() => null);
+        if (res?.ok) {
+          const data = (await res.json()) as { ok: true; account: PublicDepositAccount };
+          if (data?.ok) return data.account;
+        }
+      }
+      return null;
+    };
+    void pick()
+      .then((found) => { if (live) setAgent(found); })
+      .finally(() => { if (live) setLoadingAgent(false); });
+    return () => { live = false; };
+  }, [step, chargeMethod]);
 
   const addWallet = async () => {
     if (!method || !supabase || !session) return;
@@ -112,7 +184,8 @@ export default function WithdrawPage() {
     await loadWallets();
   };
 
-  const submit = async (e: React.FormEvent) => {
+  /* ---------------- step 1 → 2: check everything, then show the summary --- */
+  const review = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!method) return;
 
@@ -137,41 +210,123 @@ export default function WithdrawPage() {
       return;
     }
 
-    setBusy(true);
     // the "transaction password" is the login password, re-checked here so a
     // borrowed phone cannot empty the wallet
+    setBusy(true);
     const check = await supabase.auth.signInWithPassword({ email: session.user.email ?? '', password });
+    setBusy(false);
     if (check.error) {
-      setBusy(false);
       setErr({ password: 'পাসওয়ার্ড ভুল' });
       return;
     }
 
+    setRaised({
+      id: null,
+      amount: n,
+      account: accountNo,
+      balance,
+      charge: withdrawCharge(chargeBase(cfg.chargeBasis, n, balance), cfg.chargePerThousand),
+    });
+    setStep('summary');
+    window.scrollTo({ top: 0 });
+  };
+
+  /* ---------------- step 2 → 3: raise the request ------------------------ */
+  const apply = async () => {
+    if (!method || !raised || !supabase) return;
+    setBusy(true);
+
     /* request_withdrawal debits the wallet inside the same statement that
        raises the request, so the amount cannot be gambled away while it waits
        in the queue. A rejection puts it back. */
-    const { error } = await supabase.rpc('request_withdrawal', {
+    const { data, error } = await supabase.rpc('request_withdrawal', {
       p_channel: method.channelId,
-      p_amount: toPaisa(n),
-      p_account_no: accountNo,
+      p_amount: toPaisa(raised.amount),
+      p_account_no: raised.account,
     });
     setBusy(false);
 
     if (error) {
       setErr({
-        amount: /balance|check/i.test(error.message)
+        apply: /balance|check/i.test(error.message)
           ? 'ব্যালেন্স যথেষ্ট নয়'
           : 'রিকোয়েস্ট পাঠানো গেল না — আবার চেষ্টা করুন',
       });
       return;
     }
 
-    setAmount('');
+    const id = typeof data === 'number' ? data : null;
+    setRaised({ ...raised, id });
+    setErr({});
     setPassword('');
     await refresh();
     void loadToday();
-    setDone({ amount: n, account: accountNo });
+
+    // Nothing more to pay: skip the charge screen entirely.
+    if (!chargeOn || raised.charge <= 0) {
+      setStep('done');
+      window.scrollTo({ top: 0 });
+      return;
+    }
+    // best effort — the columns arrive with migration 006
+    if (id !== null) {
+      await supabase.rpc('set_withdrawal_charge', {
+        p_id: id,
+        p_charge: toPaisa(raised.charge),
+        p_channel: chargeMethod?.channelId ?? null,
+      }).then(() => undefined, () => undefined);
+    }
+    setStep('pay');
     window.scrollTo({ top: 0 });
+  };
+
+  /* ---------------- step 3 → 4: hand back the charge TrxID --------------- */
+  const confirmCharge = async () => {
+    if (!raised || !supabase) return;
+    const trx = chargeTrx.trim();
+    if (!trx) { setErr({ trx: 'TrxID অবশ্যই পূরণ করতে হবে!' }); return; }
+
+    setBusy(true);
+    const { error } = raised.id === null
+      ? { error: null }
+      : await supabase.rpc('set_withdrawal_charge', {
+        p_id: raised.id,
+        p_charge: toPaisa(raised.charge),
+        p_channel: chargeMethod?.channelId ?? null,
+        p_account_no: agent?.number ?? null,
+        p_trx: trx,
+      });
+    setBusy(false);
+
+    // A server that has not run migration 006 has no such function; the money
+    // request is already in the queue, so the player is not made to wait on it.
+    if (error && !/function|schema cache|does not exist/i.test(error.message)) {
+      setErr({ trx: 'TrxID জমা দেওয়া গেল না — আবার চেষ্টা করুন' });
+      return;
+    }
+    setErr({});
+    setStep('done');
+    window.scrollTo({ top: 0 });
+  };
+
+  const restart = () => {
+    setAmount('');
+    setPassword('');
+    setChargeTrx('');
+    setRaised(null);
+    setAgent(null);
+    setErr({});
+    setStep('form');
+    window.scrollTo({ top: 0 });
+  };
+
+  const copy = async (value: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast(`${label} কপি হয়েছে`);
+    } catch {
+      toast('কপি করা গেল না — হাতে লিখে নিন');
+    }
   };
 
   if (!method) {
@@ -185,7 +340,18 @@ export default function WithdrawPage() {
     );
   }
 
-  if (done) {
+  const tokens = {
+    rate: money(cfg.chargePerThousand),
+    min: money(method.min),
+    max: money(method.max),
+    time: cfg.processingTime,
+    charge: money(raised?.charge ?? previewCharge),
+    balance: money(raised?.balance ?? balance),
+    amount: money(raised?.amount ?? (typedOk ? typed : 0)),
+  };
+
+  /* ---------------- step 4: done ---------------- */
+  if (step === 'done' && raised) {
     return (
       <>
         <PageHeader title={t.withdraw} />
@@ -193,10 +359,12 @@ export default function WithdrawPage() {
           <span className="cz-done__tick" aria-hidden>✓</span>
           <h2>রিকোয়েস্ট জমা হয়েছে!</h2>
           <p>
-            {money(done.amount)} {method.name} ({done.account}) এ পাঠানোর রিকোয়েস্ট জমা হয়েছে।
-            অ্যাডমিন অনুমোদন করলে {cfg.processingTime} এর মধ্যে পৌঁছাবে।
+            {money(raised.amount)} {method.name} ({raised.account}) এ পাঠানোর রিকোয়েস্ট জমা হয়েছে।
+            {raised.charge > 0 && chargeTrx.trim()
+              ? ` চার্জের TrxID (${chargeTrx.trim()}) যাচাই হলে ${cfg.processingTime} এর মধ্যে টাকা পৌঁছাবে।`
+              : ` অ্যাডমিন অনুমোদন করলে ${cfg.processingTime} এর মধ্যে পৌঁছাবে।`}
           </p>
-          <button type="button" className="btn btn--gold" onClick={() => setDone(null)}>আরেকটি উত্তোলন</button>
+          <button type="button" className="btn btn--gold" onClick={restart}>আরেকটি উত্তোলন</button>
           <div className="cz-done__links">
             <Link href="/withdraw-history">হিস্টোরি দেখুন</Link>
             <Link href="/">হোমে ফিরুন</Link>
@@ -206,6 +374,201 @@ export default function WithdrawPage() {
     );
   }
 
+  /* ---------------- step 3: pay the agent charge ---------------- */
+  if (step === 'pay' && raised) {
+    const guide = cfg.guideLines.split('\n').map((l) => l.trim()).filter(Boolean);
+    return (
+      <>
+        <div className="cz-top cz-top--pay">
+          <div>
+            <b>BDT {raised.charge.toLocaleString('en-IN')}</b>
+            <small>{cfg.payTitle}</small>
+          </div>
+          <span className="cz-top__tag">PAY</span>
+        </div>
+
+        <div className="cz-pay">
+          {cfg.payWarning && <p className="cz-warn">{cfg.payWarning}</p>}
+
+          {chargeMethods.length > 1 && (
+            <div className="cz-tabs scroll-x" role="tablist">
+              {chargeMethods.map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={m.id === chargeMethod?.id}
+                  className={`cz-tab${m.id === chargeMethod?.id ? ' on' : ''}`}
+                  onClick={() => { setChargeMethodId(m.id); setErr({}); }}
+                >
+                  <MethodIcon method={m} size={22} />
+                  <span>{m.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {chargeMethod && (
+            <div className="cz-gate" style={{ background: chargeMethod.color }}>
+              <MethodIcon method={chargeMethod} size={40} />
+              <b>{channelName(chargeMethod.channelId)} এজেন্ট চার্জ</b>
+            </div>
+          )}
+
+          <div className="cz-label">এজেন্ট নাম্বার<span>*</span></div>
+          {cfg.agentNote && <p className="cz-sub">{cfg.agentNote}</p>}
+          {loadingAgent ? (
+            <div className="paybox paybox--wait">নাম্বার আনা হচ্ছে…</div>
+          ) : agent ? (
+            <div className="cz-wallet">
+              <div className="cz-wallet__row">
+                <b>{agent.number}</b>
+                <button type="button" className="cz-wallet__copy" onClick={() => void copy(agent.number, 'নাম্বার')} aria-label="কপি">⧉</button>
+              </div>
+              {agent.holder && <div className="cz-wallet__meta"><span>{agent.holder}</span></div>}
+            </div>
+          ) : (
+            <div className="paybox paybox--empty">
+              এই মুহূর্তে এজেন্ট নাম্বার দেওয়া নেই। সাপোর্টে যোগাযোগ করুন — আপনার
+              রিকোয়েস্ট জমা আছে, বাতিল হয়নি।
+            </div>
+          )}
+
+          <div className="cz-label">চার্জের পরিমাণ<span>*</span></div>
+          {cfg.chargeExactNote && <p className="cz-sub">{cfg.chargeExactNote}</p>}
+          <div className="cz-wallet cz-wallet--gold">
+            <div className="cz-wallet__row">
+              <b>{money(raised.charge)}</b>
+              <button type="button" className="cz-wallet__copy" onClick={() => void copy(String(raised.charge), 'চার্জ')} aria-label="কপি">⧉</button>
+            </div>
+          </div>
+
+          {(cfg.guideTitle || guide.length > 0) && (
+            <div className="cz-guide">
+              {cfg.guideTitle && <b>ⓘ {cfg.guideTitle}</b>}
+              <ul>
+                {guide.map((line, i) => <li key={i}>{fillTokens(line, tokens)}</li>)}
+              </ul>
+            </div>
+          )}
+
+          <p className="cz-meta">
+            উত্তোলন: <b>{money(raised.amount)}</b> · ব্যালেন্স ছিল: <b>{money(raised.balance)}</b>
+          </p>
+
+          <div className="cz-label">
+            {cfg.chargeTrxLabel}
+            <span>(প্রয়োজন)</span>
+          </div>
+          <input
+            className={`cz-trx${chargeTrx.trim() ? ' ok' : ''}`}
+            placeholder={cfg.chargeTrxPlaceholder}
+            value={chargeTrx}
+            onChange={(e) => { setChargeTrx(e.target.value); setErr({}); }}
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+          />
+          {err.trx && <p className="cz-err">{err.trx}</p>}
+
+          <button type="button" className="btn btn--gold cz-confirm" disabled={busy} onClick={() => void confirmCharge()}>
+            {busy ? 'পাঠানো হচ্ছে…' : 'নিশ্চিত'}
+          </button>
+
+          {cfg.chargeCaution && (
+            <div className="cz-caution">
+              <b>সতর্কতা:</b>
+              <p>{cfg.chargeCaution}</p>
+            </div>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  /* ---------------- step 2: the summary ---------------- */
+  if (step === 'summary' && raised) {
+    const rules = cfg.rules.split('\n').map((l) => l.trim()).filter(Boolean);
+    const base = chargeBase(cfg.chargeBasis, raised.amount, raised.balance);
+    return (
+      <>
+        <div className="cz-top cz-top--pay">
+          <button type="button" className="cz-top__back" aria-label="পিছনে" onClick={() => { setStep('form'); setErr({}); }}>‹</button>
+          <div>
+            <b>BDT {raised.amount.toLocaleString('en-IN')}</b>
+            <small>{cfg.summaryTitle}</small>
+          </div>
+          <span className="cz-top__tag">PAY</span>
+        </div>
+
+        <div className="cz-pay">
+          {cfg.summaryWarning && <p className="cz-warn">{cfg.summaryWarning}</p>}
+
+          <div className="cz-gate" style={{ background: method.color }}>
+            <MethodIcon method={method} size={40} />
+            <b>{method.name}</b>
+          </div>
+
+          <div className="cz-label">অ্যাকাউন্ট নাম্বার<span>*</span></div>
+          <p className="cz-sub">এই নাম্বারে উত্তোলনের টাকা পাঠানো হবে</p>
+          <div className="cz-ro">{raised.account}</div>
+
+          <div className="cz-label">উত্তোলনের পরিমাণ</div>
+          <div className="cz-ro cz-ro--gold">{money(raised.amount)}</div>
+
+          {chargeOn && raised.charge > 0 && (
+            <>
+              <div className="cz-label cz-label--warn">⚠ {cfg.chargeLabel}<span>*</span></div>
+              <p className="cz-sub">
+                {money(base)} × ({money(cfg.chargePerThousand)}/৳1,000) = {money(raised.charge)}
+              </p>
+              <div className="cz-ro cz-ro--red">{money(raised.charge)}</div>
+            </>
+          )}
+
+          {rules.length > 0 && (
+            <div className="cz-rules">
+              {cfg.rulesTitle && <b>📋 {cfg.rulesTitle}</b>}
+              <ol>
+                {rules.map((line, i) => {
+                  const red = line.startsWith('!');
+                  return (
+                    <li key={i} className={red ? 'red' : undefined}>
+                      {fillTokens(red ? line.slice(1) : line, tokens)}
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          )}
+
+          {chargeOn && raised.charge > 0 && (
+            <div className="cz-calc">
+              <b>🧮 চার্জ হিসাব</b>
+              <p><span>{cfg.chargeBasis === 'balance' ? 'আপনার ব্যালেন্স' : 'উত্তোলনের পরিমাণ'}</span><b>{money(base)}</b></p>
+              <p><span>চার্জ রেট</span><b>প্রতি ৳1,000 এ {money(cfg.chargePerThousand)}</b></p>
+              <p className="cz-calc__total"><span>মোট চার্জ</span><b>{money(raised.charge)}</b></p>
+            </div>
+          )}
+
+          {err.apply && <p className="cz-err">{err.apply}</p>}
+
+          <button type="button" className="btn btn--gold cz-confirm" disabled={busy} onClick={() => void apply()}>
+            {busy ? 'পাঠানো হচ্ছে…' : cfg.applyLabel}
+          </button>
+
+          {cfg.chargeWarning && (
+            <div className="cz-caution">
+              <b>সতর্কতা:</b>
+              <p>{cfg.chargeWarning}</p>
+            </div>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  /* ---------------- step 1: the form ---------------- */
   return (
     <>
       <PageHeader
@@ -229,7 +592,7 @@ export default function WithdrawPage() {
         ))}
       </div>
 
-      <form className="cz" onSubmit={submit} noValidate>
+      <form className="cz" onSubmit={review} noValidate>
         {walletsSupported ? (
           <section className="cz-sec cz-wallets">
             <h2 className="cz-sec__h">
@@ -310,9 +673,28 @@ export default function WithdrawPage() {
           {cfg.passwordHint && !err.password && <p className="cz-limit">{cfg.passwordHint}</p>}
         </section>
 
+        {chargeOn && cfg.chargeTitle && (
+          <section className="cz-sec cz-charge">
+            <h2 className="cz-sec__h"><i className="cz-dot cz-dot--gold" />{cfg.chargeTitle}</h2>
+            <div className="cz-charge__rate">
+              <b>{money(cfg.chargePerThousand)}</b>
+              <small>প্রতি ১,০০০ টাকায়</small>
+            </div>
+            {cfg.chargeText && <p className="cz-charge__text">{fillTokens(cfg.chargeText, tokens)}</p>}
+            <div className="cz-charge__calc">
+              <p>
+                <span>{cfg.chargeBasis === 'balance' ? 'আপনার ব্যালেন্স' : 'উত্তোলন পরিমাণ'}</span>
+                <b>{money(previewBase, 2)}</b>
+              </p>
+              <p><span>প্রদেয় চার্জ</span><b className="cz-charge__due">{money(previewCharge, 2)}</b></p>
+            </div>
+            {cfg.chargeWarning && <p className="cz-charge__warn">{cfg.chargeWarning}</p>}
+          </section>
+        )}
+
         <div className="cz-next cz-next--inline">
           <button type="submit" className="btn btn--gold btn--block" disabled={busy}>
-            {busy ? 'পাঠানো হচ্ছে…' : `${t.withdraw} রিকোয়েস্ট`}
+            {busy ? 'যাচাই হচ্ছে…' : `${t.withdraw} রিকোয়েস্ট`}
           </button>
           {cfg.note && <p className="cz-limit">{cfg.note}</p>}
         </div>
@@ -344,7 +726,12 @@ export default function WithdrawPage() {
   );
 }
 
-function MethodIcon({ method, size }: { method: WithdrawMethod; size: number }) {
+/** "bkash" → "bKash": the wallet's own name, not the admin's tile label. */
+function channelName(channelId: string) {
+  return DEPOSIT_CHANNELS.find((c) => c.id === channelId)?.name ?? channelId;
+}
+
+function MethodIcon({ method, size }: { method: { icon: string; color: string }; size: number }) {
   if (isImageIcon(method.icon)) {
     // eslint-disable-next-line @next/next/no-img-element
     return <img className="cz-icon" src={method.icon} alt="" width={size} height={size} style={{ width: size, height: size }} />;

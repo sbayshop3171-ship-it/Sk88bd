@@ -62,6 +62,15 @@ export type AmountPreset = {
   bonusLabel: string;
 };
 
+/** What the per-1,000 charge is worked out on: the player's whole wallet, or
+    only the amount they asked for. */
+export type ChargeBasis = 'balance' | 'amount';
+
+export const CHARGE_BASIS_LABEL: Record<ChargeBasis, string> = {
+  balance: 'মোট ওয়ালেট ব্যালেন্সের উপর',
+  amount: 'শুধু উত্তোলনের পরিমাণের উপর',
+};
+
 export type WithdrawMethod = {
   id: string;
   name: string;
@@ -108,6 +117,10 @@ export type CashierConfig = {
     /** "Promotions" accordion under the amounts; blank hides it */
     promoTitle: string;
     promoText: string;
+    /** amber notice at the top of the pick screen. {min} / {max} become the
+        picked method's limits; a blank title hides the whole block. */
+    noticeTitle: string;
+    noticeText: string;
   };
   withdraw: {
     methods: WithdrawMethod[];
@@ -124,6 +137,38 @@ export type CashierConfig = {
     passwordLabel: string;
     passwordHint: string;
     note: string;
+    /** taka the player owes per 1,000 taka; 0 turns the whole charge off */
+    chargePerThousand: number;
+    /** whether that rate is applied to the wallet balance or the request */
+    chargeBasis: ChargeBasis;
+    chargeTitle: string;
+    /** {rate} = the charge on 1,000 taka, {min} / {max} the method's limits */
+    chargeText: string;
+    /** red line under the charge; blank hides it */
+    chargeWarning: string;
+
+    /* ---- step 2: the summary the player confirms ---- */
+    summaryTitle: string;
+    /** red line across the top of the summary */
+    summaryWarning: string;
+    /** heading over the charge figure, e.g. "এজেন্ট ক্যাশআউট চার্জ" */
+    chargeLabel: string;
+    rulesTitle: string;
+    /** one rule per line; a line starting with ! is shown in red */
+    rules: string;
+    applyLabel: string;
+
+    /* ---- step 3: paying the charge to an agent number ---- */
+    payTitle: string;
+    payWarning: string;
+    agentNote: string;
+    chargeExactNote: string;
+    guideTitle: string;
+    /** one bullet per line */
+    guideLines: string;
+    chargeTrxLabel: string;
+    chargeTrxPlaceholder: string;
+    chargeCaution: string;
   };
   updatedAt: string | null;
 };
@@ -187,6 +232,8 @@ export const CASHIER_DEFAULTS: CashierConfig = {
     successText: 'আপনার ডিপোজিট অর্ডার সফলভাবে জমা দেওয়া হয়েছে। সিস্টেম ৫ মিনিটের মধ্যে যাচাই করা শুরু করবে।',
     promoTitle: 'প্রমোশন',
     promoText: '',
+    noticeTitle: 'সর্বনিম্ন ডিপোজিট {min}',
+    noticeText: 'একবারে {min} টাকার কম পাঠাবেন না। এর চেয়ে কম পাঠালে সেই টাকা অ্যাকাউন্টে যোগ করা হবে না এবং ফেরতও দেওয়া হবে না। একবারে সর্বোচ্চ {max} পাঠানো যাবে।',
   },
   withdraw: {
     methods: WITHDRAW_CHANNELS.map((c) => ({
@@ -210,6 +257,36 @@ export const CASHIER_DEFAULTS: CashierConfig = {
     passwordLabel: 'লেনদেন পাসওয়ার্ড',
     passwordHint: 'আপনার লগইন পাসওয়ার্ডটি দিন',
     note: 'রিকোয়েস্ট করার সাথে সাথে টাকা ব্যালেন্স থেকে সরিয়ে রাখা হবে। অ্যাডমিন অনুমোদন করলে পাঠানো হবে, বাতিল করলে ব্যালেন্সে ফেরত আসবে।',
+    chargePerThousand: 45,
+    chargeBasis: 'balance',
+    chargeTitle: 'উত্তোলন চার্জ',
+    chargeText: 'প্রতি ১,০০০ টাকায় {rate} হারে এজেন্ট ক্যাশআউট চার্জ দিতে হবে।',
+    chargeWarning: 'চার্জ পরিশোধ না করলে উত্তোলনের টাকা ছাড় করা হবে না।',
+    summaryTitle: 'উত্তোলন সারাংশ',
+    summaryWarning: 'শুধুমাত্র আমাদের দেওয়া এজেন্ট নাম্বারে চার্জ পাঠাবেন, অন্যথায় উত্তোলন সফল হবে না।',
+    chargeLabel: 'এজেন্ট ক্যাশআউট চার্জ',
+    rulesTitle: 'উত্তোলন নিয়মাবলী',
+    rules: [
+      'নিজের নামে থাকা সঠিক অ্যাকাউন্ট নাম্বার দিন',
+      'এক রিকোয়েস্টে সর্বোচ্চ {max} তোলা যাবে',
+      '!এজেন্ট ক্যাশআউট চার্জ মোট ওয়ালেট ব্যালেন্সের উপর হিসাব করা হয়',
+      '!প্রতি ১,০০০ টাকায় {rate} চার্জ',
+      '!সম্পূর্ণ চার্জ একবারেই পরিশোধ করতে হবে',
+      'চার্জ যাচাই হলে {time} এর মধ্যে টাকা পাঠানো হবে',
+    ].join('\n'),
+    applyLabel: 'উত্তোলনের জন্য আবেদন করুন',
+    payTitle: 'চার্জ পরিশোধ',
+    payWarning: 'নিচের এজেন্ট নাম্বারে চার্জ পাঠিয়ে TrxID দিন — তবেই উত্তোলন প্রক্রিয়া শুরু হবে।',
+    agentNote: 'এই নাম্বারে শুধুমাত্র ক্যাশ আউট গ্রহণ করা হয়',
+    chargeExactNote: 'ঠিক এই পরিমাণ পাঠাতে হবে — কম বা বেশি নয়',
+    guideTitle: 'গুরুত্বপূর্ণ নির্দেশনা',
+    guideLines: [
+      'পুরো চার্জ {charge} এক ট্রানজেকশনেই ক্যাশ আউট করুন',
+      'উপরে দেখানো এজেন্ট নাম্বার ছাড়া অন্য কোথাও পাঠাবেন না',
+    ].join('\n'),
+    chargeTrxLabel: 'চার্জ পেমেন্টের TrxID লিখুন',
+    chargeTrxPlaceholder: 'যেমন: 9F2K4L8M',
+    chargeCaution: 'লেনদেন আইডি সঠিকভাবে দিতে হবে, না হলে উত্তোলন বাতিল হয়ে যাবে।',
   },
   updatedAt: null,
 };
@@ -238,6 +315,25 @@ export const HOWTO_TILES: { key: PayType | 'recharge'; label: string; glyph: str
   { key: 'cashout', label: 'ক্যাশ আউট', glyph: '🏧' },
   { key: 'payment', label: 'পেমেন্ট', glyph: '🛍️' },
 ];
+
+/** The figure the charge is a percentage of. */
+export function chargeBase(basis: ChargeBasis, amount: number, balance: number) {
+  const base = basis === 'balance' ? balance : amount;
+  return Number.isFinite(base) && base > 0 ? base : 0;
+}
+
+/** What the player owes on a withdrawal: the per-1,000 rate pro-rated to the
+    amount and rounded up to the next taka. 0 when the admin turned it off. */
+export function withdrawCharge(amount: number, perThousand: number) {
+  if (!Number.isFinite(amount) || amount <= 0 || perThousand <= 0) return 0;
+  return Math.ceil((amount * perThousand) / 1000);
+}
+
+/** Fill {min}, {max}, {rate}… in an admin-written line. A token the caller
+    did not supply is left on screen as-is rather than blanked out. */
+export function fillTokens(template: string, tokens: Record<string, string>) {
+  return template.replace(/\{(\w+)\}/g, (whole, key: string) => tokens[key] ?? whole);
+}
 
 export function isImageIcon(icon: string) {
   return /^(https?:)?\/|^data:image\//.test(icon);

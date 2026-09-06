@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import {
+  CHARGE_BASIS_LABEL,
   PAY_TYPE_LABEL,
   type AmountPreset,
+  type ChargeBasis,
   type CashierConfig,
   type DepositMethod,
   type PayType,
@@ -26,6 +28,8 @@ const ERROR_LABEL: Record<string, string> = {
 const PAY_TYPES = Object.keys(PAY_TYPE_LABEL) as PayType[];
 
 const DEPOSIT_TEXTS: [keyof CashierConfig['deposit'], string, boolean][] = [
+  ['noticeTitle', 'সর্বনিম্ন ডিপোজিট নোটিশের শিরোনাম (খালি রাখলে নোটিশ দেখাবে না)', false],
+  ['noticeText', 'সর্বনিম্ন ডিপোজিট নোটিশের লেখা — {min} ও {max} লিখলে বাছাই করা মেথডের লিমিট বসে যাবে', true],
   ['methodTitle', 'মেথড সেকশনের শিরোনাম', false],
   ['channelTitle', 'চ্যানেল সেকশনের শিরোনাম', false],
   ['amountTitle', 'পরিমাণ সেকশনের শিরোনাম', false],
@@ -51,14 +55,38 @@ const DEPOSIT_TEXTS: [keyof CashierConfig['deposit'], string, boolean][] = [
 ];
 
 const WITHDRAW_TEXTS: [keyof CashierConfig['withdraw'], string, boolean][] = [
+  ['chargeTitle', 'উত্তোলন চার্জ কার্ডের শিরোনাম (খালি রাখলে কার্ড দেখাবে না)', false],
+  ['chargeText', 'চার্জের ব্যাখ্যা — {rate} লিখলে প্রতি ১,০০০ টাকার চার্জ বসে যাবে', true],
+  ['chargeWarning', 'চার্জ না দিলে কী হবে — লাল সতর্কবার্তা', true],
   ['processingTime', 'উত্তোলন সময় (যেমন: ২৪ ঘন্টা)', false],
-  ['reminder', 'সৌজন্যমূলক স্মরণিকা', true],
   ['walletsTitle', 'সংরক্ষিত ওয়ালেট সেকশনের শিরোনাম', false],
+  ['reminder', 'সৌজন্যমূলক স্মরণিকা', true],
   ['emptyWalletsText', 'ওয়ালেট না থাকলে যে লেখা', false],
   ['amountLabel', 'পরিমাণ সেকশনের শিরোনাম', false],
   ['passwordLabel', 'পাসওয়ার্ড ফিল্ডের লেবেল', false],
   ['passwordHint', 'পাসওয়ার্ড ফিল্ডের নিচের ইঙ্গিত', false],
   ['note', 'বাটনের নিচের নোট', true],
+];
+
+/** Step 2 (the summary the player confirms) and step 3 (paying the charge to
+    an agent number) — kept apart from the plain withdraw copy so the admin
+    form does not read as one long wall of inputs. */
+const CHARGE_TEXTS: [keyof CashierConfig['withdraw'], string, boolean][] = [
+  ['summaryTitle', 'সারাংশ স্ক্রিনের শিরোনাম', false],
+  ['summaryWarning', 'সারাংশের উপরের লাল সতর্কবার্তা', true],
+  ['chargeLabel', 'চার্জের অংকের উপরের লেবেল', false],
+  ['rulesTitle', 'নিয়মাবলী বক্সের শিরোনাম', false],
+  ['rules', 'নিয়মাবলী — প্রতি লাইনে একটি নিয়ম। লাইনের শুরুতে ! দিলে লাল রঙে দেখাবে। {rate} {max} {min} {time} {charge} {balance} {amount} বসানো যাবে', true],
+  ['applyLabel', 'সারাংশের বাটনের লেখা', false],
+  ['payTitle', 'চার্জ পরিশোধ স্ক্রিনের শিরোনাম', false],
+  ['payWarning', 'চার্জ পরিশোধ স্ক্রিনের উপরের লাল লেখা', true],
+  ['agentNote', 'এজেন্ট নাম্বারের নিচের ছোট লেখা', false],
+  ['chargeExactNote', 'চার্জের অংকের নিচের ছোট লেখা', false],
+  ['guideTitle', 'নির্দেশনা বক্সের শিরোনাম', false],
+  ['guideLines', 'নির্দেশনা — প্রতি লাইনে একটি পয়েন্ট ({charge} বসানো যাবে)', true],
+  ['chargeTrxLabel', 'চার্জের TrxID ইনপুটের লেবেল', false],
+  ['chargeTrxPlaceholder', 'চার্জের TrxID ইনপুটের placeholder', false],
+  ['chargeCaution', 'চার্জ স্ক্রিনের নিচের সতর্কতা', true],
 ];
 
 const blankDeposit = (channelId: string): DepositMethod => ({
@@ -300,13 +328,54 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
                 <span>প্রতি মেথডে সর্বোচ্চ সংরক্ষিত ওয়ালেট</span>
                 <input type="number" min={1} max={20} value={num(form.withdraw.maxWallets)} disabled={busy} onChange={(e) => setWd({ maxWallets: Number(e.target.value) })} />
               </label>
+              <label className="adm__f">
+                <span>উত্তোলন চার্জ — প্রতি ১,০০০ টাকায় (৳, ০ = চার্জ নেই)</span>
+                <input type="number" min={0} max={1000} value={num(form.withdraw.chargePerThousand)} disabled={busy} onChange={(e) => setWd({ chargePerThousand: Number(e.target.value) })} />
+              </label>
+              <label className="adm__f">
+                <span>চার্জ কিসের উপর হিসাব হবে</span>
+                <select value={form.withdraw.chargeBasis} disabled={busy} onChange={(e) => setWd({ chargeBasis: e.target.value as ChargeBasis })}>
+                  {(Object.keys(CHARGE_BASIS_LABEL) as ChargeBasis[]).map((b) => (
+                    <option key={b} value={b}>{CHARGE_BASIS_LABEL[b]}</option>
+                  ))}
+                </select>
+              </label>
             </div>
+            <p className="adm__hint">
+              চার্জ প্লেয়ারের উত্তোলনের পরিমাণ অনুযায়ী হিসাব হয় — {form.withdraw.chargePerThousand} ৳ প্রতি ১,০০০ টাকায়,
+              অর্থাৎ ৳১,০০০ এ ৳{form.withdraw.chargePerThousand} আর ৳৫,০০০ এ
+              ৳{form.withdraw.chargePerThousand * 5}। “{CHARGE_BASIS_LABEL[form.withdraw.chargeBasis]}”
+              বেছে নিলে হিসাবটা {form.withdraw.chargeBasis === 'balance'
+                ? 'প্লেয়ারের পুরো ওয়ালেট ব্যালেন্স ধরে হয় — সে যত টাকাই তুলুক'
+                : 'শুধু সে যত টাকা তুলতে চাইছে তার উপর হয়'}। ০ দিলে চার্জের ধাপটি একেবারে উঠে যাবে
+              এবং রিকোয়েস্ট সরাসরি জমা হবে।
+            </p>
           </div>
 
           <div className="adm__card">
             <h2 className="adm__cardh">লেখা</h2>
             <div className="adm__formgrid">
               {WITHDRAW_TEXTS.map(([key, label, long]) => (
+                <label className={`adm__f${long ? ' adm__f--wide' : ''}`} key={key}>
+                  <span>{label}</span>
+                  {long
+                    ? <textarea value={String(form.withdraw[key])} disabled={busy} onChange={(e) => setWd({ [key]: e.target.value })} />
+                    : <input value={String(form.withdraw[key])} disabled={busy} onChange={(e) => setWd({ [key]: e.target.value })} />}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="adm__card">
+            <h2 className="adm__cardh">সারাংশ ও চার্জ পরিশোধ স্ক্রিন</h2>
+            <p className="adm__hint" style={{ marginTop: 0 }}>
+              রিকোয়েস্ট দেওয়ার পর প্লেয়ার দুইটি স্ক্রিন দেখে — কত চার্জ লাগবে তার সারাংশ,
+              তারপর কোন এজেন্ট নাম্বারে চার্জ পাঠাতে হবে সেই পাতা। এজেন্ট নাম্বার আসে
+              <b> অ্যাডমিন → পেমেন্ট</b> এর “এজেন্ট” ধরনের নাম্বার থেকে, তাই ওখানে অন্তত
+              একটি এজেন্ট নাম্বার চালু রাখতে হবে।
+            </p>
+            <div className="adm__formgrid">
+              {CHARGE_TEXTS.map(([key, label, long]) => (
                 <label className={`adm__f${long ? ' adm__f--wide' : ''}`} key={key}>
                   <span>{label}</span>
                   {long

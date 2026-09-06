@@ -134,13 +134,14 @@ export default function CashierControl({
             <tr>
               <th>#</th><th>প্লেয়ার</th><th>চ্যানেল</th><th>পরিমাণ</th>
               <th>{isDeposit ? 'সেন্ডার / TxnID' : 'যে অ্যাকাউন্টে যাবে'}</th>
+              {!isDeposit && <th>চার্জ / TrxID</th>}
               <th>সময়</th><th>অবস্থা</th><th></th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="adm__empty">
+                <td colSpan={isDeposit ? 8 : 9} className="adm__empty">
                   {isDeposit ? 'কোনো ডিপোজিট রিকোয়েস্ট নেই।' : 'কোনো উইথড্র রিকোয়েস্ট নেই।'}
                 </td>
               </tr>
@@ -166,6 +167,27 @@ export default function CashierControl({
                         <code>{r.accountNo || '—'}</code>
                       )}
                     </td>
+                    {!isDeposit && (
+                      <td>
+                        {r.chargeAmount ? (
+                          <>
+                            <b style={{ color: 'var(--gold)' }}>{money(toTaka(r.chargeAmount))}</b>
+                            {r.chargeTrxId ? (
+                              <div style={{ fontSize: 11 }}>
+                                <code>{r.chargeTrxId}</code>
+                                {r.chargeAccountNo && (
+                                  <div className="adm__muted">{r.chargeChannelId} · {r.chargeAccountNo}</div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="adm__miss" style={{ fontSize: 11 }}>চার্জ আসেনি</div>
+                            )}
+                          </>
+                        ) : (
+                          <span className="adm__muted">—</span>
+                        )}
+                      </td>
+                    )}
                     <td className="adm__muted">{when(r.createdAt)}</td>
                     <td>
                       {r.state === 'pending' && <span className="adm__miss">{STATE_LABEL.pending}</span>}

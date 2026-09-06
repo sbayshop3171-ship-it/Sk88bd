@@ -30,6 +30,12 @@ export type CashierRow = {
   txnId?: string | null;
   /** withdrawals: where the money should go */
   accountNo?: string | null;
+  /** withdrawals: the agent cash-out charge, in paisa, and its proof */
+  chargeAmount?: number;
+  chargeChannelId?: string | null;
+  chargeAccountNo?: string | null;
+  chargeTrxId?: string | null;
+  chargePaidAt?: string | null;
 };
 
 export type PlayerRow = {
@@ -72,20 +78,31 @@ export async function listCashier(
   if (!db) return NO_BACKEND;
 
   // The columns differ by table, so the select string cannot be a literal —
-  // .returns<>() gives the rows a shape the mapper can read.
-  const extra = table === 'deposits' ? 'sender_no, txn_id' : 'account_no';
-  let query = db
-    .from(table)
-    .select(
-      `id, user_id, channel_id, amount, state, admin_note, created_at, reviewed_at, ${extra}, `
-      + 'profiles!user_id (phone, display_name)',
-    )
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  // .returns<>() gives the rows a shape the mapper can read. The charge
+  // columns arrive with migration 006, so a server that has not run it yet
+  // falls back to the older, narrower select rather than losing the queue.
+  const base = table === 'deposits' ? 'sender_no, txn_id' : 'account_no';
+  const withCharge = table === 'withdrawals'
+    ? `${base}, charge_amount, charge_channel_id, charge_account_no, charge_trx_id, charge_paid_at`
+    : base;
 
-  if (state !== 'all') query = query.eq('state', state);
+  const run = async (extra: string) => {
+    let query = db
+      .from(table)
+      .select(
+        `id, user_id, channel_id, amount, state, admin_note, created_at, reviewed_at, ${extra}, `
+        + 'profiles!user_id (phone, display_name)',
+      )
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (state !== 'all') query = query.eq('state', state);
+    return query.returns<Record<string, unknown>[]>();
+  };
 
-  const { data, error } = await query.returns<Record<string, unknown>[]>();
+  let { data, error } = await run(withCharge);
+  if (error && withCharge !== base && /column|schema cache/i.test(error.message)) {
+    ({ data, error } = await run(base));
+  }
   if (error) return { ok: false, reason: 'db-error', message: error.message };
 
   return { ok: true, data: (data ?? []).map(toCashierRow) };
@@ -222,6 +239,11 @@ function toCashierRow(row: Record<string, unknown>): CashierRow {
     senderNo: (row.sender_no as string) ?? null,
     txnId: (row.txn_id as string) ?? null,
     accountNo: (row.account_no as string) ?? null,
+    chargeAmount: Number(row.charge_amount ?? 0),
+    chargeChannelId: (row.charge_channel_id as string) ?? null,
+    chargeAccountNo: (row.charge_account_no as string) ?? null,
+    chargeTrxId: (row.charge_trx_id as string) ?? null,
+    chargePaidAt: (row.charge_paid_at as string) ?? null,
   };
 }
 

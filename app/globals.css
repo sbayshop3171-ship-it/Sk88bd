@@ -2110,6 +2110,101 @@ body.aviator-immersive .app{padding-bottom:0}
   color:#ff9a9a;font-size:12px;font-weight:700;line-height:1.6;
 }
 
+/* the minimum-deposit notice that opens the deposit screen */
+.cz-notice{
+  display:flex;align-items:flex-start;gap:11px;margin:12px 0 2px;padding:13px 14px;
+  border-radius:var(--r-md);
+  background:linear-gradient(180deg,rgba(255,196,46,.17),rgba(255,157,11,.06));
+  border:1px solid rgba(255,196,46,.42);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07);
+}
+.cz-notice__ico{
+  flex:0 0 26px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  background:linear-gradient(180deg,#ffd95e,#ff9d0b);color:#4a2900;font-size:14px;font-weight:900;
+}
+.cz-notice__body b{display:block;font-size:14px;font-weight:900;color:var(--gold);letter-spacing:.2px}
+.cz-notice__body p{margin:5px 0 0;font-size:12px;line-height:1.75;color:#e6efec}
+
+/* the withdraw charge the player still owes */
+.cz-charge__rate{
+  display:flex;align-items:baseline;gap:8px;padding:12px 14px;border-radius:var(--r-md);
+  background:rgba(255,196,46,.1);border:1px solid rgba(255,196,46,.35);
+}
+.cz-charge__rate b{font-size:22px;font-weight:900;color:var(--gold);line-height:1}
+.cz-charge__rate small{font-size:11.5px;font-weight:700;color:#cfe9e4}
+.cz-charge__text{margin:9px 0 0;font-size:12px;line-height:1.75;color:#cfe9e4}
+.cz-charge__calc{
+  margin-top:10px;padding:4px 12px;border-radius:var(--r-sm);
+  background:rgba(0,0,0,.28);border:1px solid var(--line);
+}
+.cz-charge__calc p{display:flex;justify-content:space-between;gap:12px;margin:0;padding:7px 0;font-size:12.5px}
+.cz-charge__calc p+p{border-top:1px solid rgba(255,255,255,.06)}
+.cz-charge__calc span{color:var(--muted)}
+.cz-charge__calc b{color:#fff;font-variant-numeric:tabular-nums;font-weight:800}
+.cz-charge__due{color:var(--gold)!important;font-size:14px}
+.cz-charge__warn{
+  margin:10px 0 0;padding:10px 12px;border-radius:var(--r-sm);
+  background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.35);
+  color:#ff9a9a;font-size:12px;font-weight:700;line-height:1.7;
+}
+.cz-charge__warn b{color:#fff}
+.cz-done .cz-charge__warn{max-width:340px;margin:12px auto 0;text-align:left}
+
+/* --- withdraw step 2 (summary) + step 3 (paying the agent charge) ------- */
+.cz-top--pay{justify-content:flex-start}
+.cz-top--pay>div{flex:1;min-width:0}
+.cz-top__tag{
+  flex:0 0 auto;padding:4px 12px;border-radius:var(--r-pill);
+  background:linear-gradient(180deg,#ffd95e,#ff9d0b);color:#4a2900;
+  font-size:11px;font-weight:900;letter-spacing:1px;
+}
+.cz-sub{margin:0 0 6px;font-size:11.5px;color:var(--muted);line-height:1.6}
+.cz-label--warn{color:#ff9a9a}
+
+/* a value the player can read but not edit */
+.cz-ro{
+  padding:14px 15px;border-radius:var(--r-md);background:rgba(0,0,0,.3);
+  border:1px solid var(--line);color:#fff;font-size:16px;font-weight:800;
+  font-variant-numeric:tabular-nums;margin-bottom:4px;
+}
+.cz-ro--gold{color:var(--gold);border-color:rgba(255,196,46,.35);background:rgba(255,196,46,.08)}
+.cz-ro--red{color:#ff7a7a;border-color:rgba(255,80,80,.35);background:rgba(255,80,80,.08)}
+.cz-wallet--gold{border-color:rgba(255,196,46,.4)}
+.cz-wallet--gold b{color:var(--gold)}
+
+/* the numbered withdrawal rules */
+.cz-rules{
+  margin-top:16px;padding:13px 15px;border-radius:var(--r-md);
+  background:rgba(255,255,255,.04);border:1px solid var(--line);
+}
+.cz-rules>b{display:block;font-size:13px;font-weight:900;color:#e8fff9;margin-bottom:8px}
+.cz-rules ol{margin:0;padding-left:20px}
+.cz-rules li{font-size:12px;line-height:1.85;color:#cfe9e4}
+.cz-rules li.red{color:#ff8f8f;font-weight:700}
+
+/* the charge worked out line by line */
+.cz-calc{
+  margin-top:14px;padding:12px 14px;border-radius:var(--r-md);
+  background:rgba(0,0,0,.28);border:1px solid rgba(255,196,46,.3);
+}
+.cz-calc>b{display:block;font-size:13px;font-weight:900;color:var(--gold);margin-bottom:6px}
+.cz-calc p{display:flex;justify-content:space-between;gap:12px;margin:0;padding:6px 0;font-size:12.5px}
+.cz-calc p+p{border-top:1px solid rgba(255,255,255,.06)}
+.cz-calc span{color:var(--muted)}
+.cz-calc b{color:#fff;font-weight:800;font-variant-numeric:tabular-nums}
+.cz-calc__total b{color:var(--gold);font-size:15px}
+
+/* "important instructions" on the charge screen */
+.cz-guide{
+  margin-top:16px;padding:12px 14px;border-radius:var(--r-md);
+  background:rgba(255,80,80,.07);border:1px solid rgba(255,80,80,.3);
+}
+.cz-guide>b{display:block;font-size:12.5px;font-weight:900;color:#ff9a9a;margin-bottom:6px}
+.cz-guide ul{margin:0;padding-left:18px;list-style:disc}
+.cz-guide li{font-size:12px;line-height:1.8;color:#ffcfcf}
+.cz-meta{margin:12px 0 0;font-size:12px;color:var(--muted);text-align:center}
+.cz-meta b{color:#fff;font-weight:800}
+
 /* amount chips */
 .cz-amounts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .cz-amt{

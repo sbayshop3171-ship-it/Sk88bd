@@ -112,7 +112,7 @@ function cleanDeposit(
     'methodTitle', 'channelTitle', 'amountTitle', 'channelNote', 'stepHeaderNote', 'stepWarning',
     'walletLabel', 'howToTitle', 'howToSteps', 'trxLabel', 'trxHelpText', 'trxPlaceholder',
     'confirmTitle', 'confirmText', 'cautionTitle', 'cautionText', 'successTitle', 'successText',
-    'promoTitle', 'promoText',
+    'promoTitle', 'promoText', 'noticeTitle', 'noticeText',
   ];
   for (const key of strings) {
     if (raw[key] !== undefined) (out as Record<string, unknown>)[key] = text(raw[key], 1200);
@@ -172,11 +172,23 @@ function cleanWithdraw(
     out.methods = methods;
   }
 
-  for (const key of ['processingTime', 'reminder', 'walletsTitle', 'emptyWalletsText', 'amountLabel', 'passwordLabel', 'passwordHint', 'note'] as const) {
-    if (raw[key] !== undefined) out[key] = text(raw[key], 800);
+  for (const key of [
+    'processingTime', 'reminder', 'walletsTitle', 'emptyWalletsText', 'amountLabel',
+    'passwordLabel', 'passwordHint', 'note', 'chargeTitle', 'chargeText', 'chargeWarning',
+    'summaryTitle', 'summaryWarning', 'chargeLabel', 'rulesTitle', 'rules', 'applyLabel',
+    'payTitle', 'payWarning', 'agentNote', 'chargeExactNote', 'guideTitle', 'guideLines',
+    'chargeTrxLabel', 'chargeTrxPlaceholder', 'chargeCaution',
+  ] as const) {
+    if (raw[key] !== undefined) out[key] = text(raw[key], 1200);
+  }
+  if (raw.chargeBasis !== undefined) {
+    out.chargeBasis = raw.chargeBasis === 'amount' ? 'amount' : 'balance';
   }
   if (raw.dailyLimit !== undefined) out.dailyLimit = clampInt(raw.dailyLimit, 0, 999, base.dailyLimit);
   if (raw.maxWallets !== undefined) out.maxWallets = clampInt(raw.maxWallets, 1, 20, base.maxWallets);
+  if (raw.chargePerThousand !== undefined) {
+    out.chargePerThousand = clampInt(raw.chargePerThousand, 0, 100_000, base.chargePerThousand);
+  }
 
   return out;
 }
