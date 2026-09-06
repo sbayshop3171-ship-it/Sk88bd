@@ -10,10 +10,10 @@ export const BRAND = {
   accent: '88BD',
   tag: 'bet',
   currency: '৳',
-  domain: 'sk88bd.live',
-  /** Project owner's operational mailbox — support, admin sign-in, Supabase and
-      Vercel accounts all hang off this address. */
-  email: 'mpmony1@gmail.com',
+  domain: 'sk88bd.com',
+  /** Support mailbox shown in the footer and on the support page. The admin
+      can override it at /admin/settings; this is the fallback. */
+  email: 'tsportscom70@gmail.com',
   /** support handles shown in the floating buttons + footer */
   social: {
     whatsapp: 'https://wa.me/8801000000000',

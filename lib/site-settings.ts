@@ -28,6 +28,8 @@ export type SiteSettings = {
     whatsapp: string;
     telegram: string;
     facebook: string;
+    /** shown in the footer and on the support page */
+    email: string;
   };
   /** the running line under the header; empty hides it */
   notice: string;
@@ -43,12 +45,17 @@ export const SITE_SETTINGS_DEFAULTS: SiteSettings = {
     whatsapp: BRAND.social.whatsapp,
     telegram: BRAND.social.telegram,
     facebook: BRAND.social.facebook,
+    email: BRAND.email,
   },
   notice: '',
   updatedAt: null,
 };
 
-export type SettingsMutationReason = 'invalid-limit' | 'invalid-url' | 'unknown-channel';
+export type SettingsMutationReason =
+  | 'invalid-limit'
+  | 'invalid-url'
+  | 'invalid-email'
+  | 'unknown-channel';
 
 export type SettingsMutationResult =
   | { ok: true; settings: SiteSettings }
@@ -57,3 +64,7 @@ export type SettingsMutationResult =
 /** Only web links, so a typo can't turn a support button into javascript:. */
 export const isSupportUrl = (value: string) =>
   value === '' || /^https?:\/\/[^\s]+$/i.test(value);
+
+/** Blank drops the email row; otherwise it has to look like an address. */
+export const isSupportEmail = (value: string) =>
+  value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);

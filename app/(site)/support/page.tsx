@@ -2,7 +2,6 @@
 
 import PageHeader from '@/components/PageHeader';
 import { useSiteSettings } from '@/components/useSiteSettings';
-import { BRAND } from '@/lib/brand';
 
 export default function SupportPage() {
   const { support } = useSiteSettings();
@@ -10,7 +9,7 @@ export default function SupportPage() {
   // [glyph, label, sub, link] — a blank admin link hides that row
   const channels: [string, string, string, string | null][] = [
     ['💬', 'লাইভ চ্যাট', '২৪/৭ সরাসরি সাপোর্ট', null],
-    ['✉️', 'ইমেইল', BRAND.email, `mailto:${BRAND.email}`],
+    ['✉️', 'ইমেইল', support.email, support.email ? `mailto:${support.email}` : null],
     ['📱', 'WhatsApp', support.whatsapp, support.whatsapp],
     ['✈️', 'Telegram', support.telegram, support.telegram],
     ['📘', 'Facebook', support.facebook, support.facebook],

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
+import InstallPrompt from '@/components/InstallPrompt';
 import { BRAND } from '@/lib/brand';
 import './globals.css';
 
@@ -8,6 +9,16 @@ export const metadata: Metadata = {
   description:
     'বাংলাদেশের অনলাইন গেমিং প্ল্যাটফর্ম — লাইভ ক্যাসিনো, স্লট, ক্রিকেট এক্সচেঞ্জ, ফিশিং ও লটারি।',
   applicationName: BRAND.name,
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/icons/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/icons/apple-touch-icon.png',
+  },
+  // lets iOS run it full-screen once it is on the home screen
+  appleWebApp: { capable: true, title: BRAND.name, statusBarStyle: 'black-translucent' },
 };
 
 export const viewport: Viewport = {
@@ -56,6 +67,17 @@ const extensionErrorGuard = `
 })();
 `;
 
+const installPromptCatcher = `
+(function () {
+  window.addEventListener('beforeinstallprompt', function (event) {
+    // stop Chrome's own mini-infobar; the site shows its own sheet instead
+    event.preventDefault();
+    window.__skInstallEvent = event;
+    window.dispatchEvent(new Event('sk:installable'));
+  });
+})();
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="bn" suppressHydrationWarning>
@@ -65,7 +87,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: extensionErrorGuard }}
         />
+        <Script
+          id="install-prompt-catcher"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: installPromptCatcher }}
+        />
         {children}
+        <InstallPrompt />
       </body>
     </html>
   );

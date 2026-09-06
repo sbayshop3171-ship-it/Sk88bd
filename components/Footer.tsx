@@ -1,3 +1,6 @@
+'use client';
+
+import { useSiteSettings } from '@/components/useSiteSettings';
 import { BRAND } from '@/lib/brand';
 import { PAYMENT_METHODS } from '@/lib/catalogue';
 import { t } from '@/lib/strings';
@@ -17,6 +20,10 @@ function Group({ title, items }: { title: string; items: readonly string[] }) {
 }
 
 export default function Footer() {
+  // the admin's address, falling back to the one the code ships with
+  const { support } = useSiteSettings();
+  const email = support.email;
+
   return (
     <footer className="ftr">
       <Group title={t.paymentMethods} items={PAYMENT_METHODS} />
@@ -25,7 +32,9 @@ export default function Footer() {
       <div className="ftr__grp">
         <div className="ftr__ttl">যোগাযোগ</div>
         <div className="ftr__row">
-          <a className="chip" href={`mailto:${BRAND.email}`}>{BRAND.email}</a>
+          {email
+            ? <a className="chip" href={`mailto:${email}`}>{email}</a>
+            : <span className="chip">লাইভ চ্যাট</span>}
         </div>
       </div>
       <p className="ftr__legal">

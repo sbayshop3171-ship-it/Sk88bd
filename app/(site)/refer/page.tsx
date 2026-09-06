@@ -26,7 +26,11 @@ export default function ReferPage() {
 
   const signedIn = ready && Boolean(session);
   const code = profile?.referral_code ?? '';
-  const link = code ? `https://${BRAND.domain}/register?ref=${code}` : '';
+  // the domain the player is actually on, so the link works on every mirror;
+  // read after mount so server and client render the same first frame
+  const [origin, setOrigin] = useState(`https://${BRAND.domain}`);
+  useEffect(() => { setOrigin(window.location.origin); }, []);
+  const link = code ? `${origin}/register?ref=${code}` : '';
 
   useEffect(() => {
     if (!session) return;

@@ -9,8 +9,9 @@ Two apps live in this one repo:
 | `laravel/`  | Laravel 12 + Inertia + React port (the app being built) | active work happens here |
 | `legacy/`   | the original static HTML build                          | reference only, do not edit |
 
-Owner account for everything (GitHub, Supabase, Vercel, support mailbox):
-**mpmony1@gmail.com**
+Support mailbox and Supabase account: **tsportscom70@gmail.com**. The support
+address is admin-editable at `/admin/settings`; the value above is the
+fallback in `lib/brand.ts`.
 
 ## Requirements
 
@@ -29,9 +30,11 @@ npm run dev                    # http://localhost:3000
 npm run build
 ```
 
-Local demo admin starts with `ADMIN_USERNAME` / `ADMIN_PASSWORD` when
-`.data/admin-auth-store.json` does not exist yet. Change the password from
-`/admin/settings` after the first login.
+Admin login is fixed: **admin / admin1141**. It is set in
+`lib/admin-auth.ts` and needs no environment variable, so `/admin` works the
+same locally and on the server. To use different credentials, set
+`ADMIN_USERNAME` / `ADMIN_PASSWORD` in the environment and restart —
+changing either one logs any open admin session out.
 
 Important admin routes:
 

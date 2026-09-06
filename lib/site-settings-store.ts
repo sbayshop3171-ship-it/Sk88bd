@@ -5,6 +5,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
+  isSupportEmail,
   isSupportUrl,
   SITE_SETTINGS_DEFAULTS,
   type ChannelLimit,
@@ -86,6 +87,11 @@ function normalize(input: unknown): Clean {
       const url = String(s[key]).trim().slice(0, 300);
       if (!isSupportUrl(url)) return { ok: false, reason: 'invalid-url', field: key };
       out[key] = url;
+    }
+    if (s.email !== undefined) {
+      const email = String(s.email).trim().slice(0, 120);
+      if (!isSupportEmail(email)) return { ok: false, reason: 'invalid-email', field: 'email' };
+      out.email = email;
     }
     value.support = out as SiteSettings['support'];
   }

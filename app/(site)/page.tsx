@@ -13,6 +13,7 @@ import NoticeBar from '@/components/NoticeBar';
 import { HOME_SECTIONS, PROVIDERS, demoGames } from '@/lib/catalogue';
 import { t } from '@/lib/strings';
 import Link from 'next/link';
+import { Fragment } from 'react';
 import { DepositIcon, WithdrawIcon } from '@/components/Icons';
 
 export default function HomePage() {
@@ -30,7 +31,6 @@ export default function HomePage() {
         <Link href="/withdraw"><WithdrawIcon />{t.withdraw}</Link>
       </div>
 
-      <Jackpot />
       <FeaturedGame />
       <CategoryTabs />
 
@@ -42,7 +42,13 @@ export default function HomePage() {
       {/* only rendered once the visitor has starred a tile */}
       <FavouriteGames />
 
-      {HOME_SECTIONS.map((key) => <GameSection key={key} category={key} />)}
+      {HOME_SECTIONS.map((key) => (
+        <Fragment key={key}>
+          <GameSection category={key} />
+          {/* the pot rides under the poker rail, where the reference lobby has it */}
+          {key === 'poker' && <Jackpot />}
+        </Fragment>
+      ))}
 
       <Winners />
 

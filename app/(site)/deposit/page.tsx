@@ -1,55 +1,99 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
-import Field from '@/components/Field';
 import PageHeader from '@/components/PageHeader';
+import { useCashierConfig } from '@/components/useCashierConfig';
 import { useUI } from '@/components/UIProvider';
 import { toPaisa } from '@/lib/auth';
 import { money } from '@/lib/brand';
+import {
+  HOWTO_TILES,
+  PAY_TYPE_KINDS,
+  PAY_TYPE_LABEL,
+  isImageIcon,
+  type DepositMethod,
+} from '@/lib/cashier-config';
 import { KIND_LABEL, type PublicDepositAccount } from '@/lib/payment-accounts';
-import { DEPOSIT_CHANNELS, QUICK_AMOUNTS } from '@/lib/payments';
+import { PROMOTIONS } from '@/lib/promotions';
 import { t } from '@/lib/strings';
-import Link from 'next/link';
-import { useSiteSettings } from '@/components/useSiteSettings';
 
+type Step = 'pick' | 'pay' | 'done';
+
+/** Three screens, like the cashiers players already know: pick a method and
+    an amount → pay into the number shown and type the TrxID → done. Every
+    label, method and amount comes from the admin's cashier design. */
 export default function DepositPage() {
+  const router = useRouter();
   const { toast } = useUI();
-  const { backendReady, session, supabase, refresh } = useAuth();
-  const settings = useSiteSettings();
-  // Channels the admin switched off drop out; limits come from the admin's
-  // settings too, with the shipped numbers as the first-paint fallback.
-  const channels = DEPOSIT_CHANNELS
-    .filter((c) => settings.deposit[c.id]?.active !== false)
-    .map((c) => ({ ...c, ...settings.deposit[c.id] }));
-  const [channelId, setChannelId] = useState(DEPOSIT_CHANNELS[0].id);
-  const channel = channels.find((c) => c.id === channelId) ?? channels[0] ?? DEPOSIT_CHANNELS[0];
+  const { ready, backendReady, session, supabase, refresh } = useAuth();
+  const { config, ready: configReady } = useCashierConfig();
+  const cfg = config.deposit;
+
+  const methods = useMemo(() => cfg.methods.filter((m) => m.active), [cfg.methods]);
+  const [methodId, setMethodId] = useState('');
+  const method: DepositMethod | undefined = methods.find((m) => m.id === methodId) ?? methods[0];
+
+  const [step, setStep] = useState<Step>('pick');
   const [amount, setAmount] = useState('');
-  const [sender, setSender] = useState('');
-  const [txnId, setTxnId] = useState('');
+  const [trx, setTrx] = useState('');
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [promoOpen, setPromoOpen] = useState(false);
+  const [howOpen, setHowOpen] = useState(true);
   const [account, setAccount] = useState<PublicDepositAccount | null>(null);
-  const [loadingAccount, setLoadingAccount] = useState(true);
+  const [loadingAccount, setLoadingAccount] = useState(false);
 
-  // One random operator number per channel pick. Switching channel — or
-  // reloading — asks again, so players spread across the numbers the admin
-  // added instead of all paying into the same one.
+  const n = Number(amount);
+  const amountOk = Boolean(method) && Number.isFinite(n) && n >= (method?.min ?? 0) && n <= (method?.max ?? 0);
+  const trxPattern = useMemo(() => {
+    try { return cfg.trxPattern ? new RegExp(cfg.trxPattern) : null; } catch { return null; }
+  }, [cfg.trxPattern]);
+  const trxClean = trx.trim();
+  const trxOk = trxClean.length > 0 && (!trxPattern || trxPattern.test(trxClean));
+
+  // One operator number per visit to the pay screen; a re-entry asks again
+  // so players spread across the numbers the admin added.
   useEffect(() => {
+    if (step !== 'pay' || !method) return;
     let live = true;
     setLoadingAccount(true);
     setAccount(null);
-
-    fetch(`/api/deposit/account?channel=${encodeURIComponent(channel.id)}`, { cache: 'no-store' })
+    const kinds = PAY_TYPE_KINDS[method.payType].join(',');
+    fetch(`/api/deposit/account?channel=${encodeURIComponent(method.channelId)}&kinds=${kinds}`, { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { ok: true; account: PublicDepositAccount } | null) => {
         if (live) setAccount(data?.ok ? data.account : null);
       })
       .catch(() => { if (live) setAccount(null); })
       .finally(() => { if (live) setLoadingAccount(false); });
-
     return () => { live = false; };
-  }, [channel.id]);
+  }, [step, method]);
+
+  const pickMethod = (m: DepositMethod) => {
+    setMethodId(m.id);
+    setErr('');
+  };
+
+  const next = () => {
+    if (!method) return;
+    if (!amountOk) {
+      setErr(`${method.name} এর জন্য ${money(method.min)} — ${money(method.max)} এর মধ্যে দিন`);
+      return;
+    }
+    if (ready && !session) {
+      toast('ডিপোজিট করতে আগে লগইন করুন');
+      router.push('/login');
+      return;
+    }
+    setErr('');
+    setTrx('');
+    setStep('pay');
+    window.scrollTo({ top: 0 });
+  };
 
   const copyNumber = async () => {
     if (!account) return;
@@ -61,54 +105,232 @@ export default function DepositPage() {
     }
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const n = Number(amount);
-    if (!Number.isFinite(n) || n < channel.min || n > channel.max) {
-      setErr(`${channel.name} এর জন্য ${money(channel.min)} — ${money(channel.max)} এর মধ্যে দিন`);
-      return;
-    }
-    if (!/^01\d{9}$/.test(sender.trim())) {
-      setErr('যে নাম্বার থেকে পাঠিয়েছেন সেটি দিন (১১ ডিজিট)');
+  const askConfirm = () => {
+    if (!method || !account) return;
+    if (method.trxRequired && !trxOk) {
+      setErr(trxClean ? 'TrxID এর ফরম্যাট ঠিক নেই' : 'TrxID দিন');
       return;
     }
     setErr('');
+    setConfirming(true);
+  };
 
-    if (!backendReady) {
+  const submit = async () => {
+    if (!method) return;
+    setConfirming(false);
+    if (!backendReady || !session || !supabase) {
       toast('পেমেন্ট গেটওয়ে যুক্ত হলে এখান থেকে ডিপোজিট হবে');
-      return;
-    }
-    if (!session || !supabase) {
-      setErr('ডিপোজিট করতে আগে লগইন করুন');
       return;
     }
 
     // The player raises the request; RLS only lets them insert their own row.
     // An admin approves it at /admin/deposits, and only then does the money
-    // reach the wallet.
+    // reach the wallet. The method/bonus columns arrive with migration 005;
+    // until it is applied the row is raised without them.
     setBusy(true);
-    const { error } = await supabase.from('deposits').insert({
+    const row = {
       user_id: session.user.id,
-      channel_id: channel.id,
+      channel_id: method.channelId,
       amount: toPaisa(n),
-      sender_no: sender.trim(),
-      txn_id: txnId.trim() || null,
-    });
+      sender_no: null,
+      txn_id: trxClean || null,
+    };
+    const bonus = { method_id: method.id, bonus_amount: toPaisa(Math.round((n * method.bonusPercent) / 100)) };
+    let { error } = await supabase.from('deposits').insert({ ...row, ...bonus });
+    if (error && /column|schema cache/i.test(error.message)) {
+      ({ error } = await supabase.from('deposits').insert(row));
+    }
     setBusy(false);
 
     if (error) {
       setErr('রিকোয়েস্ট পাঠানো গেল না — আবার চেষ্টা করুন');
       return;
     }
-
-    setAmount('');
-    setSender('');
-    setTxnId('');
     await refresh();
-    toast('ডিপোজিট রিকোয়েস্ট জমা হয়েছে — অ্যাডমিন অনুমোদনের পর ব্যালেন্সে যোগ হবে');
+    setStep('done');
+    window.scrollTo({ top: 0 });
   };
 
+  const resubmit = () => {
+    setTrx('');
+    setErr('');
+    setStep('pay');
+    window.scrollTo({ top: 0 });
+  };
+
+  if (!method) {
+    return (
+      <>
+        <PageHeader title={t.deposit} />
+        <div className="note" style={{ margin: 12 }}>
+          {configReady ? 'এই মুহূর্তে কোনো ডিপোজিট মেথড চালু নেই। সাপোর্টে যোগাযোগ করুন।' : 'লোড হচ্ছে…'}
+        </div>
+      </>
+    );
+  }
+
+  /* ---------------- step 3: done ---------------- */
+  if (step === 'done') {
+    return (
+      <>
+        <div className="cz-top">
+          <button type="button" className="cz-top__back" aria-label="পিছনে" onClick={() => setStep('pick')}>‹</button>
+          <div>
+            <b>BDT {n.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</b>
+            <small>{cfg.stepHeaderNote}</small>
+          </div>
+        </div>
+        <div className="cz-done">
+          <span className="cz-done__tick" aria-hidden>✓</span>
+          <h2>{cfg.successTitle}</h2>
+          <p>{cfg.successText}</p>
+          <button type="button" className="btn btn--gold" onClick={resubmit}>Resubmit TrxID</button>
+          <div className="cz-done__links">
+            <Link href="/deposit-history">হিস্টোরি দেখুন</Link>
+            <Link href="/">হোমে ফিরুন</Link>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  /* ---------------- step 2: pay ---------------- */
+  if (step === 'pay') {
+    const payLabel = PAY_TYPE_LABEL[method.payType];
+    const steps = cfg.howToSteps.split('\n').map((s) => s.trim()).filter(Boolean);
+    return (
+      <>
+        <div className="cz-top">
+          <button type="button" className="cz-top__back" aria-label="পিছনে" onClick={() => { setStep('pick'); setErr(''); }}>‹</button>
+          <div>
+            <b>BDT {n.toLocaleString('en-IN')}</b>
+            <small>{cfg.stepHeaderNote}</small>
+          </div>
+        </div>
+
+        <div className="cz-pay">
+          {cfg.stepWarning && <p className="cz-warn">{cfg.stepWarning}</p>}
+
+          <div className="cz-gate" style={{ background: method.color }}>
+            <MethodIcon method={method} size={40} />
+            <b>{method.name}</b>
+          </div>
+
+          <div className="cz-label">{cfg.walletLabel}<span>*</span></div>
+          {cfg.channelNote && <p className="cz-pink">{cfg.channelNote}</p>}
+          {loadingAccount ? (
+            <div className="paybox paybox--wait">নাম্বার আনা হচ্ছে…</div>
+          ) : account ? (
+            <div className="cz-wallet">
+              <div className="cz-wallet__row">
+                <b>{account.number}</b>
+                <button type="button" className="cz-wallet__copy" onClick={copyNumber} aria-label="কপি">⧉</button>
+              </div>
+              <div className="cz-wallet__meta">
+                <span className="paybox__kind">{KIND_LABEL[account.kind]}</span>
+                <span>{account.holder}</span>
+              </div>
+              {account.note && <p className="paybox__note">{account.note}</p>}
+            </div>
+          ) : (
+            <div className="paybox paybox--empty">
+              এই মুহূর্তে {method.name} এর নাম্বার দেওয়া নেই। সাপোর্টে যোগাযোগ করুন অথবা
+              অন্য একটি মেথড বেছে নিন।
+            </div>
+          )}
+
+          {howOpen && (
+            <div className="cz-how">
+              {method.payType !== 'transfer' && (
+                <>
+                  <div className="cz-how__tiles">
+                    {HOWTO_TILES.map((tile) => (
+                      <span key={tile.key} className={`cz-how__tile${tile.key === method.payType ? ' on' : ''}`}>
+                        <i aria-hidden>{tile.glyph}</i>
+                        <small>{tile.label}</small>
+                      </span>
+                    ))}
+                  </div>
+                  <div className="cz-how__pick">{payLabel}</div>
+                </>
+              )}
+              {method.payType === 'transfer' && cfg.howToTitle && <div className="cz-how__pick">{cfg.howToTitle}</div>}
+              {steps.length > 0 && (
+                <p className="cz-how__steps">
+                  {steps.map((s, i) => (
+                    <span key={i}>
+                      {i > 0 && <em> → </em>}
+                      {s === 'উপরের মেনু বেছে নিন' ? <b>{payLabel}</b> : s}
+                    </span>
+                  ))}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="cz-label">
+            {cfg.trxLabel}
+            {method.trxRequired && <span>(প্রয়োজন)</span>}
+          </div>
+          {cfg.trxHelpText && (
+            cfg.trxHelpUrl
+              ? <a className="cz-help" href={cfg.trxHelpUrl} target="_blank" rel="noopener noreferrer">{cfg.trxHelpText}</a>
+              : <button type="button" className="cz-help" onClick={() => setHowOpen((v) => !v)}>{cfg.trxHelpText}</button>
+          )}
+          <input
+            className={`cz-trx${trxClean ? (trxOk ? ' ok' : ' bad') : ''}`}
+            placeholder={cfg.trxPlaceholder}
+            value={trx}
+            onChange={(e) => { setTrx(e.target.value); setErr(''); }}
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+          />
+          {trxClean && (
+            <p className={`cz-trx__state${trxOk ? ' ok' : ' bad'}`}>
+              {trxOk ? '✓ TrxID সঠিক ফরম্যাটে আছে' : 'TrxID এর ফরম্যাট ঠিক নেই'}
+            </p>
+          )}
+          {err && <p className="cz-err">{err}</p>}
+
+          <button
+            type="button"
+            className="btn btn--gold cz-confirm"
+            disabled={busy || loadingAccount || !account || (method.trxRequired && !trxOk)}
+            onClick={askConfirm}
+          >
+            {busy ? 'পাঠানো হচ্ছে…' : 'নিশ্চিত'}
+          </button>
+
+          {(cfg.cautionTitle || cfg.cautionText) && (
+            <div className="cz-caution">
+              {cfg.cautionTitle && <b>{cfg.cautionTitle}</b>}
+              {cfg.cautionText && <p>{cfg.cautionText}</p>}
+            </div>
+          )}
+        </div>
+
+        {confirming && (
+          <>
+            <div className="scrim on" onClick={() => setConfirming(false)} />
+            <div className="modal cz-modal" role="dialog" aria-modal="true">
+              <h3>{cfg.confirmTitle}</h3>
+              <p>
+                {cfg.confirmText}
+                {trxClean && <> <b className="cz-modal__trx">{trxClean}</b></>}
+              </p>
+              <div className="cz-modal__acts">
+                <button type="button" className="btn btn--ghost" onClick={() => setConfirming(false)}>বাতিল</button>
+                <button type="button" className="btn btn--gold" onClick={submit}>নিশ্চিত</button>
+              </div>
+            </div>
+          </>
+        )}
+      </>
+    );
+  }
+
+  /* ---------------- step 1: pick ---------------- */
   return (
     <>
       <PageHeader
@@ -116,105 +338,101 @@ export default function DepositPage() {
         action={<Link href="/deposit-history" className="btn btn--ghost" style={{ fontSize: 11, padding: '6px 12px' }}>হিস্টোরি</Link>}
       />
 
-      <form style={{ margin: 12 }} onSubmit={submit} noValidate>
-        <div className="field">
-          <label>পেমেন্ট মেথড</label>
-          <div className="grid grid--2" style={{ gap: 8 }}>
-            {channels.map((c) => (
+      <div className="cz">
+        <section className="cz-sec">
+          <h2 className="cz-sec__h"><i className="cz-dot cz-dot--gold" />{cfg.methodTitle}</h2>
+          <div className="cz-methods">
+            {methods.map((m) => (
               <button
-                key={c.id}
+                key={m.id}
                 type="button"
-                onClick={() => { setChannelId(c.id); setErr(''); }}
-                className="game"
-                style={{
-                  padding: '10px 8px',
-                  display: 'flex', alignItems: 'center', gap: 9,
-                  borderColor: c.id === channel.id ? 'var(--gold)' : 'var(--line)',
-                  background: c.id === channel.id ? 'rgba(255,196,46,.12)' : undefined,
-                }}
-                aria-pressed={c.id === channel.id}
+                className={`cz-method${m.id === method.id ? ' on' : ''}`}
+                onClick={() => pickMethod(m)}
+                aria-pressed={m.id === method.id}
               >
-                <span className={c.art} style={{ width: 30, height: 30, borderRadius: 8, display: 'grid', placeItems: 'center', fontSize: 15, flex: '0 0 30px' }}>
-                  {c.glyph}
-                </span>
-                <span style={{ fontSize: 12, fontWeight: 700 }}>{c.name}</span>
+                <MethodIcon method={m} size={26} />
+                <span className="cz-method__name">{m.name}</span>
+                {m.bonusLabel && <span className="cz-method__bonus">{m.bonusLabel}</span>}
               </button>
             ))}
           </div>
-        </div>
+          {method.note && <p className="cz-note">{method.note}</p>}
+        </section>
 
-        <div className="field">
-          <label>{channel.name} নাম্বার</label>
-          {loadingAccount ? (
-            <div className="paybox paybox--wait">নাম্বার আনা হচ্ছে…</div>
-          ) : account ? (
-            <div className="paybox">
-              <div className="paybox__top">
-                <span className="paybox__kind">{KIND_LABEL[account.kind]}</span>
-                <span className="paybox__ch">{account.channelName}</span>
-              </div>
-              <div className="paybox__row">
-                <b className="paybox__num">{account.number}</b>
-                <button type="button" className="btn btn--gold paybox__copy" onClick={copyNumber}>
-                  কপি
-                </button>
-              </div>
-              <div className="paybox__holder">{account.holder}</div>
-              {account.note && <p className="paybox__note">{account.note}</p>}
-            </div>
-          ) : (
-            <div className="paybox paybox--empty">
-              এই মুহূর্তে {channel.name} নাম্বার দেওয়া নেই। সাপোর্টে যোগাযোগ করুন অথবা
-              অন্য একটি মেথড বেছে নিন।
-            </div>
-          )}
-        </div>
-
-        <div className="field">
-          <label>দ্রুত সিলেক্ট</label>
-          <div className="scroll-x">
-            <div className="provs">
-              {QUICK_AMOUNTS.map((a) => (
-                <button key={a} type="button" className="prov" onClick={() => setAmount(String(a))}>
-                  {money(a)}
-                </button>
-              ))}
-            </div>
+        <section className="cz-sec">
+          <h2 className="cz-sec__h"><i className="cz-dot cz-dot--mint" />{cfg.channelTitle}</h2>
+          <div className="cz-channel on">
+            <MethodIcon method={method} size={22} />
+            <span>{method.name}</span>
+            {method.tag && <><em>|</em><i>{method.tag}</i></>}
           </div>
-        </div>
+          {cfg.channelNote && <p className="cz-pink">{cfg.channelNote}</p>}
+        </section>
 
-        <Field label={`পরিমাণ (সর্বনিম্ন ${money(channel.min)})`}>
-          <input
-            type="number" inputMode="numeric" placeholder={String(channel.min)}
-            value={amount} onChange={(e) => setAmount(e.target.value)}
-            min={channel.min} max={channel.max}
-          />
-        </Field>
+        <section className="cz-sec">
+          <h2 className="cz-sec__h"><i className="cz-dot cz-dot--gold" />{cfg.amountTitle}</h2>
+          <div className="cz-amounts">
+            {cfg.amounts.map((a) => (
+              <button
+                key={a.amount}
+                type="button"
+                className={`cz-amt${Number(amount) === a.amount ? ' on' : ''}`}
+                onClick={() => { setAmount(String(a.amount)); setErr(''); }}
+              >
+                {a.bonusLabel && <span className="cz-amt__badge">🎁 {a.bonusLabel}</span>}
+                <b>{a.amount.toLocaleString('en-IN')}</b>
+              </button>
+            ))}
+          </div>
+          <label className="cz-amtin">
+            <span>৳</span>
+            <input
+              type="number" inputMode="numeric" placeholder={String(method.min)}
+              value={amount} min={method.min} max={method.max}
+              onChange={(e) => { setAmount(e.target.value); setErr(''); }}
+            />
+          </label>
+          <p className="cz-limit">লিমিট: {money(method.min)} — {money(method.max)}</p>
+          {err && <p className="cz-err">{err}</p>}
+        </section>
 
-        <Field label="যে নাম্বার থেকে পাঠিয়েছেন">
-          <input
-            type="tel" inputMode="numeric" placeholder="01XXXXXXXXX"
-            value={sender} onChange={(e) => setSender(e.target.value)}
-          />
-        </Field>
+        {cfg.promoTitle && (
+          <section className="cz-sec">
+            <button type="button" className="cz-sec__h cz-sec__h--btn" onClick={() => setPromoOpen((v) => !v)} aria-expanded={promoOpen}>
+              <i className="cz-dot cz-dot--purple" />{cfg.promoTitle}
+              <span className={`cz-chev${promoOpen ? ' up' : ''}`} aria-hidden>⌃</span>
+            </button>
+            {promoOpen && (
+              <div className="cz-promos">
+                {cfg.promoText && <p>{cfg.promoText}</p>}
+                {PROMOTIONS.slice(0, 4).map((p) => (
+                  <Link key={p.id} href="/promotions" className="cz-promo">
+                    <span aria-hidden>{p.glyph}</span>{p.title}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+      </div>
 
-        <Field label="ট্রানজেকশন আইডি (ঐচ্ছিক)" error={err}>
-          <input
-            placeholder="যেমন: 9F2K4L8M"
-            value={txnId} onChange={(e) => setTxnId(e.target.value)}
-          />
-        </Field>
-
-        <button type="submit" className="btn btn--gold btn--block" disabled={busy}>
-          {busy ? 'পাঠানো হচ্ছে…' : `${t.deposit} করুন`}
+      <div className="cz-next">
+        <button type="button" className="btn btn--gold btn--block" disabled={!amountOk} onClick={next}>
+          পরবর্তী
         </button>
-
-        <div className="note">
-          ডিপোজিট লিমিট: {money(channel.min)} — {money(channel.max)}।
-          উপরের নাম্বারে টাকা পাঠিয়ে, তারপর পরিমাণ ও যে নাম্বার থেকে পাঠিয়েছেন
-          সেটি দিয়ে সাবমিট করুন। অ্যাডমিন অনুমোদন করলে ব্যালেন্সে যোগ হবে।
-        </div>
-      </form>
+      </div>
     </>
+  );
+}
+
+function MethodIcon({ method, size }: { method: DepositMethod; size: number }) {
+  if (isImageIcon(method.icon)) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img className="cz-icon" src={method.icon} alt="" width={size} height={size} style={{ width: size, height: size }} />;
+  }
+  return (
+    <span className="cz-icon cz-icon--glyph" style={{ width: size, height: size, fontSize: size * 0.55, color: method.color }} aria-hidden>
+      {method.icon}
+    </span>
   );
 }

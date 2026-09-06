@@ -1,0 +1,60 @@
+/* Sk88bd service worker.
+ *
+ * Deliberately minimal. Chrome will only offer "Install app" for a site whose
+ * service worker handles fetch, so that is what this does — and no more:
+ *
+ *   - page loads always go to the network first, and only fall back to a
+ *     cached copy when the device is offline;
+ *   - scripts, styles and images are never cached here, so a deploy can never
+ *     leave a player running yesterday's JavaScript against today's API.
+ *
+ * Bump CACHE when this file changes; older caches are dropped on activate.
+ */
+
+const CACHE = 'sk88bd-shell-v1';
+const OFFLINE_URL = '/offline.html';
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE).then((cache) => cache.add(OFFLINE_URL)).catch(() => undefined),
+  );
+  // a new worker should take over rather than wait for every tab to close
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+
+  // Only page navigations. Everything else — assets, API calls, Supabase —
+  // goes straight to the network untouched.
+  if (request.method !== 'GET' || request.mode !== 'navigate') return;
+
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        // keep the last good page around purely as an offline fallback
+        const copy = response.clone();
+        caches.open(CACHE).then((cache) => cache.put(OFFLINE_URL, copy)).catch(() => undefined);
+        return response;
+      })
+      .catch(async () => {
+        const cached = await caches.match(OFFLINE_URL);
+        return (
+          cached ??
+          new Response('<h1>অফলাইন</h1><p>ইন্টারনেট সংযোগ পাওয়া যাচ্ছে না।</p>', {
+            status: 503,
+            headers: { 'content-type': 'text/html; charset=utf-8' },
+          })
+        );
+      }),
+  );
+});

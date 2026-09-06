@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { BRAND } from '@/lib/brand';
 import { t } from '@/lib/strings';
+import { openInstallSheet } from './usePwaInstall';
 
 /** Dismissable app-download strip pinned above the header. */
 export default function DownloadStrip() {
@@ -18,7 +19,7 @@ export default function DownloadStrip() {
         <div className="appbar__title">{t.downloadBonus} &gt;&gt;&gt;</div>
         <div className="appbar__stars" aria-hidden>★★★★★</div>
       </div>
-      <button className="btn-download" type="button">{t.download}</button>
+      <button className="btn-download" type="button" onClick={openInstallSheet}>{t.download}</button>
       <button
         className="appbar__close"
         type="button"

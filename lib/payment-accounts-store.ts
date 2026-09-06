@@ -125,13 +125,20 @@ export async function removeAccount(id: string): Promise<AccountMutationResult> 
  * number for that channel yet — the deposit screen then says so rather than
  * inventing one.
  */
-export async function pickDepositAccount(channelId: string): Promise<PublicDepositAccount | null> {
+export async function pickDepositAccount(
+  channelId: string,
+  kinds: PaymentAccountKind[] = [],
+): Promise<PublicDepositAccount | null> {
   if (!isKnownChannel(channelId)) return null;
 
   return mutateStore((store) => {
-    const pool = store.accounts.filter(
+    const open = store.accounts.filter(
       (a) => a.channelId === channelId && a.status === 'active' && a.use !== 'withdraw',
     );
+    // a method that wants, say, merchant numbers gets those; if the admin has
+    // not added any of that kind yet, any active number for the channel will do
+    const preferred = kinds.length ? open.filter((a) => kinds.includes(a.kind)) : open;
+    const pool = preferred.length ? preferred : open;
     if (pool.length === 0) return null;
 
     const picked = weightedPick(pool);

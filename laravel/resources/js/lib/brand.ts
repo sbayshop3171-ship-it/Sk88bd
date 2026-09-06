@@ -15,7 +15,7 @@ export const BRAND = {
     tag: 'bet',
     currency: '৳',
     domain: 'sk88bd.live',
-    email: 'mpmony1@gmail.com',
+    email: 'tsportscom70@gmail.com',
     social: {
         whatsapp: 'https://wa.me/8801000000000',
         facebook: 'https://facebook.com/',

@@ -8,6 +8,7 @@ import type { SiteSettings } from '@/lib/site-settings';
 const ERROR_LABEL: Record<string, string> = {
   'invalid-limit': 'লিমিট ঠিক নেই — সর্বনিম্ন ০ বা বেশি এবং সর্বোচ্চের চেয়ে ছোট হতে হবে।',
   'invalid-url': 'লিংক https:// দিয়ে শুরু হতে হবে (খালি রাখলে বাটন থাকবে না)।',
+  'invalid-email': 'ইমেইল ঠিকানাটি ঠিক নয় (খালি রাখলে ইমেইল দেখাবে না)।',
   'unknown-channel': 'অজানা পেমেন্ট চ্যানেল — পেজ রিফ্রেশ করুন।',
   unauthorized: 'সেশন শেষ হয়ে গেছে — আবার লগইন করুন।',
 };
@@ -22,9 +23,6 @@ export default function SiteSettingsControl({ initial }: { initial: SiteSettings
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-
-  const setDeposit = (id: string, patch: Partial<SiteSettings['deposit'][string]>) =>
-    setForm((f) => ({ ...f, deposit: { ...f.deposit, [id]: { ...f.deposit[id], ...patch } } }));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -66,51 +64,10 @@ export default function SiteSettingsControl({ initial }: { initial: SiteSettings
   return (
     <form onSubmit={submit}>
       <div className="adm__card">
-        <h2 className="adm__cardh">ডিপোজিট লিমিট (৳)</h2>
-        <div className="adm__tablewrap" style={{ marginBottom: 6 }}>
-          <table className="adm__table">
-            <thead>
-              <tr><th>চ্যানেল</th><th>সর্বনিম্ন</th><th>সর্বোচ্চ</th><th>চালু</th></tr>
-            </thead>
-            <tbody>
-              {DEPOSIT_CHANNELS.map((c) => {
-                const lim = form.deposit[c.id];
-                if (!lim) return null;
-                return (
-                  <tr key={c.id}>
-                    <td>{c.glyph} {c.name}</td>
-                    <td>
-                      <input
-                        className="adm__mini" type="number" min={0} step={1} style={{ width: 96 }}
-                        value={num(lim.min)} disabled={busy}
-                        onChange={(e) => setDeposit(c.id, { min: Number(e.target.value) })}
-                      />
-                    </td>
-                    <td>
-                      <input
-                        className="adm__mini" type="number" min={0} step={1} style={{ width: 110 }}
-                        value={num(lim.max)} disabled={busy}
-                        onChange={(e) => setDeposit(c.id, { max: Number(e.target.value) })}
-                      />
-                    </td>
-                    <td>
-                      <select
-                        className="adm__mini" value={lim.active ? '1' : '0'} disabled={busy}
-                        onChange={(e) => setDeposit(c.id, { active: e.target.value === '1' })}
-                      >
-                        <option value="1">হ্যাঁ</option>
-                        <option value="0">বন্ধ</option>
-                      </select>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <p className="adm__hint">
-          বন্ধ করা চ্যানেল ডিপোজিট পেজে দেখাবে না। প্লেয়ার এই সীমার বাইরে অংক দিলে
-          ফর্ম আটকে যাবে।
+        <h2 className="adm__cardh">ডিপোজিট মেথড ও লিমিট</h2>
+        <p className="adm__hint" style={{ margin: 0 }}>
+          ডিপোজিট মেথড, তাদের সর্বনিম্ন-সর্বোচ্চ, বোনাস আর পেজের লেখা এখন
+          <a href="/admin/cashier" style={{ color: 'var(--mint)', marginLeft: 4 }}>ক্যাশিয়ার ট্যাবে</a>।
         </p>
       </div>
 
@@ -146,10 +103,17 @@ export default function SiteSettingsControl({ initial }: { initial: SiteSettings
               />
             </label>
           ))}
+          <label className="adm__f">
+            <span>সাপোর্ট ইমেইল</span>
+            <input
+              type="email" placeholder="support@example.com" value={form.support.email} disabled={busy}
+              onChange={(e) => setForm((f) => ({ ...f, support: { ...f.support, email: e.target.value } }))}
+            />
+          </label>
         </div>
         <p className="adm__hint">
-          সাইটের পাশের ভাসমান বাটন আর সাপোর্ট পেজ এই লিংকগুলো ব্যবহার করে। খালি
-          রাখলে সেই বাটনটা লুকিয়ে যাবে।
+          সাইটের পাশের ভাসমান বাটন, সাপোর্ট পেজ আর ফুটার এইগুলো ব্যবহার করে। খালি
+          রাখলে সেই সারি বা বাটনটা লুকিয়ে যাবে।
         </p>
       </div>
 
