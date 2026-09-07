@@ -84,7 +84,7 @@ adb install -r build/app/outputs/flutter-apk/app-debug.apk
 ## 5. Live Checklist
 
 - `/admin` login works.
-- `/admin/settings` password change works.
+- `/admin/settings` site settings save and reload.
 - `/admin/app-keys` can generate/revoke/reset device access.
 - `/api/signal-terminal/snapshot` returns `401` without app token.
 - Flutter app unlocks with app key and then auto-opens signal screen.

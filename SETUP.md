@@ -41,7 +41,7 @@ Important admin routes:
 - `/admin` dashboard
 - `/admin/aviator-signal` demo signal brain
 - `/admin/app-keys` device-bound APK access keys
-- `/admin/settings` password change
+- `/admin/settings` site settings (limits, support links, slides)
 
 `SUPABASE_SERVICE_ROLE_KEY` is server-only — never prefix it `NEXT_PUBLIC_`
 and never import it into a client component.
