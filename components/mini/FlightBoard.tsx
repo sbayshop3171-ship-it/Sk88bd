@@ -137,6 +137,7 @@ export default function FlightBoard({ game }: { game: 'crash' | 'jetx' }) {
 
   const takeOff = async () => {
     if (g.busy) return;
+    if (!g.requireFunds()) return;
     if (g.stake > g.balance) { g.setErr(MINI_ERROR['insufficient-balance']); return; }
     g.setBusy(true);
     g.setErr('');

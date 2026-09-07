@@ -3,7 +3,6 @@ import Carousel from '@/components/Carousel';
 import CategoryTabs from '@/components/CategoryTabs';
 import DownloadStrip from '@/components/DownloadStrip';
 import FavouriteGames from '@/components/FavouriteGames';
-import FeaturedGame from '@/components/FeaturedGame';
 import Footer from '@/components/Footer';
 import GameSection from '@/components/GameSection';
 import Header from '@/components/Header';
@@ -13,7 +12,6 @@ import NoticeBar from '@/components/NoticeBar';
 import { HOME_SECTIONS, PROVIDERS, demoGames } from '@/lib/catalogue';
 import { t } from '@/lib/strings';
 import Link from 'next/link';
-import { Fragment } from 'react';
 import { DepositIcon, WithdrawIcon } from '@/components/Icons';
 
 export default function HomePage() {
@@ -31,7 +29,9 @@ export default function HomePage() {
         <Link href="/withdraw"><WithdrawIcon />{t.withdraw}</Link>
       </div>
 
-      <FeaturedGame />
+      {/* The pot leads the lobby, where the featured-game card used to sit. */}
+      <Jackpot />
+
       <CategoryTabs />
 
       {/* Everything a visitor can actually open — provider demos and the
@@ -43,11 +43,7 @@ export default function HomePage() {
       <FavouriteGames />
 
       {HOME_SECTIONS.map((key) => (
-        <Fragment key={key}>
-          <GameSection category={key} />
-          {/* the pot rides under the poker rail, where the reference lobby has it */}
-          {key === 'poker' && <Jackpot />}
-        </Fragment>
+        <GameSection key={key} category={key} />
       ))}
 
       <Winners />

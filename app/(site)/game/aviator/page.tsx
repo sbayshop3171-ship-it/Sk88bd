@@ -9,7 +9,7 @@ import LiveBets from '@/components/aviator/LiveBets';
 import { useCrowdCount } from '@/components/aviator/useCrowdCount';
 import { useAviatorRound } from '@/components/aviator/useAviatorRound';
 import { useAuth } from '@/components/AuthProvider';
-import GameGate from '@/components/GameGate';
+import GameGate, { useGameGate } from '@/components/GameGate';
 import PageHeader from '@/components/PageHeader';
 import { useUI } from '@/components/UIProvider';
 import { BETTING_MS, fmtX, randomHex } from '@/lib/aviator';
@@ -20,7 +20,12 @@ import { money } from '@/lib/brand';
 const SEED_KEY = 'sk88bd:client-seed';
 
 export default function AviatorPage() {
+  return <GameGate><Board /></GameGate>;
+}
+
+function Board() {
   const { toast } = useUI();
+  const requireFunds = useGameGate();
   const { wallet, refresh } = useAuth();
 
   /* The seat balance IS the player's wallet — there is no separate game
@@ -164,6 +169,7 @@ export default function AviatorPage() {
 
   const place = async (i: 0 | 1) => {
     if (busySlot !== null) return;   // a request is already in flight
+    if (!requireFunds()) return;     // watching is free; staking is not
     const slot = slots[i];
     if (slot.stake < MIN_STAKE) { toast(`সর্বনিম্ন বেট ${money(MIN_STAKE)}`); return; }
     if (slot.stake > balance) { toast('ব্যালেন্স যথেষ্ট নয়'); return; }
@@ -179,7 +185,7 @@ export default function AviatorPage() {
   };
 
   return (
-    <GameGate>
+    <>
       <PageHeader
         title={<img className="av-wordmark" src="/games/aviator/wordmark.png" alt="Aviator" />}
         action={
@@ -218,6 +224,6 @@ export default function AviatorPage() {
 
       <LiveBets phase={phase} multiplier={multiplier} players={crowd} roundId={round?.id} />
       </div>
-    </GameGate>
+    </>
   );
 }
