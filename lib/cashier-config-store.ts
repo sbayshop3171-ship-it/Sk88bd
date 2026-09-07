@@ -218,12 +218,31 @@ function color(raw: unknown): string | null {
   return /^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20})$/i.test(v) ? v : null;
 }
 
-/* The method tiles once shipped with emoji stand-ins. Configs saved back
-   then carry them, and a saved field beats the default forever — so a store
-   written before the brand marks existed would keep showing 🅱️ for bKash.
-   An icon that is still one of those emoji was never a choice the admin
-   made, so it is read as unset and picks up whatever the default is now.
-   Anything else, including a logo file the admin pointed at, is left alone. */
+/* ============================================================
+   Superseded defaults.
+
+   A saved field beats the default forever, which is right for anything the
+   admin chose — and wrong for everything they never touched. The cashier
+   design is saved whole, so pressing Save on one field freezes every other
+   field at whatever the default was that day. Three times now a default has
+   moved and the change reached nobody: the method tiles kept their emoji
+   stand-ins after the brand marks arrived, the quick-amount chips kept
+   starting at 500 after 300 was added, and the withdrawal rules kept
+   promising money within the processing time after that line was dropped.
+
+   A saved value byte-identical to the default it replaced was not a choice,
+   so it is read as unset. A value the admin actually edited differs, and is
+   left exactly as they left it. Retire an entry once no store can still
+   carry it.
+   ============================================================ */
+
+/** The value the admin has, or the current default when what they have is
+    only the old default wearing its clothes. */
+function supersededDefault<T>(saved: T, legacy: T, current: T): T {
+  return JSON.stringify(saved) === JSON.stringify(legacy) ? current : saved;
+}
+
+/** Method icons, before the brand marks in public/payments/. */
 const LEGACY_EMOJI_ICONS = new Set(['🅱️', '🅽', '🚀', '🆙', '🏦', '₮']);
 
 function freshenIcons<T extends { channelId: string; icon: string }>(
@@ -237,21 +256,19 @@ function freshenIcons<T extends { channelId: string; icon: string }>(
   });
 }
 
-/* Same story as the icons: a config saved back when the chips started at 500
-   carries that list, and a saved field beats the default forever. A saved list
-   that is exactly the old default was never a choice either, so it is read as
-   unset. A list the admin actually edited differs from it and is kept. */
-const LEGACY_QUICK_AMOUNTS = [500, 1000, 2000, 5000, 10000, 25000];
+/** Quick-amount chips, before 300 led the row. */
+const LEGACY_QUICK_AMOUNTS: AmountPreset[] = [500, 1000, 2000, 5000, 10000, 25000]
+  .map((amount) => ({ amount, bonusLabel: '' }));
 
-function freshenAmounts(
-  amounts: AmountPreset[],
-  fallback: AmountPreset[],
-): AmountPreset[] {
-  const untouched =
-    amounts.length === LEGACY_QUICK_AMOUNTS.length &&
-    amounts.every((a, i) => a.amount === LEGACY_QUICK_AMOUNTS[i] && !a.bonusLabel);
-  return untouched ? fallback : amounts;
-}
+/** Withdrawal rules, before the line promising the money was dropped. */
+const LEGACY_WITHDRAW_RULES = [
+  'নিজের নামে থাকা সঠিক অ্যাকাউন্ট নাম্বার দিন',
+  'এক রিকোয়েস্টে সর্বোচ্চ {max} তোলা যাবে',
+  '!এজেন্ট ক্যাশআউট চার্জ মোট ওয়ালেট ব্যালেন্সের উপর হিসাব করা হয়',
+  '!প্রতি ১,০০০ টাকায় {rate} চার্জ',
+  '!সম্পূর্ণ চার্জ একবারেই পরিশোধ করতে হবে',
+  'চার্জ যাচাই হলে {time} এর মধ্যে টাকা পাঠানো হবে',
+].join('\n');
 
 function merge(partial: Partial<CashierConfig>): CashierConfig {
   const deposit = { ...CASHIER_DEFAULTS.deposit, ...(partial.deposit ?? {}) };
@@ -260,9 +277,21 @@ function merge(partial: Partial<CashierConfig>): CashierConfig {
     deposit: {
       ...deposit,
       methods: freshenIcons(deposit.methods, CASHIER_DEFAULTS.deposit.methods),
-      amounts: freshenAmounts(deposit.amounts, CASHIER_DEFAULTS.deposit.amounts),
+      amounts: supersededDefault(
+        deposit.amounts,
+        LEGACY_QUICK_AMOUNTS,
+        CASHIER_DEFAULTS.deposit.amounts,
+      ),
     },
-    withdraw: { ...withdraw, methods: freshenIcons(withdraw.methods, CASHIER_DEFAULTS.withdraw.methods) },
+    withdraw: {
+      ...withdraw,
+      methods: freshenIcons(withdraw.methods, CASHIER_DEFAULTS.withdraw.methods),
+      rules: supersededDefault(
+        withdraw.rules,
+        LEGACY_WITHDRAW_RULES,
+        CASHIER_DEFAULTS.withdraw.rules,
+      ),
+    },
     updatedAt: partial.updatedAt ?? null,
   };
 }
