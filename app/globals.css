@@ -2269,6 +2269,50 @@ body.cz-light .cz-how__tile.on{border-color:#e5203f;background:#fff1f1}
 body.cz-light .cz-how__pick{color:#c02626}
 body.cz-light .cz-channel i{color:#c02626}
 
+/* ---- step 2: the screen the player reads before sending money ----
+   Everything here was written to sit on dark green, so on white it arrives
+   as pale text on pale panels. Each one gets an ink that actually carries. */
+body.cz-light .cz-pink{background:#fff1f1;border-color:#f0bcbc;color:#b02020}
+body.cz-light .cz-channel i{color:#b02020}
+body.cz-light .cz-channel em{color:var(--muted)}
+
+/* the account kind chip, e.g. পার্সোনাল */
+body.cz-light .paybox__kind{background:#e3f5ef;color:#0d6a58}
+
+/* the "how to send" tiles: the unpicked ones were faded to 45%, which on
+   white leaves nothing at all */
+body.cz-light .cz-how{background:#fafbfc;border-color:var(--line)}
+body.cz-light .cz-how__tile{background:#fff;border-color:var(--line);opacity:.8}
+body.cz-light .cz-how__tile small{color:#4a525b}
+body.cz-light .cz-how__tile.on{opacity:1;border-color:#e5203f;background:#fff1f1}
+body.cz-light .cz-how__tile.on small{color:#b02020}
+body.cz-light .cz-how__pick{color:#b02020}
+body.cz-light .cz-how__steps{color:#32393f}
+body.cz-light .cz-how__steps em{color:var(--muted)}
+body.cz-light .cz-how__steps b{color:var(--text)}
+
+/* the TrxID box read as a dead grey slab */
+body.cz-light .cz-trx{background:#fff;border-color:#c9ced4;color:var(--text)}
+body.cz-light .cz-trx::placeholder{color:#aab0b8;font-weight:600;letter-spacing:.5px}
+body.cz-light .cz-trx:focus{border-color:#1b8a76}
+body.cz-light .cz-trx.ok{border-color:#12855b}
+body.cz-light .cz-trx.bad{border-color:#c02626}
+body.cz-light .cz-trx__state.ok{color:#12855b}
+body.cz-light .cz-trx__state.bad{color:#c02626}
+
+/* a disabled gold button at 55% opacity on white is a ghost; it becomes a
+   plainly greyed-out control instead, so it still reads as a button */
+body.cz-light .btn[disabled]{
+  opacity:1;background:#e9ecef;color:#9aa1a9;box-shadow:none;border-color:#dde1e5;
+}
+
+body.cz-light .cz-caution b{color:var(--text)}
+body.cz-light .cz-caution p{color:#b02020}
+/* the "how do I find my TrxID" link, and the (প্রয়োজন) mark beside a
+   required label — both were faint accents chosen against dark green */
+body.cz-light .cz-help{color:#1f5fbf}
+body.cz-light .cz-label span{color:#c02626}
+
 /* the tiles are white now, so a logo needs a plate that is not also white */
 body.cz-light .cz-icon{border-radius:8px}
 body.cz-light .cz-icon--glyph{background:#f1f3f5;color:inherit}

@@ -72,6 +72,14 @@ export const KIND_LABEL: Record<PaymentAccountKind, string> = {
 
 export const USE_LABEL: Record<PaymentAccountUse, string> = {
   deposit: 'ডিপোজিট',
-  withdraw: 'উইথড্র',
+  withdraw: 'উইথড্র চার্জ',
   both: 'দুটোই',
+};
+
+/** Spelled out under the picker, because "উইথড্র" on a number the operator
+    *receives* on is easy to read backwards. */
+export const USE_HELP: Record<PaymentAccountUse, string> = {
+  deposit: 'প্লেয়ার এই নাম্বারে ডিপোজিট পাঠাবে',
+  withdraw: 'উত্তোলনের এজেন্ট চার্জ এই নাম্বারে জমা হবে',
+  both: 'ডিপোজিট আর উত্তোলনের চার্জ — দুটোই এই নাম্বারে',
 };

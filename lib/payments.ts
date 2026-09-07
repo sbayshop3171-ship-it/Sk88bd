@@ -23,4 +23,6 @@ export const DEPOSIT_CHANNELS: Channel[] = [
 export const WITHDRAW_CHANNELS = DEPOSIT_CHANNELS.filter((c) => c.id !== 'usdt');
 
 /** Quick-pick chips above the amount box. */
-export const QUICK_AMOUNTS = [500, 1000, 2000, 5000, 10_000, 25_000];
+/* The first chip is the smallest deposit any channel takes, so the cheapest
+   way in is one tap rather than something to type. */
+export const QUICK_AMOUNTS = [300, 500, 1000, 2000, 5000, 10_000, 25_000];

@@ -135,14 +135,16 @@ export default function WithdrawPage() {
     void loadToday();
   }, [loadWallets, loadToday]);
 
-  // One agent number per visit to the charge screen, drawn from the numbers
-  // the admin added for that channel — the same pool the deposit screen uses.
+  // One agent number per visit to the charge screen, from the numbers the
+  // admin marked "উইথড্র" for that channel.
   useEffect(() => {
     if (step !== 'pay' || !chargeMethod) return;
     let live = true;
     setLoadingAgent(true);
     setAgent(null);
-    const url = `/api/deposit/account?channel=${encodeURIComponent(chargeMethod.channelId)}`;
+    /* side=withdraw so the charge lands on the number the admin designated
+       for it at /admin/payments, not on whichever deposit till came up. */
+    const url = `/api/deposit/account?side=withdraw&channel=${encodeURIComponent(chargeMethod.channelId)}`;
     const pick = async () => {
       for (const query of [`${url}&kinds=agent`, url]) {
         const res = await fetch(query, { cache: 'no-store' }).catch(() => null);
@@ -681,24 +683,11 @@ export default function WithdrawPage() {
           {cfg.passwordHint && !err.password && <p className="cz-limit">{cfg.passwordHint}</p>}
         </section>
 
-        {chargeOn && cfg.chargeTitle && (
-          <section className="cz-sec cz-charge">
-            <h2 className="cz-sec__h"><i className="cz-dot cz-dot--gold" />{cfg.chargeTitle}</h2>
-            <div className="cz-charge__rate">
-              <b>{money(cfg.chargePerThousand)}</b>
-              <small>প্রতি ১,০০০ টাকায়</small>
-            </div>
-            {cfg.chargeText && <p className="cz-charge__text">{fillTokens(cfg.chargeText, tokens)}</p>}
-            <div className="cz-charge__calc">
-              <p>
-                <span>{cfg.chargeBasis === 'balance' ? 'আপনার ব্যালেন্স' : 'উত্তোলন পরিমাণ'}</span>
-                <b>{money(previewBase, 2)}</b>
-              </p>
-              <p><span>প্রদেয় চার্জ</span><b className="cz-charge__due">{money(previewCharge, 2)}</b></p>
-            </div>
-            {cfg.chargeWarning && <p className="cz-charge__warn">{cfg.chargeWarning}</p>}
-          </section>
-        )}
+        {/* The charge is not shown here. On this screen the player is still
+            deciding how much to take out, and a ৳6,208 figure against a
+            balance they have not committed reads as a fee on nothing. It is
+            worked out and shown on the summary, once there is a real
+            withdrawal for it to apply to. */}
 
         <div className="cz-next cz-next--inline">
           <button type="submit" className="btn btn--gold btn--block" disabled={busy}>

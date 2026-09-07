@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import {
   KIND_LABEL,
   MAX_PER_CHANNEL,
+  USE_HELP,
   USE_LABEL,
   type PaymentAccount,
   type PaymentAccountInput,
@@ -187,6 +188,7 @@ export default function PaymentAccountsControl({
             <select value={form.use} onChange={(e) => set('use', e.target.value as PaymentAccountInput['use'])} disabled={busy}>
               {Object.entries(USE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
+            <em className="adm__hint">{USE_HELP[form.use]}</em>
           </label>
 
           <label className="adm__f">

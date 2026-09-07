@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { PaymentAccountKind } from '@/lib/payment-accounts';
-import { isKnownChannel, pickDepositAccount } from '@/lib/payment-accounts-store';
+import { isKnownChannel, pickOperatorAccount } from '@/lib/payment-accounts-store';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -9,6 +9,9 @@ export const dynamic = 'force-dynamic';
  * One operator account for the player to send money to, drawn at random from
  * the numbers the admin added for that channel. Called once per channel pick
  * on the deposit screen, so a reload rotates the player onto another number.
+ *
+ * `side=withdraw` asks for the till a withdrawal charge is paid into, which
+ * the admin designates separately at /admin/payments.
  */
 export async function GET(req: Request) {
   const params = new URL(req.url).searchParams;
@@ -21,7 +24,9 @@ export async function GET(req: Request) {
     .split(',')
     .filter((k): k is PaymentAccountKind => k === 'personal' || k === 'agent' || k === 'merchant');
 
-  const account = await pickDepositAccount(channelId, kinds);
+  const side = params.get('side') === 'withdraw' ? 'withdraw' : 'deposit';
+
+  const account = await pickOperatorAccount(channelId, { kinds, side });
   if (!account) return json({ ok: false, reason: 'no-account' }, 404);
 
   return json({ ok: true, account });

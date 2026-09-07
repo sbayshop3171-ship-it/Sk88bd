@@ -119,27 +119,40 @@ export async function removeAccount(id: string): Promise<AccountMutationResult> 
 }
 
 /**
- * One account for a player about to pay into `channelId`, chosen at random
- * from the active ones by weight, and recorded so the admin table can show how
- * the traffic actually landed. Returns null when the operator has not added a
- * number for that channel yet — the deposit screen then says so rather than
- * inventing one.
+ * One account for a player about to pay us, chosen at random from the active
+ * ones by weight and recorded so the admin table can show how the traffic
+ * actually landed. Returns null when the operator has not added a number for
+ * that channel yet — the screen then says so rather than inventing one.
+ *
+ * `side` says which till the money is for. Deposits skip anything the admin
+ * marked withdraw-only. A withdrawal charge is money coming in too, but the
+ * operator usually wants it landing somewhere of its own, so it prefers the
+ * numbers marked "উইথড্র" (or "দুটোই") and only falls back to the rest when
+ * none is set — nobody is left unable to pay a charge because a number was
+ * never designated.
  */
-export async function pickDepositAccount(
+export async function pickOperatorAccount(
   channelId: string,
-  kinds: PaymentAccountKind[] = [],
+  opts: { kinds?: PaymentAccountKind[]; side?: 'deposit' | 'withdraw' } = {},
 ): Promise<PublicDepositAccount | null> {
   if (!isKnownChannel(channelId)) return null;
+  const { kinds = [], side = 'deposit' } = opts;
 
   return mutateStore((store) => {
-    const open = store.accounts.filter(
-      (a) => a.channelId === channelId && a.status === 'active' && a.use !== 'withdraw',
+    const active = store.accounts.filter(
+      (a) => a.channelId === channelId && a.status === 'active',
     );
-    // a method that wants, say, merchant numbers gets those; if the admin has
-    // not added any of that kind yet, any active number for the channel will do
-    const preferred = kinds.length ? open.filter((a) => kinds.includes(a.kind)) : open;
-    const pool = preferred.length ? preferred : open;
-    if (pool.length === 0) return null;
+    const open =
+      side === 'withdraw' ? active : active.filter((a) => a.use !== 'withdraw');
+    if (open.length === 0) return null;
+
+    // the admin's designation first, then the kind a method asks for, then
+    // whatever is active — each step only narrows if it leaves something
+    const designated =
+      side === 'withdraw' ? open.filter((a) => a.use === 'withdraw' || a.use === 'both') : open;
+    let pool = designated.length ? designated : open;
+    const preferred = kinds.length ? pool.filter((a) => kinds.includes(a.kind)) : pool;
+    pool = preferred.length ? preferred : pool;
 
     const picked = weightedPick(pool);
     picked.usageCount += 1;
@@ -155,6 +168,12 @@ export async function pickDepositAccount(
     };
   });
 }
+
+/** The deposit till. */
+export const pickDepositAccount = (
+  channelId: string,
+  kinds: PaymentAccountKind[] = [],
+) => pickOperatorAccount(channelId, { kinds, side: 'deposit' });
 
 /** Active deposit-side count per channel, for the admin summary tiles. */
 export async function accountCounts(): Promise<Record<string, number>> {

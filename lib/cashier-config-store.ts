@@ -237,11 +237,31 @@ function freshenIcons<T extends { channelId: string; icon: string }>(
   });
 }
 
+/* Same story as the icons: a config saved back when the chips started at 500
+   carries that list, and a saved field beats the default forever. A saved list
+   that is exactly the old default was never a choice either, so it is read as
+   unset. A list the admin actually edited differs from it and is kept. */
+const LEGACY_QUICK_AMOUNTS = [500, 1000, 2000, 5000, 10000, 25000];
+
+function freshenAmounts(
+  amounts: AmountPreset[],
+  fallback: AmountPreset[],
+): AmountPreset[] {
+  const untouched =
+    amounts.length === LEGACY_QUICK_AMOUNTS.length &&
+    amounts.every((a, i) => a.amount === LEGACY_QUICK_AMOUNTS[i] && !a.bonusLabel);
+  return untouched ? fallback : amounts;
+}
+
 function merge(partial: Partial<CashierConfig>): CashierConfig {
   const deposit = { ...CASHIER_DEFAULTS.deposit, ...(partial.deposit ?? {}) };
   const withdraw = { ...CASHIER_DEFAULTS.withdraw, ...(partial.withdraw ?? {}) };
   return {
-    deposit: { ...deposit, methods: freshenIcons(deposit.methods, CASHIER_DEFAULTS.deposit.methods) },
+    deposit: {
+      ...deposit,
+      methods: freshenIcons(deposit.methods, CASHIER_DEFAULTS.deposit.methods),
+      amounts: freshenAmounts(deposit.amounts, CASHIER_DEFAULTS.deposit.amounts),
+    },
     withdraw: { ...withdraw, methods: freshenIcons(withdraw.methods, CASHIER_DEFAULTS.withdraw.methods) },
     updatedAt: partial.updatedAt ?? null,
   };
