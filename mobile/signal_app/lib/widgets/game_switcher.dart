@@ -37,8 +37,11 @@ class GameSwitcher extends StatelessWidget {
               child: _SwitcherButton(
                 label: '[ ${game.label} ]',
                 active: active,
+                locked: game.locked,
                 scale: scale,
-                onTap: () => onChanged(game),
+                onTap: game.locked
+                    ? () => _sayLocked(context, game)
+                    : () => onChanged(game),
               ),
             ),
           );
@@ -48,16 +51,38 @@ class GameSwitcher extends StatelessWidget {
   }
 }
 
+/// A locked tab still answers the tap — silently ignoring it reads as a bug.
+void _sayLocked(BuildContext context, SignalGame game) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        backgroundColor: NeonPalette.panelSoft,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        content: Text(
+          '${game.label} সিগন্যাল এখনো চালু হয়নি — শীঘ্রই আসছে',
+          style: const TextStyle(
+            color: NeonPalette.text,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+}
+
 class _SwitcherButton extends StatelessWidget {
   const _SwitcherButton({
     required this.label,
     required this.active,
+    required this.locked,
     required this.scale,
     required this.onTap,
   });
 
   final String label;
   final bool active;
+  final bool locked;
   final double scale;
   final VoidCallback onTap;
 
@@ -77,9 +102,11 @@ class _SwitcherButton extends StatelessWidget {
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(6 * scale),
             border: Border.all(
-              color: active
-                  ? NeonPalette.cyan.withOpacity(0.85)
-                  : NeonPalette.cyan.withOpacity(0.13),
+              color: locked
+                  ? NeonPalette.muted.withOpacity(0.22)
+                  : active
+                      ? NeonPalette.cyan.withOpacity(0.85)
+                      : NeonPalette.cyan.withOpacity(0.13),
             ),
             boxShadow: active
                 ? [
@@ -90,13 +117,33 @@ class _SwitcherButton extends StatelessWidget {
                   ]
                 : null,
           ),
-          child: Text(
-            label,
-            style: TextStyle(
-              color: active ? NeonPalette.text : NeonPalette.muted,
-              fontSize: 11 * scale,
-              fontWeight: FontWeight.w900,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (locked) ...[
+                Icon(
+                  Icons.lock_outline,
+                  size: 12 * scale,
+                  color: NeonPalette.muted.withOpacity(0.75),
+                ),
+                SizedBox(width: 5 * scale),
+              ],
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: locked
+                        ? NeonPalette.muted.withOpacity(0.6)
+                        : active
+                            ? NeonPalette.text
+                            : NeonPalette.muted,
+                    fontSize: 11 * scale,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

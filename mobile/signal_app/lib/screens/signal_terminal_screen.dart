@@ -111,7 +111,9 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
   }
 
   void _selectGame(SignalGame game) {
-    if (game == _game) return;
+    // the switcher already refuses a locked tab; this is the backstop, so a
+    // future caller cannot open one by going round it
+    if (game == _game || game.locked) return;
     setState(() {
       _game = game;
       _scanned = false;

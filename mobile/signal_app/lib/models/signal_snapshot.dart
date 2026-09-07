@@ -12,6 +12,16 @@ const kAppSubtitle = 'ENCRYPTED SIGNAL TERMINAL';
 
 enum SignalGame { aviator, crash }
 
+/// Games the terminal will not open yet. Crash has an engine on the site but
+/// its signal queue is not trusted enough to sell, so the tab shows locked
+/// rather than being hidden — a player who knows it exists can see it is
+/// coming. Drop it from this set to open it; nothing else changes.
+const kLockedGames = {SignalGame.crash};
+
+extension SignalGameLock on SignalGame {
+  bool get locked => kLockedGames.contains(this);
+}
+
 extension SignalGameLabel on SignalGame {
   String get apiValue => switch (this) {
         SignalGame.aviator => 'aviator',
