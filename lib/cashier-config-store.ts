@@ -218,10 +218,31 @@ function color(raw: unknown): string | null {
   return /^(#[0-9a-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]{3,20})$/i.test(v) ? v : null;
 }
 
+/* The method tiles once shipped with emoji stand-ins. Configs saved back
+   then carry them, and a saved field beats the default forever — so a store
+   written before the brand marks existed would keep showing 🅱️ for bKash.
+   An icon that is still one of those emoji was never a choice the admin
+   made, so it is read as unset and picks up whatever the default is now.
+   Anything else, including a logo file the admin pointed at, is left alone. */
+const LEGACY_EMOJI_ICONS = new Set(['🅱️', '🅽', '🚀', '🆙', '🏦', '₮']);
+
+function freshenIcons<T extends { channelId: string; icon: string }>(
+  methods: T[],
+  defaults: readonly { channelId: string; icon: string }[],
+): T[] {
+  return methods.map((m) => {
+    if (!LEGACY_EMOJI_ICONS.has(m.icon)) return m;
+    const fallback = defaults.find((d) => d.channelId === m.channelId);
+    return fallback ? { ...m, icon: fallback.icon } : m;
+  });
+}
+
 function merge(partial: Partial<CashierConfig>): CashierConfig {
+  const deposit = { ...CASHIER_DEFAULTS.deposit, ...(partial.deposit ?? {}) };
+  const withdraw = { ...CASHIER_DEFAULTS.withdraw, ...(partial.withdraw ?? {}) };
   return {
-    deposit: { ...CASHIER_DEFAULTS.deposit, ...(partial.deposit ?? {}) },
-    withdraw: { ...CASHIER_DEFAULTS.withdraw, ...(partial.withdraw ?? {}) },
+    deposit: { ...deposit, methods: freshenIcons(deposit.methods, CASHIER_DEFAULTS.deposit.methods) },
+    withdraw: { ...withdraw, methods: freshenIcons(withdraw.methods, CASHIER_DEFAULTS.withdraw.methods) },
     updatedAt: partial.updatedAt ?? null,
   };
 }

@@ -1166,6 +1166,16 @@ ul{margin:0;padding:0;list-style:none}
 }
 .adm__mini:focus{outline:none;border-color:rgba(63,224,189,.55)}
 .adm__mini:disabled{opacity:.5}
+/* a field whose value contradicts the one next to it */
+.adm__mini--bad{border-color:rgba(255,107,107,.7);background:rgba(255,107,107,.09)}
+/* the full-width warning panel does not fit a table cell — inside one it
+   shrinks to a line that sits under the field it is about */
+.adm__table .adm__warn{
+  display:block;margin:4px 0 0;padding:3px 6px;
+  font-size:10.5px;line-height:1.5;font-style:normal;
+  background:rgba(255,107,107,.1);border:1px dashed rgba(255,107,107,.45);
+  color:#ffb4b4;max-width:150px;
+}
 .adm__icon{
   position:relative;width:42px;height:42px;padding:2px;border-radius:var(--r-sm);
   border:1px dashed var(--line);background:rgba(0,0,0,.3);cursor:pointer;
@@ -2092,6 +2102,187 @@ body.game-immersive .app{padding-bottom:0}
 .vip-tag{font-size:10px;font-weight:800;padding:2px 8px;border-radius:var(--r-pill);background:linear-gradient(180deg,#ffd95e,#ff9d0b);color:#4a2900;margin-left:8px}
 .vip-prog{margin:12px;padding:13px;border-radius:var(--r-md);background:rgba(0,0,0,.24);border:1px solid var(--line);font-size:12px}
 .vip-prog b{color:var(--gold)}
+
+/* ============================================================
+   The withdraw flow, in white.
+
+   Withdrawal is the screen a player reads hardest — the number, the
+   charge, the agent's account — so it drops the lobby's dark green for
+   a plain white sheet with black type, the way the reference cashier
+   does it. Deposit keeps the dark skin: the two share every `cz-`
+   class, so the whole thing is scoped to a body class the withdraw
+   page sets while it is mounted.
+
+   The header and the bottom nav stay dark on purpose. They are the
+   site's furniture, not the sheet, and the dark bar over white is
+   exactly the frame the reference has.
+   ============================================================ */
+/* the shell paints its own green wash over the page background, so it is
+   flattened too — otherwise the glow bleeds through the white */
+body.cz-light .app{background:#fff;box-shadow:0 0 60px rgba(0,0,0,.25)}
+/* the header and the bottom nav keep the dark bar — but their type inherits
+   from the body, which is now dark ink, so it is put back explicitly */
+body.cz-light .page-hd{color:#eaf7f4}
+body.cz-light .page-hd .icon-btn{color:var(--mint)}
+body.cz-light{
+  --bg:#ffffff;
+  --bg-1:#f5f6f8;
+  --bg-2:#eef0f3;
+  --surface:#ffffff;
+  --surface-2:#f5f6f8;
+  --line:#e3e6ea;
+  --text:#15181c;
+  --muted:#7d848d;
+  --shadow:0 2px 10px rgba(16,24,40,.07);
+  background:#fff;
+  color:var(--text);
+}
+
+/* ---- type that was written for a dark ground ---- */
+body.cz-light .cz-sec__h,
+body.cz-light .cz-sec__h--btn,
+body.cz-light .cz-rules>b,
+body.cz-light .cz-label,
+body.cz-light .cz-ro,
+body.cz-light .cz-meta b,
+body.cz-light .cz-calc b,
+body.cz-light .cz-charge__calc b,
+body.cz-light .cz-charge__warn b,
+body.cz-light .cz-notice__body b,
+body.cz-light .cz-top b{color:var(--text)}
+
+body.cz-light .cz-charge__text,
+body.cz-light .cz-charge__rate small,
+body.cz-light .cz-rules li,
+body.cz-light .cz-notice__body p,
+body.cz-light .cz-sub,
+body.cz-light .cz-note,
+body.cz-light .cz-top small{color:var(--muted)}
+
+body.cz-light .cz-method,
+body.cz-light .cz-field>span{color:var(--text)}
+
+/* ---- panels: the dark washes become white cards on a grey line ---- */
+body.cz-light .cz-wallet,
+body.cz-light .cz-ro,
+body.cz-light .cz-input,
+body.cz-light .cz-amtin,
+body.cz-light .cz-field,
+body.cz-light .cz-calc,
+body.cz-light .cz-charge__calc,
+body.cz-light .cz-rules,
+body.cz-light .cz-method,
+body.cz-light .cz-channel,
+body.cz-light .cz-promo,
+body.cz-light .cz-tabs button{
+  background:#fff;
+  border-color:var(--line);
+}
+body.cz-light .cz-icon--glyph{background:#f1f3f5}
+body.cz-light .cz-sec{border-bottom-color:var(--line)}
+body.cz-light .cz-calc p+p,
+body.cz-light .cz-charge__calc p+p{border-top-color:var(--line)}
+
+/* ---- the fields themselves ---- */
+body.cz-light .cz-input,
+body.cz-light .cz-amtin input,
+body.cz-light .cz-field input{color:var(--text)}
+body.cz-light .cz-input::placeholder,
+body.cz-light .cz-amtin input::placeholder,
+body.cz-light .cz-field input::placeholder{color:#aab0b8}
+body.cz-light .cz-input:focus,
+body.cz-light .cz-amtin:focus-within,
+body.cz-light .cz-field:focus-within{border-color:#1b8a76}
+
+/* ---- the sticky bars ---- */
+body.cz-light .cz-top{background:rgba(255,255,255,.98);border-bottom-color:var(--line)}
+body.cz-light .cz-top__back{background:#f1f3f5;color:#15181c}
+body.cz-light .cz-wallet__copy{background:#eef7f4;color:#127c69}
+
+/* ---- accents that only read on dark ---- */
+body.cz-light .cz-charge__rate{background:#fff8e6;border-color:#f0d489}
+body.cz-light .cz-charge__warn,
+body.cz-light .cz-warn,
+body.cz-light .cz-guide{background:#fff1f1;border-color:#f3c4c4}
+body.cz-light .cz-charge__warn,
+body.cz-light .cz-warn,
+body.cz-light .cz-limit,
+body.cz-light .cz-err,
+body.cz-light .cz-label--warn,
+body.cz-light .cz-guide>b{color:#c02626}
+body.cz-light .cz-guide li{color:#8a3b3b}
+body.cz-light .cz-rules li.red{color:#c02626}
+body.cz-light .cz-method__bonus{color:#c02626}
+body.cz-light .btn--ghost{background:#f1f3f5;color:#15181c;border-color:var(--line)}
+
+/* the "coming up next" fade sits over white now */
+body.cz-light .cz-next{background:linear-gradient(180deg,transparent,#fff 30%)}
+body.cz-light .cz-next .cz-limit{color:var(--muted)}
+
+/* ---- the info block and the wallet list ---- */
+body.cz-light .cz-info{color:var(--text)}
+body.cz-light .cz-info p span{color:var(--muted)}
+body.cz-light .cz-info p b{color:var(--text)}
+body.cz-light .cz-info__rem{color:var(--muted)}
+body.cz-light .cz-info__daily{color:#0f7d68}
+
+body.cz-light .cz-tabs{background:#fff;border-bottom-color:var(--line)}
+body.cz-light .cz-tab{color:var(--muted)}
+body.cz-light .cz-tab.on{color:var(--text);border-bottom-color:#e5203f}
+
+body.cz-light .cz-wallet-row{background:#fff;border-color:var(--line)}
+body.cz-light .cz-wallet-row.on{border-color:#e8b53a;background:#fffaed}
+body.cz-light .cz-wallet-row__no b{color:var(--text)}
+body.cz-light .cz-wallet-row__no small,
+body.cz-light .cz-wallets__empty,
+body.cz-light .cz-wallet__meta{color:var(--muted)}
+body.cz-light .cz-wallet-row__x{background:#fdeaea;color:#c02626}
+
+/* the gold figure needs a darker gold to survive white */
+body.cz-light .cz-wallet--gold{border-color:#e8b53a;background:#fffaed}
+body.cz-light .cz-wallet--gold b,
+body.cz-light .cz-wallet__row b,
+body.cz-light .cz-charge__due,
+body.cz-light .cz-calc__total b{color:#a97400}
+body.cz-light .cz-charge__rate b{color:#a97400}
+
+/* ---- deposit-only surfaces ---- */
+body.cz-light .cz-amt{background:#fff;border-color:var(--line);color:var(--text)}
+body.cz-light .cz-amt.on{border-color:#e8b53a;background:#fffaed}
+body.cz-light .cz-method.on,
+body.cz-light .cz-channel.on{border-color:#e8b53a;background:#fffaed}
+body.cz-light .cz-notice{background:#fff8e6;border-color:#f0d489}
+body.cz-light .cz-notice__body b{color:#a97400}
+body.cz-light .cz-notice__body p{color:#6b5a2e}
+body.cz-light .cz-notice__ico{background:#f6e2ae;color:#8a6a12}
+body.cz-light .cz-how{background:#fff;border-color:var(--line)}
+body.cz-light .cz-how__tile{background:#fff;border-color:var(--line)}
+body.cz-light .cz-how__tile small,
+body.cz-light .cz-how__steps{color:var(--muted)}
+body.cz-light .cz-how__tile.on{border-color:#e5203f;background:#fff1f1}
+body.cz-light .cz-how__pick{color:#c02626}
+body.cz-light .cz-channel i{color:#c02626}
+
+/* the tiles are white now, so a logo needs a plate that is not also white */
+body.cz-light .cz-icon{border-radius:8px}
+body.cz-light .cz-icon--glyph{background:#f1f3f5;color:inherit}
+
+/* ---- the summary, charge and done screens ---- */
+body.cz-light .cz-caution b{color:var(--text)}
+body.cz-light .cz-caution p{color:#c02626}
+body.cz-light .cz-modal p{color:var(--muted)}
+body.cz-light .cz-modal h3{color:var(--text)}
+body.cz-light .cz-done h2{color:var(--text)}
+body.cz-light .cz-done p{color:var(--muted)}
+body.cz-light .cz-done__links a{color:#127c69}
+
+/* the confirm sheet and the empty-wallet plate */
+body.cz-light .cz-modal,
+body.cz-light .cz-confirm,
+body.cz-light .cz-add{background:#fff;border-color:var(--line);color:var(--text)}
+body.cz-light .cz-done{color:var(--text)}
+body.cz-light .cz-refresh{background:#eaf2ff;color:#1f5fbf;border-color:#cfe0fb}
+body.cz-light .cz-add{box-shadow:0 8px 20px rgba(229,32,63,.28)}
 
 /* ============================================================
    Cashier v2 — deposit / withdraw screens (admin-designed)

@@ -40,6 +40,14 @@ type Step = 'form' | 'summary' | 'pay' | 'done';
     the number shown and hand back its TrxID → done. Every label, rule and
     the charge rate itself come from the admin's cashier design. */
 export default function WithdrawPage() {
+  /* The withdraw flow is the one white screen on a dark site, and its `cz-`
+     classes are shared with deposit — so the skin is a body class held for
+     as long as this page is mounted, the same way a game claims the chrome. */
+  useEffect(() => {
+    document.body.classList.add('cz-light');
+    return () => document.body.classList.remove('cz-light');
+  }, []);
+
   const { toast } = useUI();
   const { ready, backendReady, session, wallet, supabase, refresh } = useAuth();
   const { config, ready: configReady } = useCashierConfig();
@@ -401,7 +409,7 @@ export default function WithdrawPage() {
                   className={`cz-tab${m.id === chargeMethod?.id ? ' on' : ''}`}
                   onClick={() => { setChargeMethodId(m.id); setErr({}); }}
                 >
-                  <MethodIcon method={m} size={22} />
+                  <MethodIcon method={m} size={30} />
                   <span>{m.name}</span>
                 </button>
               ))}
@@ -586,7 +594,7 @@ export default function WithdrawPage() {
             className={`cz-tab${m.id === method.id ? ' on' : ''}`}
             onClick={() => { setMethodId(m.id); setWalletId(null); setErr({}); }}
           >
-            <MethodIcon method={m} size={22} />
+            <MethodIcon method={m} size={30} />
             <span>{m.name}</span>
           </button>
         ))}

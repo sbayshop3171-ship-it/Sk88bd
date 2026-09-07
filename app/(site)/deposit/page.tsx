@@ -27,6 +27,14 @@ type Step = 'pick' | 'pay' | 'done';
     an amount → pay into the number shown and type the TrxID → done. Every
     label, method and amount comes from the admin's cashier design. */
 export default function DepositPage() {
+  /* Deposit wears the same white sheet as withdraw — see the `cz-light`
+     block in globals.css. The class is held only while the page is mounted,
+     so the rest of the lobby stays dark. */
+  useEffect(() => {
+    document.body.classList.add('cz-light');
+    return () => document.body.classList.remove('cz-light');
+  }, []);
+
   const router = useRouter();
   const { toast } = useUI();
   const { ready, backendReady, session, supabase, refresh } = useAuth();
@@ -365,7 +373,7 @@ export default function DepositPage() {
                 onClick={() => pickMethod(m)}
                 aria-pressed={m.id === method.id}
               >
-                <MethodIcon method={m} size={26} />
+                <MethodIcon method={m} size={38} />
                 <span className="cz-method__name">{m.name}</span>
                 {m.bonusLabel && <span className="cz-method__bonus">{m.bonusLabel}</span>}
               </button>

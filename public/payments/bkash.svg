@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="bKash">
+  <rect width="120" height="120" rx="26" fill="#e2136e"/>
+  <path d="M30 34 58 46 44 56z" fill="#fff" opacity=".92"/>
+  <path d="M30 34 44 56 34 78z" fill="#fff" opacity=".62"/>
+  <path d="M58 46 92 40 62 72z" fill="#fff" opacity=".78"/>
+  <text x="60" y="102" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="26"
+        font-weight="700" fill="#fff" text-anchor="middle" letter-spacing="-.5">bKash</text>
+</svg>

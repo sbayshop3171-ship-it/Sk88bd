@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="USDT TRC20">
+  <rect width="120" height="120" rx="26" fill="#26a17b"/>
+  <path d="M34 32h52v13H67v9c14 .7 25 3.5 25 6.9s-11 6.2-25 6.9v22H53V68c-14-.7-25-3.5-25-6.9s11-6.2 25-6.9v-9H34z"
+        fill="#fff"/>
+  <text x="60" y="104" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="19"
+        font-weight="800" fill="#fff" text-anchor="middle" letter-spacing=".5">USDT</text>
+</svg>

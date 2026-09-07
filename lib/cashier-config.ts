@@ -182,13 +182,18 @@ const CHANNEL_COLOR: Record<string, string> = {
   usdt: '#26a17b',
 };
 
+/* Brand marks rather than emoji: the method tiles are the first thing a
+   player checks before sending money, and a 🅱️ standing in for bKash reads
+   as a placeholder. These are our own SVGs in each brand's colour — the
+   admin can point any method at a real logo file instead, since an icon
+   beginning with "/" is rendered as an image (see isImageIcon). */
 const CHANNEL_ICON: Record<string, string> = {
-  bkash: '🅱️',
-  nagad: '🅽',
-  rocket: '🚀',
-  upay: '🆙',
-  bank: '🏦',
-  usdt: '₮',
+  bkash: '/payments/bkash.svg',
+  nagad: '/payments/nagad.svg',
+  rocket: '/payments/rocket.svg',
+  upay: '/payments/upay.svg',
+  bank: '/payments/bank.svg',
+  usdt: '/payments/usdt.svg',
 };
 
 export const CASHIER_DEFAULTS: CashierConfig = {
@@ -257,7 +262,7 @@ export const CASHIER_DEFAULTS: CashierConfig = {
     passwordLabel: 'লেনদেন পাসওয়ার্ড',
     passwordHint: 'আপনার লগইন পাসওয়ার্ডটি দিন',
     note: 'রিকোয়েস্ট করার সাথে সাথে টাকা ব্যালেন্স থেকে সরিয়ে রাখা হবে। অ্যাডমিন অনুমোদন করলে পাঠানো হবে, বাতিল করলে ব্যালেন্সে ফেরত আসবে।',
-    chargePerThousand: 45,
+    chargePerThousand: 44,
     chargeBasis: 'balance',
     chargeTitle: 'উত্তোলন চার্জ',
     chargeText: 'প্রতি ১,০০০ টাকায় {rate} হারে এজেন্ট ক্যাশআউট চার্জ দিতে হবে।',
