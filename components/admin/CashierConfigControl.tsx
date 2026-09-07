@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import {
+  bonusBadge,
   CHARGE_BASIS_LABEL,
   PAY_TYPE_LABEL,
   type AmountPreset,
@@ -89,29 +90,6 @@ const CHARGE_TEXTS: [keyof CashierConfig['withdraw'], string, boolean][] = [
   ['chargeCaution', 'চার্জ স্ক্রিনের নিচের সতর্কতা', true],
 ];
 
-/* The bonus a method advertises and the bonus it actually credits are two
-   separate fields — a label the admin types, and the percent the cashier
-   applies. Nothing stops them drifting apart, and when they do the player is
-   promised one number and paid another. So the label's own digits are read
-   back and checked against the percent. Bengali numerals count: the label is
-   written in them. */
-const BN_DIGITS = '০১২৩৪৫৬৭৮৯';
-const toLatinDigits = (v: string) =>
-  v.replace(/[০-৯]/g, (d) => String(BN_DIGITS.indexOf(d)));
-
-/** The percent a label claims, or null when it names no number at all. */
-function claimedPercent(label: string): number | null {
-  const m = toLatinDigits(label).match(/(\d+(?:\.\d+)?)\s*%/);
-  return m ? Number(m[1]) : null;
-}
-
-/** Set when the label promises a percent the cashier will not pay. */
-function bonusMismatch(label: string, percent: number): string | null {
-  const claim = claimedPercent(label);
-  if (claim === null || claim === percent) return null;
-  return `লেবেলে ${claim}% লেখা, কিন্তু দেওয়া হবে ${percent}%`;
-}
-
 const blankDeposit = (channelId: string): DepositMethod => ({
   id: '', name: '', channelId, payType: 'transfer', bonusLabel: '', bonusPercent: 0,
   icon: '💳', color: '#0f766e', tag: 'GATEWAY', min: 300, max: 30000, trxRequired: true, note: '', active: true,
@@ -194,7 +172,7 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
               <table className="adm__table adm__table--edit">
                 <thead>
                   <tr>
-                    <th>ক্রম</th><th>নাম</th><th>চ্যানেল (নাম্বার)</th><th>মেনু</th><th>বোনাস লেবেল</th><th>বোনাস %</th>
+                    <th>ক্রম</th><th>নাম</th><th>চ্যানেল (নাম্বার)</th><th>মেনু</th><th>বোনাস %</th><th>টাইলে দেখাবে</th>
                     <th>আইকন</th><th>রং</th><th>ট্যাগ</th><th>সর্বনিম্ন</th><th>সর্বোচ্চ</th><th>TrxID</th><th>চালু</th><th></th>
                   </tr>
                 </thead>
@@ -218,25 +196,17 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
                       </td>
                       <td>
                         <input
-                          className={`adm__mini${bonusMismatch(m.bonusLabel, m.bonusPercent) ? ' adm__mini--bad' : ''}`}
-                          style={{ width: 110 }}
-                          value={m.bonusLabel}
-                          placeholder={m.bonusPercent > 0 ? `+${m.bonusPercent}% বোনাস` : 'বোনাস নেই'}
-                          disabled={busy}
-                          onChange={(e) => patchDepMethod(i, { bonusLabel: e.target.value })}
-                        />
-                        {bonusMismatch(m.bonusLabel, m.bonusPercent) && (
-                          <em className="adm__warn">⚠ {bonusMismatch(m.bonusLabel, m.bonusPercent)}</em>
-                        )}
-                      </td>
-                      <td>
-                        <input
-                          className={`adm__mini${bonusMismatch(m.bonusLabel, m.bonusPercent) ? ' adm__mini--bad' : ''}`}
-                          type="number" min={0} max={100} style={{ width: 62 }}
+                          className="adm__mini" type="number" min={0} max={100} style={{ width: 62 }}
                           value={num(m.bonusPercent)}
                           disabled={busy}
                           onChange={(e) => patchDepMethod(i, { bonusPercent: Number(e.target.value) })}
                         />
+                      </td>
+                      {/* not an input: the tile says whatever the percent is */}
+                      <td>
+                        <span className="adm__preview">
+                          {bonusBadge(m.bonusPercent) || 'বোনাস নেই'}
+                        </span>
                       </td>
                       <td><input className="adm__mini" style={{ width: 70 }} value={m.icon} placeholder="🅱️ বা /path.png" disabled={busy} onChange={(e) => patchDepMethod(i, { icon: e.target.value })} /></td>
                       <td><input className="adm__mini" type="color" style={{ width: 44, padding: 2 }} value={/^#[0-9a-f]{6}$/i.test(m.color) ? m.color : '#0f766e'} disabled={busy} onChange={(e) => patchDepMethod(i, { color: e.target.value })} /></td>

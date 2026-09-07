@@ -14,6 +14,7 @@ import {
   PAY_TYPE_KINDS,
   PAY_TYPE_LABEL,
   fillTokens,
+  bonusBadge,
   isImageIcon,
   type DepositMethod,
 } from '@/lib/cashier-config';
@@ -375,7 +376,9 @@ export default function DepositPage() {
               >
                 <MethodIcon method={m} size={38} />
                 <span className="cz-method__name">{m.name}</span>
-                {m.bonusLabel && <span className="cz-method__bonus">{m.bonusLabel}</span>}
+                {bonusBadge(m.bonusPercent) && (
+                  <span className="cz-method__bonus">{bonusBadge(m.bonusPercent)}</span>
+                )}
               </button>
             ))}
           </div>

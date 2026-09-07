@@ -203,7 +203,7 @@ export const CASHIER_DEFAULTS: CashierConfig = {
       name: c.name.toUpperCase(),
       channelId: c.id,
       payType: c.id === 'bank' || c.id === 'usdt' ? 'transfer' : 'sendmoney',
-      bonusLabel: i === 0 ? '+৫% বোনাস' : '',
+      bonusLabel: '',
       bonusPercent: i === 0 ? 5 : 0,
       icon: CHANNEL_ICON[c.id] ?? c.glyph,
       color: CHANNEL_COLOR[c.id] ?? '#0f766e',
@@ -338,6 +338,21 @@ export function withdrawCharge(amount: number, perThousand: number) {
     did not supply is left on screen as-is rather than blanked out. */
 export function fillTokens(template: string, tokens: Record<string, string>) {
   return template.replace(/\{(\w+)\}/g, (whole, key: string) => tokens[key] ?? whole);
+}
+
+/** The badge on a deposit tile, written from the percent the cashier will
+    actually credit.
+
+    It used to be a free-text field the admin typed next to the percent, and
+    nothing tied the two together — bKash sat on "+১০% বোনাস" while paying 5
+    for as long as nobody noticed. There is now one number: whatever percent
+    the admin sets is what the tile says. */
+const BN_DIGITS = '০১২৩৪৫৬৭৮৯';
+
+export function bonusBadge(percent: number): string {
+  if (!Number.isFinite(percent) || percent <= 0) return '';
+  const bengali = String(percent).replace(/\d/g, (d) => BN_DIGITS[Number(d)]);
+  return `+${bengali}% বোনাস`;
 }
 
 export function isImageIcon(icon: string) {
