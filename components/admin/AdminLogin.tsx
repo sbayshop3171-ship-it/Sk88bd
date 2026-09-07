@@ -6,6 +6,9 @@ import type { FormEvent } from 'react';
 
 const REASON_TEXT: Record<string, string> = {
   'invalid-credentials': 'ইউজারনেম অথবা পাসওয়ার্ড সঠিক নয়।',
+  locked: 'অনেকবার ভুল হয়েছে — কিছুক্ষণ পর আবার চেষ্টা করুন।',
+  'not-configured':
+    'এই সার্ভারে অ্যাডমিন পাসওয়ার্ড সেট করা নেই। ADMIN_PASSWORD সেট করে অ্যাপ রিস্টার্ট করুন।',
 };
 
 export default function AdminLogin() {
@@ -26,9 +29,18 @@ export default function AdminLogin() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-      const data = (await res.json()) as { ok?: boolean; reason?: string };
+      const data = (await res.json()) as {
+        ok?: boolean;
+        reason?: string;
+        retryInSeconds?: number;
+      };
 
       if (!res.ok || !data.ok) {
+        if (data.reason === 'locked' && data.retryInSeconds) {
+          const minutes = Math.ceil(data.retryInSeconds / 60);
+          setError(`অনেকবার ভুল হয়েছে — ${minutes} মিনিট পর আবার চেষ্টা করুন।`);
+          return;
+        }
         setError(REASON_TEXT[data.reason ?? ''] ?? 'লগইন করা যায়নি।');
         return;
       }

@@ -30,11 +30,14 @@ npm run dev                    # http://localhost:3000
 npm run build
 ```
 
-Admin login is fixed: **admin / admin1141**. It is set in
-`lib/admin-auth.ts` and needs no environment variable, so `/admin` works the
-same locally and on the server. To use different credentials, set
-`ADMIN_USERNAME` / `ADMIN_PASSWORD` in the environment and restart —
-changing either one logs any open admin session out.
+Admin login comes from the environment and nowhere else. Set
+`ADMIN_USERNAME` and `ADMIN_PASSWORD` in `.env.local` (and `.env.production`
+on the server), then restart. There is deliberately no default: this
+repository is public, so a password in the source would be the admin password
+of every deployment that had not overridden it. With `ADMIN_PASSWORD` unset,
+`/admin` refuses every login and says so.
+
+Changing either value logs any open admin session out.
 
 Important admin routes:
 

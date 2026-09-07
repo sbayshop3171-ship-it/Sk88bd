@@ -45,8 +45,9 @@ HTTPS for your domain.
 
 Required production notes:
 
-- Admin login is fixed in `lib/admin-auth.ts` (**admin / admin1141**). Set
-  `ADMIN_USERNAME` / `ADMIN_PASSWORD` in `.env.production` only to override it.
+- `ADMIN_USERNAME` / `ADMIN_PASSWORD` must be set in `.env.production`. There
+  is no default — unset means `/admin` refuses every login. Six wrong guesses
+  from one address locks that address out for fifteen minutes.
 - Keep `.data/` on persistent disk. It stores the admin session secret, payment
   numbers, banners, site settings, the cashier design, app key hash, device
   bindings and demo round state.

@@ -278,39 +278,51 @@ export default function WithdrawPage() {
       window.scrollTo({ top: 0 });
       return;
     }
-    // best effort — the columns arrive with migration 006
+    /* The charge is quoted by the server from the cashier config — the
+       browser only says which withdrawal and which channel. */
     if (id !== null) {
-      await supabase.rpc('set_withdrawal_charge', {
-        p_id: id,
-        p_charge: toPaisa(raised.charge),
-        p_channel: chargeMethod?.channelId ?? null,
-      }).then(() => undefined, () => undefined);
+      await quoteCharge(id, { channelId: chargeMethod?.channelId });
     }
     setStep('pay');
     window.scrollTo({ top: 0 });
   };
 
+  /* The charge and the proof both go through our own route rather than
+     straight at the database: the figure is worked out server-side from the
+     cashier config, so the browser never gets to say what it owes. */
+  const quoteCharge = async (
+    id: number,
+    extra: { channelId?: string; trxId?: string },
+  ): Promise<boolean> => {
+    try {
+      const res = await fetch('/api/withdraw/charge', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ id, ...extra }),
+      });
+      const data = (await res.json()) as { ok?: boolean };
+      return Boolean(data?.ok);
+    } catch {
+      return false;
+    }
+  };
+
   /* ---------------- step 3 → 4: hand back the charge TrxID --------------- */
   const confirmCharge = async () => {
-    if (!raised || !supabase) return;
+    if (!raised) return;
     const trx = chargeTrx.trim();
     if (!trx) { setErr({ trx: 'TrxID অবশ্যই পূরণ করতে হবে!' }); return; }
 
     setBusy(true);
-    const { error } = raised.id === null
-      ? { error: null }
-      : await supabase.rpc('set_withdrawal_charge', {
-        p_id: raised.id,
-        p_charge: toPaisa(raised.charge),
-        p_channel: chargeMethod?.channelId ?? null,
-        p_account_no: agent?.number ?? null,
-        p_trx: trx,
+    const saved = raised.id === null
+      ? true
+      : await quoteCharge(raised.id, {
+        channelId: chargeMethod?.channelId,
+        trxId: trx,
       });
     setBusy(false);
 
-    // A server that has not run migration 006 has no such function; the money
-    // request is already in the queue, so the player is not made to wait on it.
-    if (error && !/function|schema cache|does not exist/i.test(error.message)) {
+    if (!saved) {
       setErr({ trx: 'TrxID জমা দেওয়া গেল না — আবার চেষ্টা করুন' });
       return;
     }

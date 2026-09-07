@@ -227,6 +227,8 @@ export async function unlockSignalApp(input: {
   appKey: string;
   deviceId: string;
   appVersion: string;
+  /** the client's address, for the second lockout bucket */
+  caller?: string;
 }): Promise<SignalAppAuthResult> {
   return mutateStore((store) => {
     const now = Date.now();
@@ -235,9 +237,19 @@ export async function unlockSignalApp(input: {
     const deviceHash = hashDeviceId(store, input.deviceId);
     if (!deviceHash) return { ok: false, reason: 'device-required' };
 
-    const lockout = getLockout(store, deviceHash);
-    if (isLocked(lockout, now)) {
-      return { ok: false, reason: 'locked', lockedUntil: lockout.locked_until ?? undefined };
+    /* Guessing was counted per device — and the device id comes from the
+       client. A script sending a fresh one with every attempt got a fresh
+       lockout bucket every time, so the limit never bit. Attempts are now
+       counted against the caller's address as well, which the guesser does
+       not choose, and either bucket filling up closes the door. */
+    const callerHash = hashDeviceId(store, `caller:${input.caller ?? 'unknown'}`);
+    const buckets = [deviceHash, callerHash];
+
+    for (const bucket of buckets) {
+      const lockout = getLockout(store, bucket);
+      if (isLocked(lockout, now)) {
+        return { ok: false, reason: 'locked', lockedUntil: lockout.locked_until ?? undefined };
+      }
     }
 
     const normalizedKey = normalizeAccessKey(input.appKey);
@@ -245,7 +257,7 @@ export async function unlockSignalApp(input: {
     const key = store.app_keys.find((item) => timingSafeEqualText(item.key_hash, keyHash));
 
     if (!key) {
-      recordFailedAttempt(store, deviceHash, now);
+      for (const bucket of buckets) recordFailedAttempt(store, bucket, now);
       return lockoutResult(store, deviceHash, now, 'invalid-key');
     }
 
@@ -273,7 +285,7 @@ export async function unlockSignalApp(input: {
 
     key.last_used_at = iso(now);
     key.updated_at = iso(now);
-    clearLockout(store, deviceHash);
+    for (const bucket of buckets) clearLockout(store, bucket);
     addLog(store, 'unlock', `${key.name} unlocked on device ${shortHash(deviceHash)}`, now);
 
     return issueTokens(store, key, deviceHash, now);
