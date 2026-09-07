@@ -1,5 +1,15 @@
 import 'dart:math' as math;
 
+/// What the app calls itself.
+///
+/// This is not read from the server. The title used to come from the
+/// snapshot's branding block, which meant the app wore whatever name the
+/// backend happened to be serving — so a rename shipped in the APK did not
+/// show until the site was redeployed, and an unreachable server left it on
+/// a stale one. The app's own name is the app's own.
+const kAppTitle = 'ARIYAN KHAN';
+const kAppSubtitle = 'ENCRYPTED SIGNAL TERMINAL';
+
 enum SignalGame { aviator, crash }
 
 extension SignalGameLabel on SignalGame {
@@ -84,8 +94,8 @@ class UpcomingSignal {
     final map = _readMap(raw);
     final target = map['targetX'];
     return UpcomingSignal(
-      position: _readInt(map['position'], index + 1),
-      roundId: _readInt(map['roundId'], 0),
+      position: _readCount(map['position'], index + 1),
+      roundId: _readCount(map['roundId'], 0),
       targetX: target is num ? target.toDouble() : null,
       flyAt: DateTime.tryParse('${map['flyAt'] ?? ''}'),
       flyInMs: map['flyInMs'] is num ? (map['flyInMs'] as num).round() : 0,
@@ -180,8 +190,8 @@ class SignalSnapshot {
 
     return SignalSnapshot(
       game: parseSignalGame(json['game'] ?? fallbackGame.apiValue),
-      title: _readString(branding['title'], 'ARIYAN KHAN'),
-      subtitle: _readString(branding['subtitle'], 'ENCRYPTED SIGNAL TERMINAL'),
+      title: kAppTitle,
+      subtitle: kAppSubtitle,
       modeBadge: _readString(branding['modeBadge'], 'MODE: BASS'),
       accuracy: _readInt(stats['accuracy'], 60),
       mode: _readString(stats['mode'], 'AUTO').toUpperCase(),
@@ -218,8 +228,8 @@ class SignalSnapshot {
 
     return SignalSnapshot(
       game: game,
-      title: 'ARIYAN KHAN',
-      subtitle: 'ENCRYPTED SIGNAL TERMINAL',
+      title: kAppTitle,
+      subtitle: kAppSubtitle,
       modeBadge: 'MODE: $mode',
       accuracy: 60 + seed % 9,
       mode: mode,
@@ -277,9 +287,18 @@ String _readString(Object? value, String fallback) {
   return raw == null || raw.isEmpty ? fallback : raw;
 }
 
+/// Percentages — accuracy, win rate — which are the only things this was
+/// ever meant to read, hence the clamp.
 int _readInt(Object? value, int fallback) {
   if (value is num) return value.round().clamp(0, 100).toInt();
   return int.tryParse('${value ?? ''}')?.clamp(0, 100).toInt() ?? fallback;
+}
+
+/// A plain counter. Round ids run past 100 within a day, and reading them
+/// through _readInt capped every one of them at 100.
+int _readCount(Object? value, int fallback) {
+  if (value is num) return value.round();
+  return int.tryParse('${value ?? ''}') ?? fallback;
 }
 
 double _readDouble(Object? value, double fallback) {

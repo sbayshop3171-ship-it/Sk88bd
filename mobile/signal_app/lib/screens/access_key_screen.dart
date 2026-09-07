@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../models/signal_snapshot.dart';
 import 'package:flutter/services.dart';
 
 import '../theme/neon_theme.dart';
@@ -102,7 +104,7 @@ class _AccessKeyScreenState extends State<AccessKeyScreen> {
                               ),
                               SizedBox(height: 22 * scale),
                               Text(
-                                'ARIYAN KHAN',
+                                kAppTitle,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: NeonPalette.text,
