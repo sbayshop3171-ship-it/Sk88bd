@@ -102,7 +102,7 @@ class _AccessKeyScreenState extends State<AccessKeyScreen> {
                               ),
                               SizedBox(height: 22 * scale),
                               Text(
-                                'PRIME VAI DEVX',
+                                'ARIYAN KHAN',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: NeonPalette.text,

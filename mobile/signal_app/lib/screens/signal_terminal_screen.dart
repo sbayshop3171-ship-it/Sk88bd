@@ -10,7 +10,9 @@ import '../widgets/auto_signal_bar.dart';
 import '../widgets/brand_terminal.dart';
 import '../widgets/game_switcher.dart';
 import '../widgets/neon_background.dart';
+import '../widgets/next_signals_list.dart';
 import '../widgets/recent_rounds_strip.dart';
+import '../widgets/scan_gate.dart';
 import '../widgets/signal_gauge.dart';
 import '../widgets/stat_grid.dart';
 import '../widgets/status_alert.dart';
@@ -38,6 +40,9 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
   late String _accessToken;
   late SignalSnapshot _snapshot;
   SignalGame _game = SignalGame.aviator;
+  /* The terminal opens on the scan, not on the numbers. Switching games puts
+     it back — a queue read for Aviator says nothing about Crash. */
+  bool _scanned = false;
   DateTime _now = DateTime.now();
   Timer? _clockTimer;
   Timer? _pollTimer;
@@ -109,10 +114,14 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
     if (game == _game) return;
     setState(() {
       _game = game;
+      _scanned = false;
       _snapshot = SignalSnapshot.demo(game, now: _now);
     });
     _loadSnapshot();
   }
+
+  /// Back to the dial for another read.
+  void _rescan() => setState(() => _scanned = false);
 
   @override
   Widget build(BuildContext context) {
@@ -165,31 +174,48 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
                             ),
                           ],
                         ),
-                        SignalGauge(
-                          multiplier: _snapshot.targetMultiplier,
-                          timestamp: _now,
-                          active: _snapshot.signalActive,
-                          label: _snapshot.signalLabel,
-                          pulse: _pulse,
-                          size: layout.gaugeSize,
-                          scale: layout.scale,
-                        ),
+                        if (!_scanned)
+                          ScanGate(
+                            gameLabel: _game.label,
+                            scale: layout.scale,
+                            onScan: _loadSnapshot,
+                            onComplete: () =>
+                                setState(() => _scanned = true),
+                          )
+                        else
+                          SignalGauge(
+                            multiplier: _snapshot.targetMultiplier,
+                            timestamp: _now,
+                            active: _snapshot.signalActive,
+                            label: _snapshot.signalLabel,
+                            pulse: _pulse,
+                            size: layout.gaugeSize,
+                            scale: layout.scale,
+                          ),
                         Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            AutoSignalBar(
-                              active: _snapshot.autoSignalActive,
-                              onTap: _loadSnapshot,
-                              height: layout.autoBarHeight,
-                              scale: layout.scale,
-                            ),
-                            SizedBox(height: layout.gapSm),
-                            RecentRoundsStrip(
-                              rounds: _snapshot.recentRounds,
-                              scale: layout.scale,
-                            ),
-                            SizedBox(height: layout.gapSm),
+                            if (_scanned) ...[
+                              NextSignalsList(
+                                signals: _snapshot.upcoming,
+                                now: _now,
+                                scale: layout.scale,
+                              ),
+                              SizedBox(height: layout.gapSm),
+                              AutoSignalBar(
+                                active: _snapshot.autoSignalActive,
+                                onTap: _rescan,
+                                height: layout.autoBarHeight,
+                                scale: layout.scale,
+                              ),
+                              SizedBox(height: layout.gapSm),
+                              RecentRoundsStrip(
+                                rounds: _snapshot.recentRounds,
+                                scale: layout.scale,
+                              ),
+                              SizedBox(height: layout.gapSm),
+                            ],
                             StatusAlert(
                               text: _snapshot.notice,
                               scale: layout.scale,

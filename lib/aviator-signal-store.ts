@@ -45,6 +45,8 @@ export interface AviatorSignalState {
   currentRound: StoredAviatorRound;
   appSignalRound: StoredAviatorRound;
   previewRounds: StoredAviatorRound[];
+  /** the app's queue: appSignalRound first, then the ones behind it */
+  upcomingSignalRounds: StoredAviatorRound[];
   history: StoredAviatorRound[];
   auditLogs: AviatorAuditLog[];
 }
@@ -78,6 +80,10 @@ export async function getAviatorSignalState(): Promise<AviatorSignalState> {
   });
 }
 
+/** What the app calls itself. The app carries the same string as a fallback
+    for when it cannot reach us, so change both together. */
+export const SIGNAL_APP_TITLE = 'ARIYAN KHAN';
+
 export async function getSignalTerminalSnapshot(game: SignalGame = 'aviator') {
   const state = await getAviatorSignalState();
   const now = Date.parse(state.serverTime);
@@ -91,7 +97,7 @@ export async function getSignalTerminalSnapshot(game: SignalGame = 'aviator') {
   return {
     game,
     branding: {
-      title: 'PRIME VAI DEVX',
+      title: SIGNAL_APP_TITLE,
       subtitle: 'ENCRYPTED SIGNAL TERMINAL',
       modeBadge: `MODE: ${mode}`,
     },
@@ -117,6 +123,20 @@ export async function getSignalTerminalSnapshot(game: SignalGame = 'aviator') {
     },
     round: publicRound(round),
     websiteRound: publicRound(websiteRound),
+    /* The queue the app shows: what is coming, in order, each with the hash
+       it is committed to. `revealed` is false while the signal is switched
+       off, so the app can show the row without giving the number away. */
+    upcoming: state.upcomingSignalRounds.map((item, i) => ({
+      position: i + 1,
+      roundId: item.round_id,
+      targetX: signalVisible ? item.target_x : null,
+      revealed: signalVisible,
+      bettingAt: item.betting_at,
+      flyAt: item.fly_at,
+      bettingInMs: Math.max(0, Date.parse(item.betting_at) - now),
+      flyInMs: Math.max(0, Date.parse(item.fly_at) - now),
+      serverSeedHash: item.server_seed_hash,
+    })),
     recentRounds: state.history.map((item) => ({
       id: item.round_id,
       multiplier: item.target_x,
@@ -295,9 +315,35 @@ function nextFlyAfter(round: StoredAviatorRound) {
   return Date.parse(round.crash_at) + CRASHED_HOLD_MS + BETTING_LEAD_MS;
 }
 
+/** How far ahead the app's signal queue runs. */
+export const UPCOMING_SIGNAL_COUNT = 5;
+
+/**
+ * The next few signal rounds, scheduled for real if they do not exist yet.
+ *
+ * The store used to keep exactly one round queued behind the live one, so
+ * there was nothing to show a player who wants to see what is coming. These
+ * are committed rounds — each with its own seed hash — not a projection the
+ * app draws for itself, so what the queue promises is what the round pays.
+ */
+function upcomingSignalRounds(store: SignalStore, now: number, count: number) {
+  const current = getCurrentRound(store, now);
+  const queue: StoredAviatorRound[] = store.rounds
+    .filter((round) => round.round_id > current.round_id && Date.parse(round.crash_at) + CRASHED_HOLD_MS > now)
+    .sort((a, b) => a.round_id - b.round_id);
+
+  let last = queue[queue.length - 1] ?? current;
+  while (queue.length < count) {
+    last = scheduleNextRound(store, nextFlyAfter(last), now);
+    queue.push(last);
+  }
+  return queue.slice(0, count);
+}
+
 function buildState(store: SignalStore, now: number): AviatorSignalState {
   const currentRound = getCurrentRound(store, now);
-  const appSignalRound = getQueuedSignalRound(store, now);
+  const upcoming = upcomingSignalRounds(store, now, UPCOMING_SIGNAL_COUNT);
+  const appSignalRound = upcoming[0];
   const previewRounds = store.rounds
     .filter((round) => Date.parse(round.fly_at) >= now || round.round_id === currentRound.round_id)
     .sort((a, b) => a.round_id - b.round_id)
@@ -313,6 +359,7 @@ function buildState(store: SignalStore, now: number): AviatorSignalState {
     currentRound: { ...currentRound },
     appSignalRound: { ...appSignalRound },
     previewRounds: previewRounds.map((round) => ({ ...round })),
+    upcomingSignalRounds: upcoming.map((round) => ({ ...round })),
     history: history.map((round) => ({ ...round })),
     auditLogs: store.auditLogs.slice(0, 30).map((log) => ({ ...log })),
   };

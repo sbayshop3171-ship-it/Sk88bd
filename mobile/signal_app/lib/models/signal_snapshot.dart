@@ -57,6 +57,43 @@ class SignalRound {
   }
 }
 
+/// One entry in the queue of signals still to come.
+///
+/// `targetX` is null while the operator has signals switched off: the round
+/// is real and its hash is committed, but the number is not given away yet.
+class UpcomingSignal {
+  const UpcomingSignal({
+    required this.position,
+    required this.roundId,
+    required this.targetX,
+    required this.flyAt,
+    required this.flyInMs,
+    required this.serverSeedHash,
+  });
+
+  final int position;
+  final int roundId;
+  final double? targetX;
+  final DateTime? flyAt;
+  final int flyInMs;
+  final String serverSeedHash;
+
+  bool get revealed => targetX != null;
+
+  factory UpcomingSignal.fromJson(Object? raw, int index) {
+    final map = _readMap(raw);
+    final target = map['targetX'];
+    return UpcomingSignal(
+      position: _readInt(map['position'], index + 1),
+      roundId: _readInt(map['roundId'], 0),
+      targetX: target is num ? target.toDouble() : null,
+      flyAt: DateTime.tryParse('${map['flyAt'] ?? ''}'),
+      flyInMs: map['flyInMs'] is num ? (map['flyInMs'] as num).round() : 0,
+      serverSeedHash: _readString(map['serverSeedHash'], ''),
+    );
+  }
+}
+
 class SignalSnapshot {
   const SignalSnapshot({
     required this.game,
@@ -72,6 +109,7 @@ class SignalSnapshot {
     required this.signalLabel,
     required this.autoSignalActive,
     required this.recentRounds,
+    required this.upcoming,
     required this.notice,
   });
 
@@ -88,6 +126,7 @@ class SignalSnapshot {
   final String signalLabel;
   final bool autoSignalActive;
   final List<SignalRound> recentRounds;
+  final List<UpcomingSignal> upcoming;
   final String notice;
 
   SignalSnapshot copyWith({
@@ -112,6 +151,7 @@ class SignalSnapshot {
       signalLabel: signalLabel ?? this.signalLabel,
       autoSignalActive: autoSignalActive ?? this.autoSignalActive,
       recentRounds: recentRounds,
+      upcoming: upcoming,
       notice: notice ?? this.notice,
     );
   }
@@ -132,9 +172,15 @@ class SignalSnapshot {
         .where((round) => round.multiplier >= 1)
         .toList(growable: false);
 
+    final upcomingRaw = json['upcoming'] as List? ?? const [];
+    final upcoming = <UpcomingSignal>[
+      for (var i = 0; i < upcomingRaw.length; i++)
+        UpcomingSignal.fromJson(upcomingRaw[i], i),
+    ];
+
     return SignalSnapshot(
       game: parseSignalGame(json['game'] ?? fallbackGame.apiValue),
-      title: _readString(branding['title'], 'PRIME VAI DEVX'),
+      title: _readString(branding['title'], 'ARIYAN KHAN'),
       subtitle: _readString(branding['subtitle'], 'ENCRYPTED SIGNAL TERMINAL'),
       modeBadge: _readString(branding['modeBadge'], 'MODE: BASS'),
       accuracy: _readInt(stats['accuracy'], 60),
@@ -150,6 +196,7 @@ class SignalSnapshot {
       signalLabel: _readString(signal['label'], 'SIGNAL ACTIVE').toUpperCase(),
       autoSignalActive: _readBool(signal['auto'], true),
       recentRounds: rounds.isEmpty ? _demoRounds(DateTime.now(), 0) : rounds,
+      upcoming: upcoming,
       notice: _readString(json['notice'], 'এক্সেস গ্রান্টেড'),
     );
   }
@@ -171,7 +218,7 @@ class SignalSnapshot {
 
     return SignalSnapshot(
       game: game,
-      title: 'PRIME VAI DEVX',
+      title: 'ARIYAN KHAN',
       subtitle: 'ENCRYPTED SIGNAL TERMINAL',
       modeBadge: 'MODE: $mode',
       accuracy: 60 + seed % 9,
@@ -183,9 +230,29 @@ class SignalSnapshot {
       signalLabel: offline ? 'DEMO SIGNAL' : 'SIGNAL ACTIVE',
       autoSignalActive: true,
       recentRounds: _demoRounds(time, seed),
+      upcoming: _demoUpcoming(time, seed, targets, offline),
       notice: offline ? 'ডেমো ডাটা চালু' : 'এক্সেস গ্রান্টেড',
     );
   }
+}
+
+List<UpcomingSignal> _demoUpcoming(
+  DateTime now,
+  int seed,
+  List<double> targets,
+  bool offline,
+) {
+  return List.generate(5, (index) {
+    final at = now.add(Duration(seconds: 45 * (index + 1)));
+    return UpcomingSignal(
+      position: index + 1,
+      roundId: seed + index + 1,
+      targetX: offline ? null : targets[(seed + index) % targets.length],
+      flyAt: at,
+      flyInMs: at.difference(now).inMilliseconds,
+      serverSeedHash: '',
+    );
+  });
 }
 
 List<SignalRound> _demoRounds(DateTime now, int seed) {
