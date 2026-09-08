@@ -6,7 +6,7 @@
 #
 # It pulls main, installs, builds, restarts the app and checks the live site.
 # No root needed: the app is a FASTPANEL "Systemd" backend running as this
-# same user, so killing its process is enough — systemd starts it again.
+# same user's own systemd, so `systemctl --user restart` is enough.
 #
 # Flags:
 #   --check        report what is deployed and running, change nothing
@@ -99,12 +99,27 @@ OLD_PID="$(running_pid)"
    Start it from FASTPANEL: sk88bd.com → Settings → Backend → Save."
 
 # The unit that owns the process — its own cgroup line names it, and any user
-# may read that. We only kill the app if that unit will start it again.
-UNIT="$(sed -n 's#.*/system.slice/##p' "/proc/$OLD_PID/cgroup" 2>/dev/null | head -1)"
-RESTART_POLICY="$(systemctl show -p Restart --value "$UNIT" 2>/dev/null)"
-echo "  unit       ${UNIT:-unknown} (Restart=${RESTART_POLICY:-unknown})"
+# may read that.
+#
+# FASTPANEL runs this backend as a *user* unit, so the cgroup reads
+# .../user@1044.service/app.slice/sk88bd_com.service. That one this account
+# may restart outright, no root and no killing. Only if it turns out to be a
+# system unit instead do we fall back to sudo, and then to a plain signal —
+# and that last one only when the unit will start the app again.
+CGROUP="$(head -1 "/proc/$OLD_PID/cgroup" 2>/dev/null)"
+USER_UNIT="$(printf '%s' "$CGROUP" | sed -n 's#.*/app\.slice/##p')"
+UNIT="$(printf '%s' "$CGROUP" | sed -n 's#.*/system\.slice/##p')"
 
-if sudo -n systemctl restart "$UNIT" 2>/dev/null; then
+if [ -n "$USER_UNIT" ]; then
+  echo "  unit       $USER_UNIT (user, Restart=$(systemctl --user show -p Restart --value "$USER_UNIT" 2>/dev/null))"
+else
+  RESTART_POLICY="$(systemctl show -p Restart --value "$UNIT" 2>/dev/null)"
+  echo "  unit       ${UNIT:-unknown} (Restart=${RESTART_POLICY:-unknown})"
+fi
+
+if [ -n "$USER_UNIT" ] && systemctl --user restart "$USER_UNIT" 2>/dev/null; then
+  ok "restarted $USER_UNIT"
+elif [ -n "$UNIT" ] && sudo -n systemctl restart "$UNIT" 2>/dev/null; then
   ok "restarted via systemd"
 elif [ -n "$UNIT" ] && { [ "$RESTART_POLICY" = always ] || [ "$RESTART_POLICY" = on-failure ]; }; then
   # No sudo, but the unit restarts itself: killing our own process is enough.
