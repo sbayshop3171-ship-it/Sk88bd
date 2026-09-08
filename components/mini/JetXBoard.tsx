@@ -22,7 +22,7 @@ import { fmtX, flightMultiplierAt, flightTimeToReach } from '@/lib/mini-games';
    edge to edge (preserveAspectRatio="none") without the jet ever squashing. */
 const W = 100, H = 76;
 /** the pad the jet waits on, and where the nose settles once it is up */
-const PAD_X = 8, FLOOR = 66;
+const PAD_X = 12, FLOOR = 63;
 const TIP_X = 74, TIP_Y = 15;
 const STEPS = 40;
 
@@ -79,7 +79,7 @@ export default function JetXBoard() {
   const angle = Number(
     (travel < 0.05
       ? -46
-      : Math.max(-72, Math.min(-8, (Math.atan2(ty - back[1], tx - back[0]) * 180) / Math.PI))
+      : Math.max(-58, Math.min(-8, (Math.atan2(ty - back[1], tx - back[0]) * 180) / Math.PI))
     ).toFixed(2),
   );
   const scale = (1 - travel * 0.18).toFixed(3);
