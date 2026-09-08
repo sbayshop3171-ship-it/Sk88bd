@@ -2906,14 +2906,80 @@ body.cz-light .cz-add{box-shadow:0 8px 20px rgba(229,32,63,.28)}
 .mg-dice__ends{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);padding:0 2px}
 .mg-dice__slider{width:100%;margin-top:10px;accent-color:var(--mg-accent)}
 
-/* --- limbo --- */
-.mg-limbo{padding:30px 14px 16px}
-.mg-limbo__num{
-  text-align:center;font-size:52px;font-weight:900;letter-spacing:-1.5px;line-height:1;
-  color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 6px 24px rgba(0,0,0,.5);
+/* --- limbo ---
+   One number on a lit stage. The draw is instant on the server, so the whole
+   show is the riffle and the landing: the glow behind the digits swells while
+   it runs and settles into green or red once it stops. */
+/* the stage is its own frame, so the board around it drops to a spacer —
+   two nested borders read as a box in a box */
+.mg-limbo{padding:0;background:none;border:0;overflow:visible}
+.mg-limbo__stage{
+  position:relative;display:grid;place-items:center;gap:12px;
+  min-height:228px;padding:34px 12px 24px;border-radius:var(--r-lg);
+  background:
+    radial-gradient(80% 70% at 50% 40%, rgba(167,139,250,.14), transparent 70%),
+    linear-gradient(180deg,rgba(0,0,0,.34),rgba(0,0,0,.12));
+  border:1px solid rgba(167,139,250,.22);overflow:hidden;
 }
-.mg-limbo__num.win{color:#7ee0c4}
-.mg-limbo__num.lose{color:#ff8f8f}
+/* the halo that reacts — kept off the text so the digits stay crisp */
+.mg-limbo__glow{
+  position:absolute;left:50%;top:44%;width:230px;height:230px;
+  transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle, color-mix(in srgb, var(--mg-accent) 34%, transparent), transparent 62%);
+  opacity:.5;transition:opacity .35s, background .35s, transform .35s;
+}
+.mg-limbo__num{
+  position:relative;text-align:center;font-size:clamp(48px,15vw,66px);font-weight:900;
+  letter-spacing:-2px;line-height:1;color:#fff;font-variant-numeric:tabular-nums;
+  text-shadow:0 6px 30px rgba(0,0,0,.55);transition:color .25s, transform .25s;
+}
+/* the target, sitting under the draw like a bar to clear */
+.mg-limbo__mark{
+  position:relative;margin:0;display:flex;align-items:center;gap:8px;
+  padding:5px 12px;border-radius:var(--r-pill);
+  background:rgba(0,0,0,.34);border:1px solid var(--line);
+  transition:border-color .25s, background .25s;
+}
+.mg-limbo__mark span{font-size:10.5px;font-weight:800;color:var(--muted);letter-spacing:.4px}
+.mg-limbo__mark b{font-size:13px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+
+.mg-limbo.is-rolling .mg-limbo__num{color:#e7dcff}
+.mg-limbo.is-rolling .mg-limbo__glow{opacity:.85;transform:translate(-50%,-50%) scale(1.12)}
+.mg-limbo.is-win .mg-limbo__num{color:#7ee0c4;animation:mg-limbo-pop .45s cubic-bezier(.2,1.4,.4,1)}
+.mg-limbo.is-win .mg-limbo__glow{
+  opacity:.95;background:radial-gradient(circle,rgba(63,224,189,.42),transparent 62%);
+}
+.mg-limbo.is-win .mg-limbo__mark{border-color:rgba(63,224,189,.5);background:rgba(63,224,189,.12)}
+.mg-limbo.is-lose .mg-limbo__num{color:#ff8f8f}
+.mg-limbo.is-lose .mg-limbo__glow{opacity:.3;background:radial-gradient(circle,rgba(255,90,90,.3),transparent 62%)}
+.mg-limbo.is-lose .mg-limbo__mark{border-color:rgba(255,90,90,.4)}
+@keyframes mg-limbo-pop{40%{transform:scale(1.09)}}
+@media (prefers-reduced-motion:reduce){
+  .mg-limbo.is-win .mg-limbo__num{animation:none}
+  .mg-limbo__glow,.mg-limbo__num,.mg-limbo__mark{transition:none}
+}
+
+/* target and win-chance are the same number twice over, so they sit as a
+   pair rather than one above the other */
+.mg-limbo__pair{display:flex;gap:8px}
+.mg-field{
+  flex:1;min-width:0;position:relative;display:flex;flex-direction:column;gap:1px;
+  padding:7px 12px;border-radius:var(--r-sm);
+  background:rgba(0,0,0,.3);border:1px solid var(--line);
+}
+.mg-field:focus-within{border-color:var(--mg-accent)}
+.mg-field>span{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.3px}
+.mg-field input{
+  width:100%;min-width:0;padding:0;background:none;border:0;color:#fff;
+  font-size:16px;font-weight:900;font-variant-numeric:tabular-nums;
+}
+.mg-field input:focus{outline:none}
+.mg-field input:disabled{opacity:.6}
+.mg-field>i{
+  position:absolute;right:12px;bottom:8px;font-style:normal;
+  font-size:13px;font-weight:800;color:var(--muted);
+}
+.mg-field:has(>i) input{padding-right:16px}
 
 /* --- plinko --- */
 .mg-plinko{padding:12px 10px 12px}

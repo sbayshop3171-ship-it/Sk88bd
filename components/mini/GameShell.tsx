@@ -26,6 +26,7 @@ export default function GameShell({
   clientSeed,
   onNewSeed,
   hideFair,
+  runs,
   children,
 }: {
   game: MiniGameId;
@@ -37,10 +38,17 @@ export default function GameShell({
   /** the board shows the commit–reveal receipt itself, so the strip at the
       foot would only repeat it */
   hideFair?: boolean;
+  /** A game whose pills should read something other than the payout
+      multiplier supplies them itself — Limbo's strip shows the number that
+      was actually drawn, which is the interesting figure on a loss too. */
+  runs?: { id: string; label: string; won: boolean }[];
   children: React.ReactNode;
 }) {
   const def = MINI_GAMES[game];
   const [fairOpen, setFairOpen] = useState(false);
+  const pills = runs ?? history.map((h) => ({
+    id: h.id, label: h.won ? fmtX(h.multiplier) : '—', won: h.won,
+  }));
 
   return (
     <div className="mg" style={{ ['--mg-accent' as string]: def.accent }}>
@@ -56,11 +64,11 @@ export default function GameShell({
         </div>
       </header>
 
-      {history.length > 0 && (
+      {pills.length > 0 && (
         <div className="mg__runs scroll-x">
-          {history.map((h) => (
-            <span key={h.id} className={`mg__run${h.won ? ' win' : ' lose'}`}>
-              {h.won ? fmtX(h.multiplier) : '—'}
+          {pills.map((r) => (
+            <span key={r.id} className={`mg__run${r.won ? ' win' : ' lose'}`}>
+              {r.label}
             </span>
           ))}
         </div>
