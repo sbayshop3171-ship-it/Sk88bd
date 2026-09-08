@@ -2,9 +2,11 @@
 
 import GameShell from '@/components/mini/GameShell';
 import JetSprite from '@/components/mini/JetSprite';
+import LiveBoard, { type MyRow } from '@/components/mini/LiveBoard';
 import StakeBar from '@/components/mini/StakeBar';
 import { useImmersive } from '@/components/mini/useImmersive';
 import { useFlightRound } from '@/components/mini/useFlightRound';
+import { useLiveBoard } from '@/components/mini/useLiveBoard';
 import { money } from '@/lib/brand';
 import { fmtX, flightMultiplierAt, flightTimeToReach } from '@/lib/mini-games';
 
@@ -60,6 +62,7 @@ function trail(multiplier: number, travel: number): [number, number][] {
 export default function JetXBoard() {
   useImmersive();
   const r = useFlightRound('jetx');
+  const board = useLiveBoard();
   const { g, phase, multiplier, settled, busted } = r;
 
   const flying = phase === 'flying';
@@ -90,6 +93,13 @@ export default function JetXBoard() {
   const label = busted ? fmtX(settled!.crashAt) : fmtX(shown);
   const cashNow = Math.floor(g.stake * multiplier);
 
+  /* the player's own row in the table beside the board */
+  const mine: MyRow | null = flying
+    ? { stake: g.stake, multiplier, out: false }
+    : settled
+      ? { stake: settled.stake / 100, multiplier: settled.multiplier, out: settled.won }
+      : null;
+
   return (
     <GameShell
       game="jetx"
@@ -98,6 +108,7 @@ export default function JetXBoard() {
       fairness={r.fairness}
       clientSeed={g.clientSeed}
       onNewSeed={g.newSeed}
+      hideFair
     >
       <div className={`jx${busted ? ' is-busted' : ''}${flying ? ' is-live' : ''}`}>
         <div className="jx-stage">
@@ -167,6 +178,12 @@ export default function JetXBoard() {
           </div>
 
           <span className="jx-stage__tag" aria-hidden>JETX</span>
+
+          {board.players > 0 && (
+            <span className="jx-stage__crowd" aria-label={`${board.players} জন খেলছে`}>
+              <i aria-hidden /><b>{board.players.toLocaleString('en-IN')}</b>
+            </span>
+          )}
         </div>
       </div>
 
@@ -213,6 +230,16 @@ export default function JetXBoard() {
           </button>
         )}
       </div>
+
+      <LiveBoard
+        players={board.players}
+        seats={board.seats}
+        recent={board.recent}
+        mine={mine}
+        fairness={r.fairness}
+        clientSeed={g.clientSeed}
+        onNewSeed={g.newSeed}
+      />
     </GameShell>
   );
 }

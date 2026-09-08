@@ -3080,6 +3080,97 @@ body.cz-light .cz-add{box-shadow:0 8px 20px rgba(229,32,63,.28)}
   .jx-jet.is-gone{animation-duration:.01s}
 }
 
+/* --- JetX: the head count on the stage --- */
+.jx-stage__crowd{
+  position:absolute;right:10px;top:9px;display:flex;align-items:center;gap:6px;
+  padding:4px 10px 4px 8px;border-radius:var(--r-pill);pointer-events:none;
+  background:rgba(10,4,32,.55);border:1px solid rgba(167,90,255,.35);
+  backdrop-filter:blur(4px);
+}
+.jx-stage__crowd i{
+  width:7px;height:7px;border-radius:50%;background:#3ddc84;
+  box-shadow:0 0 0 3px rgba(61,220,132,.18);animation:jx-beat 1.8s ease-in-out infinite;
+}
+.jx-stage__crowd b{font-size:12px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+@keyframes jx-beat{50%{opacity:.35}}
+
+/* --- JetX: recent winners, live bets, fairness --- */
+.jx-live{margin-top:16px}
+
+.jx-wins{margin-bottom:12px}
+.jx-wins__tag{
+  display:block;margin-bottom:6px;font-size:10px;font-weight:900;letter-spacing:1.2px;
+  text-transform:uppercase;color:var(--muted);
+}
+.jx-wins__rail{display:flex;gap:8px;padding-bottom:2px}
+.jx-wins__chip{
+  flex:0 0 auto;display:flex;align-items:center;gap:7px;padding:6px 10px;
+  border-radius:var(--r-pill);background:rgba(155,92,255,.12);
+  border:1px solid rgba(155,92,255,.3);white-space:nowrap;
+}
+.jx-wins__chip b{font-size:11px;font-weight:700;color:var(--muted)}
+.jx-wins__chip i{
+  font-style:normal;font-size:11px;font-weight:900;color:#ffb03a;font-variant-numeric:tabular-nums;
+}
+.jx-wins__chip em{font-style:normal;font-size:11.5px;font-weight:900;color:#7dffc4;font-variant-numeric:tabular-nums}
+
+.jx-live__tabs{
+  display:flex;gap:4px;padding:3px;border-radius:var(--r-pill);
+  background:rgba(0,0,0,.32);border:1px solid var(--line);
+}
+.jx-live__tabs button{
+  flex:1;padding:8px 4px;border-radius:var(--r-pill);font-size:12px;font-weight:800;color:var(--muted);
+}
+.jx-live__tabs button.on{background:rgba(155,92,255,.22);color:#fff}
+
+.jx-live__meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:14px 0 0}
+.jx-live__count{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.jx-live__count b{color:#fff;font-weight:900;font-variant-numeric:tabular-nums}
+.jx-live__dot{
+  width:7px;height:7px;border-radius:50%;background:#3ddc84;flex:0 0 auto;
+  box-shadow:0 0 0 3px rgba(61,220,132,.16);animation:jx-beat 1.8s ease-in-out infinite;
+}
+.jx-live__fill{height:3px;border-radius:2px;background:rgba(255,255,255,.1);margin:9px 0 10px;overflow:hidden}
+.jx-live__fill i{display:block;height:100%;background:linear-gradient(90deg,#ff7a1a,#3ddc84);transition:width .4s}
+.jx-live__total{text-align:right;flex:0 0 auto}
+.jx-live__total b{display:block;font-size:17px;line-height:1.15;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+.jx-live__total small{font-size:10px;color:var(--muted)}
+
+.jx-bets{border-radius:var(--r-md);border:1px solid var(--line);background:rgba(0,0,0,.26);overflow:hidden}
+.jx-bets__head,.jx-bets__row{
+  display:grid;grid-template-columns:1.5fr 1fr .8fr 1.1fr;gap:8px;
+  padding:9px 12px;font-size:11.5px;align-items:center;
+}
+.jx-bets__head{
+  font-size:10px;font-weight:900;letter-spacing:.6px;color:var(--muted);
+  text-transform:uppercase;border-bottom:1px solid var(--line);
+}
+.jx-bets__head span:nth-child(n+2),
+.jx-bets__row span:nth-child(n+2){text-align:right}
+.jx-bets__scroll{max-height:340px;overflow-y:auto;overscroll-behavior:contain}
+.jx-bets__row{border-bottom:1px solid rgba(255,255,255,.05)}
+.jx-bets__row:last-child{border-bottom:0}
+.jx-bets__row.is-out{background:rgba(61,220,132,.08)}
+.jx-bets__row.is-mine{
+  background:rgba(155,92,255,.16);box-shadow:inset 2px 0 0 var(--mg-accent);
+}
+.jx-bets__row.is-mine.is-out{background:rgba(61,220,132,.16)}
+.jx-bets__u{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jx-bets__row.is-mine .jx-bets__u{color:#fff;font-weight:900}
+.jx-bets__s{font-variant-numeric:tabular-nums}
+.jx-bets__x,.jx-bets__w{font-weight:800;font-variant-numeric:tabular-nums}
+.jx-bets__x{color:#ffb03a}
+.jx-bets__w{color:#7dffc4}
+.jx-bets__row:not(.is-out) .jx-bets__x,
+.jx-bets__row:not(.is-out) .jx-bets__w{color:var(--muted);font-weight:600}
+.jx-bets__empty{padding:26px 12px;text-align:center;font-size:12px;color:var(--muted)}
+
+.jx-live .mg__fair{margin-top:12px}
+
+@media (prefers-reduced-motion:reduce){
+  .jx-stage__crowd i,.jx-live__dot{animation:none}
+}
+
 /* --- the fairness receipt --- */
 .mg__foot{margin-top:auto;padding-top:14px}
 .mg__fairbtn{
