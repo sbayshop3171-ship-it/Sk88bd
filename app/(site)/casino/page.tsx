@@ -5,7 +5,7 @@ import { GameCard } from '@/components/GameSection';
 import PageHeader from '@/components/PageHeader';
 import { useFavourites } from '@/components/useFavourites';
 import { useGameOverrides } from '@/components/useGameOverrides';
-import { CATALOGUE, HOME_SECTIONS, type CategoryKey } from '@/lib/catalogue';
+import { CATALOGUE, HOME_SECTIONS, playableFirst, type CategoryKey } from '@/lib/catalogue';
 import { applyOverrides } from '@/lib/game-control';
 import { CATEGORY_LABEL } from '@/lib/strings';
 
@@ -17,7 +17,11 @@ const GLYPH: Record<CategoryKey, string> = {
 export default function CasinoLobbyPage() {
   const [active, setActive] = useState<CategoryKey>('hot');
   const overrides = useGameOverrides();
-  const games = useMemo(() => applyOverrides(CATALOGUE[active], overrides), [active, overrides]);
+  // Same order as the home rails: what opens first, "coming soon" last.
+  const games = useMemo(
+    () => applyOverrides(playableFirst(CATALOGUE[active]), overrides),
+    [active, overrides],
+  );
   const { isFavourite, toggle } = useFavourites();
 
   return (

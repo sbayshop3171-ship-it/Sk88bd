@@ -440,3 +440,14 @@ export function demoGames(): Game[] {
   }
   return out;
 }
+
+/** Catalogue order, but every game that actually opens comes first and the
+    "coming soon" tiles sink to the end. A stable partition, so within each
+    half the hand-kept order is untouched — and it runs before the admin
+    overrides, so a pinned game still wins. */
+export function playableFirst(games: Game[]): Game[] {
+  const open: Game[] = [];
+  const soon: Game[] = [];
+  for (const g of games) (hasDemo(g.id) ? open : soon).push(g);
+  return open.concat(soon);
+}

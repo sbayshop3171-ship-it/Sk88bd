@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
-import { CATALOGUE, PLAYABLE_IDS, type CategoryKey, type Game } from '@/lib/catalogue';
+import { CATALOGUE, PLAYABLE_IDS, playableFirst, type CategoryKey, type Game } from '@/lib/catalogue';
 import { applyOverrides } from '@/lib/game-control';
 import { CATEGORY_LABEL, t } from '@/lib/strings';
 import GameArt from './GameArt';
@@ -89,11 +89,11 @@ export default function GameSection({
   games?: Game[];
   title?: string;
 }) {
-  /* Category rails keep the catalogue's own order. Everything a visitor can
-     actually open already leads the page in its own rail (demoGames()), and
-     floating those few to the front of every category as well put the handful
-     of games with no pack artwork ahead of the real tiles. */
-  const source = games ?? (category ? CATALOGUE[category] : []);
+  /* Every rail leads with the games that actually open — its own engine, a
+     provider demo or a clip — and the "coming soon" tiles fall to the end,
+     so the first page of a rail is never all placeholders. */
+  const raw = games ?? (category ? CATALOGUE[category] : []);
+  const source = useMemo(() => playableFirst(raw), [raw]);
   // What the admin hid, re-badged or pinned at /admin/games. Empty on the
   // first paint, so this renders the static build's own HTML and settles a
   // moment later.
