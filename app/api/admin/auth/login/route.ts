@@ -31,6 +31,7 @@ export async function POST(req: Request) {
   const res = json({
     ok: true,
     username: result.username,
+    role: result.role,
     expiresAt: new Date(result.expiresAt).toISOString(),
   });
   res.cookies.set(ADMIN_SESSION_COOKIE, result.token, adminSessionCookieOptions(result.expiresAt));

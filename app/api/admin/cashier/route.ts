@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { ADMIN_SESSION_COOKIE, getAdminSessionFromCookie } from '@/lib/admin-auth';
+import { requireAdmin } from '@/lib/admin-auth-next';
 import { listCashier, reviewRequest, type RequestState } from '@/lib/cashier';
 
 export const runtime = 'nodejs';
@@ -10,8 +9,8 @@ const TABLES = ['deposits', 'withdrawals'] as const;
 const STATES = ['pending', 'approved', 'rejected', 'cancelled', 'all'];
 
 export async function GET(req: Request) {
-  const session = await adminSession();
-  if (!session) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('cashier.review');
+  if (!gate.ok) return gate.response;
 
   const url = new URL(req.url);
   const table = url.searchParams.get('table');
@@ -27,8 +26,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await adminSession();
-  if (!session) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('cashier.review');
+  if (!gate.ok) return gate.response;
+  const { session } = gate;
 
   let body: unknown;
   try {
@@ -64,11 +64,6 @@ export async function POST(req: Request) {
 
 function isTable(value: unknown): value is (typeof TABLES)[number] {
   return TABLES.includes(value as (typeof TABLES)[number]);
-}
-
-async function adminSession() {
-  const cookieStore = await cookies();
-  return getAdminSessionFromCookie(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
 }
 
 function json(data: unknown, status = 200) {

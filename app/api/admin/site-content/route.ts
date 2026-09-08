@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { ADMIN_SESSION_COOKIE, getAdminSessionFromCookie } from '@/lib/admin-auth';
+import { requireAdmin } from '@/lib/admin-auth-next';
 import type { ContentMutationResult } from '@/lib/site-content';
 import {
   addSlide,
@@ -14,12 +13,14 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  if (!(await isAuthorized())) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('content.write');
+  if (!gate.ok) return gate.response;
   return json({ ok: true, content: await getSiteContent() });
 }
 
 export async function POST(req: Request) {
-  if (!(await isAuthorized())) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('content.write');
+  if (!gate.ok) return gate.response;
 
   let body: unknown;
   try {
@@ -49,11 +50,6 @@ export async function POST(req: Request) {
   }
 
   return result.ok ? json(result) : json(result, 400);
-}
-
-async function isAuthorized() {
-  const cookieStore = await cookies();
-  return Boolean(await getAdminSessionFromCookie(cookieStore.get(ADMIN_SESSION_COOKIE)?.value));
 }
 
 function json(data: unknown, status = 200) {

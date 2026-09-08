@@ -6,6 +6,7 @@ import { money } from '@/lib/brand';
 import type { PlayerRow } from '@/lib/cashier';
 
 const ERROR_LABEL: Record<string, string> = {
+  forbidden: 'ব্যালেন্স বা ব্লক বদলানোর অনুমতি আপনার নেই।',
   'invalid-amount': 'পরিমাণ দিন — শূন্য চলবে না।',
   'amount-too-large': 'এক বারে সর্বোচ্চ ৳১,০০,০০০ পর্যন্ত সমন্বয় করা যায়।',
   'invalid-user': 'প্লেয়ার পাওয়া যায়নি।',
@@ -15,9 +16,13 @@ const ERROR_LABEL: Record<string, string> = {
 export default function PlayerControl({
   initialPlayers,
   backendReady,
+  canWrite,
 }: {
   initialPlayers: PlayerRow[];
   backendReady: boolean;
+  /** false for an agent: they look players up while answering a cashier
+      request, they do not move balances or block anybody. */
+  canWrite: boolean;
 }) {
   const [players, setPlayers] = useState(initialPlayers);
   const [search, setSearch] = useState('');
@@ -146,12 +151,13 @@ export default function PlayerControl({
           <thead>
             <tr>
               <th>ফোন</th><th>নাম</th><th>ব্যালেন্স</th><th>বোনাস</th>
-              <th>VIP</th><th>রেফার কোড</th><th>রেজিস্ট্রেশন</th><th>অবস্থা</th><th></th>
+              <th>VIP</th><th>রেফার কোড</th><th>রেজিস্ট্রেশন</th><th>অবস্থা</th>
+              {canWrite && <th></th>}
             </tr>
           </thead>
           <tbody>
             {players.length === 0 ? (
-              <tr><td colSpan={9} className="adm__empty">কোনো প্লেয়ার নেই।</td></tr>
+              <tr><td colSpan={canWrite ? 9 : 8} className="adm__empty">কোনো প্লেয়ার নেই।</td></tr>
             ) : (
               players.map((p) => {
                 const busy = busyId === p.id;
@@ -170,6 +176,7 @@ export default function PlayerControl({
                           ? <span className="adm__miss">ব্লক</span>
                           : <span className="adm__ok">সক্রিয়</span>}
                       </td>
+                      {canWrite && (
                       <td className="adm__rowacts">
                         <button
                           type="button" className="btn btn--ghost" disabled={busy}
@@ -189,9 +196,10 @@ export default function PlayerControl({
                           {p.isBlocked ? 'আনব্লক' : 'ব্লক'}
                         </button>
                       </td>
+                      )}
                     </tr>
 
-                    {openId === p.id && (
+                    {canWrite && openId === p.id && (
                       <tr className="adm__subrow">
                         <td colSpan={9}>
                           <div className="adm__adjust">

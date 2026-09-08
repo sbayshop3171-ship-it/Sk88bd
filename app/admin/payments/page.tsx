@@ -1,5 +1,7 @@
+import NoAccess from '@/components/admin/NoAccess';
 import PaymentAccountsControl from '@/components/admin/PaymentAccountsControl';
 import { getCurrentAdminSession } from '@/lib/admin-auth-next';
+import { can } from '@/lib/admin-roles';
 import { DEPOSIT_CHANNELS, WITHDRAW_CHANNELS } from '@/lib/payments';
 import { MAX_PER_CHANNEL } from '@/lib/payment-accounts';
 import { listAccounts } from '@/lib/payment-accounts-store';
@@ -10,7 +12,9 @@ export const dynamic = 'force-dynamic';
 /** Operator wallet numbers. The deposit screen pulls one at random from what
     is active here, so adding several spreads players across them. */
 export default async function AdminPayments() {
-  if (!(await getCurrentAdminSession())) return null;
+  const session = await getCurrentAdminSession();
+  if (!session) return null;
+  if (!can(session.role, 'payments.read')) return <NoAccess role={session.role} what="পেমেন্ট অ্যাকাউন্ট" />;
 
   const seen = new Set<string>();
   const channels = [...DEPOSIT_CHANNELS, ...WITHDRAW_CHANNELS]
@@ -25,7 +29,11 @@ export default async function AdminPayments() {
         যায়। প্লেয়ার ডিপোজিট পেজে গেলে সক্রিয় নাম্বারগুলো থেকে একটি র‍্যান্ডম নাম্বার
         দেখানো হয় — প্রতিবার আলাদা।
       </p>
-      <PaymentAccountsControl channels={channels} initialAccounts={await listAccounts()} />
+      <PaymentAccountsControl
+        channels={channels}
+        initialAccounts={await listAccounts()}
+        canWrite={can(session.role, 'payments.write')}
+      />
     </>
   );
 }

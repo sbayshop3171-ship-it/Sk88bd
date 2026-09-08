@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { ADMIN_SESSION_COOKIE, getAdminSessionFromCookie } from '@/lib/admin-auth';
+import { requireAdmin } from '@/lib/admin-auth-next';
 import { ICON_MAX_BYTES, ICON_TYPES } from '@/lib/game-control';
 import { clearGameIcon, saveGameIcon } from '@/lib/game-control-store';
 
@@ -9,7 +8,8 @@ export const dynamic = 'force-dynamic';
 
 /** Upload a tile image for one game. multipart/form-data: gameId + file. */
 export async function POST(req: Request) {
-  if (!(await isAuthorized())) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('games.write');
+  if (!gate.ok) return gate.response;
 
   let form: FormData;
   try {
@@ -32,16 +32,12 @@ export async function POST(req: Request) {
 
 /** Remove the upload so the game falls back to its catalogue art. */
 export async function DELETE(req: Request) {
-  if (!(await isAuthorized())) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('games.write');
+  if (!gate.ok) return gate.response;
 
   const gameId = new URL(req.url).searchParams.get('gameId') ?? '';
   const result = await clearGameIcon(gameId);
   return result.ok ? json(result) : json(result, 400);
-}
-
-async function isAuthorized() {
-  const cookieStore = await cookies();
-  return Boolean(await getAdminSessionFromCookie(cookieStore.get(ADMIN_SESSION_COOKIE)?.value));
 }
 
 function json(data: unknown, status = 200) {

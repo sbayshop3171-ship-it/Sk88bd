@@ -1,5 +1,7 @@
+import NoAccess from '@/components/admin/NoAccess';
 import GameControl from '@/components/admin/GameControl';
 import { getCurrentAdminSession } from '@/lib/admin-auth-next';
+import { can } from '@/lib/admin-roles';
 import { CATALOGUE, HOME_SECTIONS, PLAYABLE_IDS } from '@/lib/catalogue';
 import { listOverrides } from '@/lib/game-control-store';
 import { CATEGORY_LABEL } from '@/lib/strings';
@@ -13,7 +15,9 @@ export const dynamic = 'force-dynamic';
  * change its badge, pin it to the front of its category.
  */
 export default async function AdminGames() {
-  if (!(await getCurrentAdminSession())) return null;
+  const session = await getCurrentAdminSession();
+  if (!session) return null;
+  if (!can(session.role, 'games.write')) return <NoAccess role={session.role} what="গেম কন্ট্রোল" />;
 
   // 35 of the 209 games sit in more than one category (Aviator is both hot and
   // jackpot). An override applies to the game, not to one of its listings, so

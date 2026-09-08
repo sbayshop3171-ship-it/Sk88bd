@@ -13,6 +13,7 @@ import {
 type Channel = { id: string; name: string; glyph: string; art: string };
 
 const ERROR_LABEL: Record<string, string> = {
+  forbidden: 'পেমেন্ট নাম্বার বদলানোর অনুমতি আপনার নেই — সুপার অ্যাডমিনকে বলুন।',
   'channel-full': `একটি চ্যানেলে সর্বোচ্চ ${MAX_PER_CHANNEL} টি নাম্বার রাখা যায়।`,
   'duplicate-number': 'এই নাম্বারটি ঐ চ্যানেলে আগে থেকেই আছে।',
   'invalid-number': 'নাম্বারটি ঠিক নয় — ৪ থেকে ৬৪ ক্যারেক্টার হতে হবে।',
@@ -36,9 +37,13 @@ const BLANK = (channelId: string): PaymentAccountInput => ({
 export default function PaymentAccountsControl({
   channels,
   initialAccounts,
+  canWrite,
 }: {
   channels: Channel[];
   initialAccounts: PaymentAccount[];
+  /** false for an admin or agent: the numbers are readable, not editable.
+      The API refuses the write too — this only keeps the screen honest. */
+  canWrite: boolean;
 }) {
   const [accounts, setAccounts] = useState(initialAccounts);
   const [form, setForm] = useState<PaymentAccountInput>(BLANK(channels[0].id));
@@ -134,6 +139,14 @@ export default function PaymentAccountsControl({
         <div className="adm__tile"><b>{MAX_PER_CHANNEL}</b><small>প্রতি চ্যানেলে সর্বোচ্চ</small></div>
       </div>
 
+      {!canWrite && (
+        <p className="adm__note" style={{ marginBottom: 14 }}>
+          নাম্বারগুলো শুধু দেখার জন্য — যোগ, এডিট বা মুছে ফেলা কেবল সুপার অ্যাডমিন
+          করতে পারেন।
+        </p>
+      )}
+
+      {canWrite && (
       <form className="adm__card" onSubmit={submit}>
         <h2 className="adm__cardh">
           {editingId ? 'অ্যাকাউন্ট এডিট' : 'নতুন অ্যাকাউন্ট যোগ করুন'}
@@ -244,19 +257,20 @@ export default function PaymentAccountsControl({
           ট্রাফিক সমানভাবে ভাগ হবে।
         </p>
       </form>
+      )}
 
       <div className="adm__tablewrap">
         <table className="adm__table">
           <thead>
             <tr>
               <th>চ্যানেল</th><th>নাম্বার</th><th>নাম</th><th>ধরন</th>
-              <th>ব্যবহার</th><th>ওজন</th><th>হিট</th><th>অবস্থা</th><th></th>
+              <th>ব্যবহার</th><th>ওজন</th><th>হিট</th><th>অবস্থা</th>{canWrite && <th></th>}
             </tr>
           </thead>
           <tbody>
             {accounts.length === 0 ? (
               <tr>
-                <td colSpan={9} className="adm__empty">
+                <td colSpan={canWrite ? 9 : 8} className="adm__empty">
                   কোনো অ্যাকাউন্ট যোগ করা হয়নি — উপরের ফর্ম থেকে যোগ করুন।
                 </td>
               </tr>
@@ -277,6 +291,7 @@ export default function PaymentAccountsControl({
                         ? <span className="adm__ok">সক্রিয়</span>
                         : <span className="adm__miss">বন্ধ</span>}
                     </td>
+                    {canWrite && (
                     <td className="adm__rowacts">
                       <button type="button" className="btn btn--ghost" onClick={() => edit(a)} disabled={busy}>
                         এডিট
@@ -301,6 +316,7 @@ export default function PaymentAccountsControl({
                         মুছুন
                       </button>
                     </td>
+                    )}
                   </tr>
                 );
               })

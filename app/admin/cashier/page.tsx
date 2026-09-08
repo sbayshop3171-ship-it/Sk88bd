@@ -1,5 +1,7 @@
+import NoAccess from '@/components/admin/NoAccess';
 import CashierConfigControl from '@/components/admin/CashierConfigControl';
 import { getCurrentAdminSession } from '@/lib/admin-auth-next';
+import { can } from '@/lib/admin-roles';
 import { getCashierConfig } from '@/lib/cashier-config-store';
 import { DEPOSIT_CHANNELS } from '@/lib/payments';
 
@@ -9,7 +11,9 @@ export const dynamic = 'force-dynamic';
 /** The cashier the players see: deposit methods with their bonus, the amount
     chips, every line of copy, and the withdraw rules. */
 export default async function AdminCashier() {
-  if (!(await getCurrentAdminSession())) return null;
+  const session = await getCurrentAdminSession();
+  if (!session) return null;
+  if (!can(session.role, 'cashier.config')) return <NoAccess role={session.role} what="ক্যাশিয়ার সেটআপ" />;
 
   return (
     <>

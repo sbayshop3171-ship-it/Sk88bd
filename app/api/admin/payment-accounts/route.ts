@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { ADMIN_SESSION_COOKIE, getAdminSessionFromCookie } from '@/lib/admin-auth';
+import { requireAdmin } from '@/lib/admin-auth-next';
 import type { AccountMutationResult, PaymentAccountInput } from '@/lib/payment-accounts';
 import {
   addAccount,
@@ -13,12 +12,14 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  if (!(await isAuthorized())) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('payments.read');
+  if (!gate.ok) return gate.response;
   return json({ ok: true, accounts: await listAccounts() });
 }
 
 export async function POST(req: Request) {
-  if (!(await isAuthorized())) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('payments.write');
+  if (!gate.ok) return gate.response;
 
   let body: unknown;
   try {
@@ -60,12 +61,6 @@ function fields(record: Record<string, unknown>): PaymentAccountInput {
     status: record.status as PaymentAccountInput['status'],
     weight: Number(record.weight ?? 1),
   };
-}
-
-async function isAuthorized() {
-  const cookieStore = await cookies();
-  const session = await getAdminSessionFromCookie(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
-  return Boolean(session);
 }
 
 function json(data: unknown, status = 200) {

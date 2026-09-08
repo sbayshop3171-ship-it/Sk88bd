@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
-import { getCurrentAdminSession } from '@/lib/admin-auth-next';
+import { requireAdmin } from '@/lib/admin-auth-next';
 import { getSignalAppKeyAdminState, updateSignalAppKeyAdmin } from '@/lib/signal-app-access';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  if (!(await getCurrentAdminSession())) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('app-keys.write');
+  if (!gate.ok) return gate.response;
   return json(await getSignalAppKeyAdminState());
 }
 
 export async function POST(req: Request) {
-  if (!(await getCurrentAdminSession())) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('app-keys.write');
+  if (!gate.ok) return gate.response;
 
   let body: unknown;
   try {

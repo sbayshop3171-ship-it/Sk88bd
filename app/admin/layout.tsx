@@ -4,6 +4,7 @@ import AdminLogin from '@/components/admin/AdminLogin';
 import AdminLogoutButton from '@/components/admin/AdminLogoutButton';
 import AdminNav from '@/components/admin/AdminNav';
 import { getCurrentAdminSession } from '@/lib/admin-auth-next';
+import { ROLE_LABEL } from '@/lib/admin-roles';
 import { BRAND } from '@/lib/brand';
 import { isBackendReady } from '@/lib/supabase';
 
@@ -31,7 +32,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           {BRAND.name} <span>অ্যাডমিন</span>
         </Link>
         <div className="adm__hd-actions">
-          <span className="adm__user">{session.username}</span>
+          <span className="adm__user">
+            {session.username} <small>{ROLE_LABEL[session.role]}</small>
+          </span>
           <Link href="/" className="btn btn--ghost adm__site-link">
             সাইট দেখুন
           </Link>
@@ -39,7 +42,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <AdminNav />
+      <AdminNav role={session.role} />
 
       {!isBackendReady() && (
         <div className="adm__warn">

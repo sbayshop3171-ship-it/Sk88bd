@@ -47,8 +47,10 @@ the systemd unit and starts it. The build is already in place by then.
 - `.env.production` — Supabase URL + anon key + service-role key, admin
   username/password. Without the Supabase values the cashier and wallet are
   dead and `/admin` says "ডেটাবেস যুক্ত হয়নি".
-- `.data/` — payment numbers, banners, site settings, cashier design. Written
-  by the admin panel, never committed. **Do not delete it.**
+- `.data/` — payment numbers, banners, site settings, cashier design, and the
+  staff logins with their password hashes. Written by the admin panel, never
+  committed. **Do not delete it** — deleting it takes every admin and agent
+  login with it (the super admin, being in `.env.production`, survives).
 - Supabase migrations are applied by hand in the Supabase SQL editor
   (project `zqhzygmxquhehmxeoljr`). `supabase/005_cashier_v2.sql` is the
   newest and is still pending.

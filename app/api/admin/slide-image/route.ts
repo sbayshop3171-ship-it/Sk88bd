@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { ADMIN_SESSION_COOKIE, getAdminSessionFromCookie } from '@/lib/admin-auth';
+import { requireAdmin } from '@/lib/admin-auth-next';
 import { SLIDE_IMAGE_MAX_BYTES, SLIDE_IMAGE_TYPES } from '@/lib/site-content';
 import { clearSlideImage, isSlideKind, saveSlideImage } from '@/lib/site-content-store';
 
@@ -10,7 +9,8 @@ export const dynamic = 'force-dynamic';
 /** Upload a picture for one banner or announcement card.
     multipart/form-data: kind, id, file. */
 export async function POST(req: Request) {
-  if (!(await isAuthorized())) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('content.write');
+  if (!gate.ok) return gate.response;
 
   let form: FormData;
   try {
@@ -35,7 +35,8 @@ export async function POST(req: Request) {
 
 /** Remove the picture so the slide falls back to its drawn art. */
 export async function DELETE(req: Request) {
-  if (!(await isAuthorized())) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('content.write');
+  if (!gate.ok) return gate.response;
 
   const url = new URL(req.url);
   const kind = url.searchParams.get('kind');
@@ -44,11 +45,6 @@ export async function DELETE(req: Request) {
 
   const result = await clearSlideImage(kind, id);
   return result.ok ? json(result) : json(result, 400);
-}
-
-async function isAuthorized() {
-  const cookieStore = await cookies();
-  return Boolean(await getAdminSessionFromCookie(cookieStore.get(ADMIN_SESSION_COOKIE)?.value));
 }
 
 function json(data: unknown, status = 200) {

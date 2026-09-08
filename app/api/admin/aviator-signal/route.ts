@@ -1,24 +1,25 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/admin-auth-next';
 import {
   getAviatorSignalState,
   publicAviatorState,
   updateAviatorSignal,
 } from '@/lib/aviator-signal-store';
-import { ADMIN_SESSION_COOKIE, getAdminSessionFromCookie } from '@/lib/admin-auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  if (!(await isAuthorized())) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('signal.write');
+  if (!gate.ok) return gate.response;
 
   const state = await getAviatorSignalState();
   return json(publicAviatorState(state));
 }
 
 export async function POST(req: Request) {
-  if (!(await isAuthorized())) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('signal.write');
+  if (!gate.ok) return gate.response;
 
   let body: unknown;
   try {
@@ -32,12 +33,6 @@ export async function POST(req: Request) {
 
   const state = await updateAviatorSignal(input);
   return json(publicAviatorState(state));
-}
-
-async function isAuthorized() {
-  const cookieStore = await cookies();
-  const session = await getAdminSessionFromCookie(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
-  return Boolean(session);
 }
 
 function json(data: unknown, status = 200) {

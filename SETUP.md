@@ -39,9 +39,27 @@ of every deployment that had not overridden it. With `ADMIN_PASSWORD` unset,
 
 Changing either value logs any open admin session out.
 
+That environment account is the **super admin**. Everybody else gets a login
+from `/admin/staff`, in one of two roles:
+
+| রোল | কী পারে |
+| --- | --- |
+| **অ্যাডমিন** | ক্যাশিয়ার, ইউজার (ব্যালেন্স/ব্লক), গেম, ব্যানার, সিগন্যাল। পেমেন্ট নাম্বার শুধু দেখতে পারে |
+| **এজেন্ট** | ডিপোজিট-উইথড্র অনুমোদন আর ইউজার দেখা — আর কিছু না |
+
+Payment numbers, app keys, site settings and the staff list itself are super
+admin only, so an agent can approve a deposit but can never repoint where the
+next one lands. The check is on every `/api/admin/*` route, not just in the
+nav — a hidden tab is a courtesy, the 403 is the lock.
+
+Staff passwords are scrypt-hashed in `.data/admin-users-store.json`. The super
+admin is deliberately not in that file: a lost or corrupted store can never
+lock the operator out of their own panel.
+
 Important admin routes:
 
 - `/admin` dashboard
+- `/admin/staff` admin and agent logins (super admin only)
 - `/admin/aviator-signal` demo signal brain
 - `/admin/app-keys` device-bound APK access keys
 - `/admin/settings` site settings (limits, support links, slides)

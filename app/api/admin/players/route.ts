@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { ADMIN_SESSION_COOKIE, getAdminSessionFromCookie } from '@/lib/admin-auth';
+import { requireAdmin } from '@/lib/admin-auth-next';
 import { adjustBalance, listPlayers, setBlocked } from '@/lib/cashier';
 
 export const runtime = 'nodejs';
@@ -10,8 +9,8 @@ export const dynamic = 'force-dynamic';
 const MAX_ADJUST_PAISA = 100_000_00;
 
 export async function GET(req: Request) {
-  const session = await adminSession();
-  if (!session) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('players.read');
+  if (!gate.ok) return gate.response;
 
   const search = new URL(req.url).searchParams.get('search') ?? '';
   const result = await listPlayers(search);
@@ -21,8 +20,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await adminSession();
-  if (!session) return json({ ok: false, reason: 'unauthorized' }, 401);
+  const gate = await requireAdmin('players.write');
+  if (!gate.ok) return gate.response;
+  const { session } = gate;
 
   let body: unknown;
   try {
@@ -57,11 +57,6 @@ export async function POST(req: Request) {
 
   const players = await listPlayers(String(record.search ?? ''));
   return json({ ok: true, players: players.ok ? players.data : [] });
-}
-
-async function adminSession() {
-  const cookieStore = await cookies();
-  return getAdminSessionFromCookie(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
 }
 
 function json(data: unknown, status = 200) {

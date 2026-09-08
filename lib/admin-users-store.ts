@@ -1,0 +1,244 @@
+/** Staff logins for /admin — the admins and agents a super admin creates.
+
+    The super admin itself is not in here: it stays in the environment
+    (ADMIN_USERNAME / ADMIN_PASSWORD, see admin-auth.ts) so a corrupted or
+    deleted store can never lock the operator out of their own panel. This
+    file holds everybody the super admin hands a login to.
+
+    Passwords are stored as scrypt hashes with a per-account salt. Nothing
+    here ever returns a hash to a caller — listStaff() strips them — so a
+    screen or an API response cannot leak one by accident.
+
+    Same file-store shape as the other .data/ stores: a serialised write
+    queue and a fresh empty store on first run. */
+
+import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import {
+  MAX_STAFF,
+  MIN_PASSWORD_LENGTH,
+  isAdminRole,
+  type AdminRole,
+  type AdminStaff,
+  type StaffMutationReason,
+} from './admin-roles';
+
+/** What the store keeps. `passwordHash` never leaves this module. */
+type StaffRecord = AdminStaff & {
+  /** scrypt$<saltHex>$<hashHex> */
+  passwordHash: string;
+};
+
+type StaffStore = {
+  version: 1;
+  users: StaffRecord[];
+  updatedAt: string;
+};
+
+const STORE_FILE = path.join(process.cwd(), '.data', 'admin-users-store.json');
+const USERNAME_RE = /^[a-z0-9._-]{3,32}$/;
+const SCRYPT_KEYLEN = 64;
+
+let writeQueue = Promise.resolve();
+
+/* ---- reading ---- */
+
+/** Everybody, newest last, without a single hash. */
+export async function listStaff(): Promise<AdminStaff[]> {
+  const store = await readStore();
+  return store.users.map(publicOf).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+export async function findStaffById(id: string): Promise<StaffRecord | null> {
+  const store = await readStore();
+  return store.users.find((u) => u.id === id) ?? null;
+}
+
+export async function findStaffByUsername(username: string): Promise<StaffRecord | null> {
+  const wanted = username.trim().toLowerCase();
+  if (!wanted) return null;
+  const store = await readStore();
+  return store.users.find((u) => u.username === wanted) ?? null;
+}
+
+export async function hasActiveStaff(): Promise<boolean> {
+  const store = await readStore();
+  return store.users.some((u) => u.active);
+}
+
+/* ---- passwords ---- */
+
+/** True when the password matches. Compared in constant time, and a record
+    with a malformed hash fails closed rather than throwing. */
+export async function verifyStaffPassword(record: StaffRecord, password: string) {
+  const [scheme, salt, expected] = record.passwordHash.split('$');
+  if (scheme !== 'scrypt' || !salt || !expected) return false;
+
+  const actual = await derive(password, salt);
+  const left = Buffer.from(expected, 'hex');
+  if (left.length !== actual.length) return false;
+  return timingSafeEqual(left, actual);
+}
+
+/** A changed password, role, or active flag changes this, and every session
+    the account already had stops verifying — a disabled agent is out of the
+    panel the moment the switch is flipped, not when their cookie expires. */
+export function staffFingerprint(record: StaffRecord) {
+  return `${record.passwordHash.slice(-16)}.${record.role}.${record.active ? 'on' : 'off'}`;
+}
+
+export async function markStaffLogin(id: string) {
+  await mutateStore((store) => {
+    const user = store.users.find((u) => u.id === id);
+    if (user) user.lastLoginAt = iso(Date.now());
+  });
+}
+
+/* ---- writing ---- */
+
+export async function createStaff(input: {
+  username: string;
+  password: string;
+  role: AdminRole;
+  createdBy: string;
+  /** the environment super admin's name, which nobody else may take */
+  reserved: string;
+}): Promise<{ ok: true; staff: AdminStaff[] } | { ok: false; reason: StaffMutationReason }> {
+  const username = String(input.username ?? '').trim().toLowerCase();
+  if (!USERNAME_RE.test(username)) return { ok: false, reason: 'invalid-username' };
+  if (username === input.reserved.trim().toLowerCase()) {
+    return { ok: false, reason: 'reserved-username' };
+  }
+  if (!isAdminRole(input.role) || input.role === 'super_admin') {
+    return { ok: false, reason: 'invalid-role' };
+  }
+  if (String(input.password ?? '').length < MIN_PASSWORD_LENGTH) {
+    return { ok: false, reason: 'weak-password' };
+  }
+
+  const passwordHash = await hash(input.password);
+
+  return mutateStore((store) => {
+    if (store.users.length >= MAX_STAFF) return { ok: false, reason: 'staff-full' as const };
+    if (store.users.some((u) => u.username === username)) {
+      return { ok: false, reason: 'username-taken' as const };
+    }
+
+    const now = iso(Date.now());
+    store.users.push({
+      id: randomBytes(8).toString('hex'),
+      username,
+      role: input.role,
+      active: true,
+      createdBy: input.createdBy,
+      createdAt: now,
+      updatedAt: now,
+      lastLoginAt: null,
+      passwordHash,
+    });
+    store.updatedAt = now;
+    return { ok: true, staff: store.users.map(publicOf) };
+  });
+}
+
+export async function updateStaff(
+  id: string,
+  patch: { role?: AdminRole; active?: boolean },
+): Promise<{ ok: true; staff: AdminStaff[] } | { ok: false; reason: StaffMutationReason }> {
+  if (patch.role !== undefined && (!isAdminRole(patch.role) || patch.role === 'super_admin')) {
+    return { ok: false, reason: 'invalid-role' };
+  }
+
+  return mutateStore((store) => {
+    const user = store.users.find((u) => u.id === id);
+    if (!user) return { ok: false, reason: 'not-found' as const };
+
+    if (patch.role !== undefined) user.role = patch.role;
+    if (patch.active !== undefined) user.active = patch.active;
+    user.updatedAt = iso(Date.now());
+    store.updatedAt = user.updatedAt;
+    return { ok: true, staff: store.users.map(publicOf) };
+  });
+}
+
+export async function setStaffPassword(
+  id: string,
+  password: string,
+): Promise<{ ok: true; staff: AdminStaff[] } | { ok: false; reason: StaffMutationReason }> {
+  if (String(password ?? '').length < MIN_PASSWORD_LENGTH) {
+    return { ok: false, reason: 'weak-password' };
+  }
+  const passwordHash = await hash(password);
+
+  return mutateStore((store) => {
+    const user = store.users.find((u) => u.id === id);
+    if (!user) return { ok: false, reason: 'not-found' as const };
+
+    user.passwordHash = passwordHash;
+    user.updatedAt = iso(Date.now());
+    store.updatedAt = user.updatedAt;
+    return { ok: true, staff: store.users.map(publicOf) };
+  });
+}
+
+export async function removeStaff(
+  id: string,
+): Promise<{ ok: true; staff: AdminStaff[] } | { ok: false; reason: StaffMutationReason }> {
+  return mutateStore((store) => {
+    const at = store.users.findIndex((u) => u.id === id);
+    if (at < 0) return { ok: false, reason: 'not-found' as const };
+
+    store.users.splice(at, 1);
+    store.updatedAt = iso(Date.now());
+    return { ok: true, staff: store.users.map(publicOf) };
+  });
+}
+
+/* ---- internals ---- */
+
+function publicOf(record: StaffRecord): AdminStaff {
+  const { passwordHash: _ignored, ...rest } = record;
+  return rest;
+}
+
+async function hash(password: string) {
+  const salt = randomBytes(16).toString('hex');
+  return `scrypt$${salt}$${(await derive(password, salt)).toString('hex')}`;
+}
+
+function derive(password: string, salt: string): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    scrypt(password, salt, SCRYPT_KEYLEN, (err, key) => (err ? reject(err) : resolve(key)));
+  });
+}
+
+function mutateStore<T>(fn: (store: StaffStore) => T): Promise<T> {
+  const next = writeQueue.then(async () => {
+    const store = await readStore();
+    const result = fn(store);
+    await writeStore(store);
+    return result;
+  });
+  writeQueue = next.then(() => undefined, () => undefined);
+  return next;
+}
+
+async function readStore(): Promise<StaffStore> {
+  try {
+    const parsed = JSON.parse(await readFile(STORE_FILE, 'utf8')) as StaffStore;
+    if (parsed?.version === 1 && Array.isArray(parsed.users)) return parsed;
+  } catch {
+    // first run on this machine: nobody but the environment super admin
+  }
+  return { version: 1, users: [], updatedAt: iso(Date.now()) };
+}
+
+async function writeStore(store: StaffStore) {
+  await mkdir(path.dirname(STORE_FILE), { recursive: true });
+  await writeFile(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`, { mode: 0o600 });
+}
+
+function iso(ms: number) {
+  return new Date(ms).toISOString();
+}
