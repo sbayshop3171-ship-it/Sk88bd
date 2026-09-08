@@ -2952,6 +2952,134 @@ body.cz-light .cz-add{box-shadow:0 8px 20px rgba(229,32,63,.28)}
 @keyframes mg-shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 @media (prefers-reduced-motion:reduce){.mg-flight.busted{animation:none}}
 
+/* --- JetX: the purple sky, the burning trail, the jet ---
+   The board is a fixed 100:62 box so the SVG can be stretched edge to edge
+   (preserveAspectRatio="none") without the jet ever squashing. */
+.jx-stage{
+  position:relative;aspect-ratio:100/76;overflow:hidden;
+  border-radius:var(--r-lg,18px);border:1px solid rgba(167,90,255,.3);
+  background:
+    radial-gradient(120% 90% at 10% 104%, rgba(255,61,48,.22), transparent 55%),
+    radial-gradient(90% 70% at 78% 6%, rgba(124,72,255,.5), transparent 62%),
+    linear-gradient(180deg,#2a1360 0%,#180b3c 46%,#09041e 100%);
+  box-shadow:inset 0 0 70px rgba(0,0,0,.55),0 14px 34px rgba(0,0,0,.45);
+}
+
+/* the sky: stars that drift, a planet on the horizon, and a grid that slides
+   past — the grid is what makes a parked nose still read as speed */
+.jx-stage__stars{
+  position:absolute;inset:-15%;pointer-events:none;opacity:.9;
+  background-image:
+    radial-gradient(2px 2px at 12% 18%,#fff,transparent),
+    radial-gradient(1.6px 1.6px at 31% 62%,#e6dcff,transparent),
+    radial-gradient(1.4px 1.4px at 47% 24%,#fff,transparent),
+    radial-gradient(2px 2px at 63% 72%,#ffe6f2,transparent),
+    radial-gradient(1.5px 1.5px at 78% 32%,#fff,transparent),
+    radial-gradient(1.7px 1.7px at 88% 58%,#dbe7ff,transparent),
+    radial-gradient(1.4px 1.4px at 22% 84%,#fff,transparent),
+    radial-gradient(1.3px 1.3px at 55% 46%,#e6dcff,transparent),
+    radial-gradient(1.6px 1.6px at 8% 46%,#fff,transparent),
+    radial-gradient(1.2px 1.2px at 40% 88%,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 70% 12%,#dbe7ff,transparent),
+    radial-gradient(1.2px 1.2px at 94% 22%,#fff,transparent);
+  animation:jx-drift 34s linear infinite;
+}
+@keyframes jx-drift{to{transform:translate3d(-7%,4%,0)}}
+
+.jx-stage__planet{
+  position:absolute;right:-20%;bottom:-38%;width:56%;aspect-ratio:1;border-radius:50%;
+  pointer-events:none;opacity:.3;
+  background:radial-gradient(circle at 34% 26%,#ffb388,#b8365e 48%,#3a1053 82%);
+  box-shadow:0 0 70px rgba(255,110,90,.18);
+}
+
+.jx-stage__grid{
+  position:absolute;inset:auto 0 0 0;height:46%;pointer-events:none;opacity:.26;
+  background-image:
+    repeating-linear-gradient(90deg,rgba(160,120,255,.55) 0 1px,transparent 1px 34px),
+    repeating-linear-gradient(0deg,rgba(160,120,255,.4) 0 1px,transparent 1px 24px);
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 72%);
+  mask-image:linear-gradient(180deg,transparent,#000 72%);
+}
+.jx.is-live .jx-stage__grid{animation:jx-grid 2.2s linear infinite}
+@keyframes jx-grid{to{background-position:-34px 0,0 24px}}
+
+.jx-stage__svg{position:absolute;inset:0;width:100%;height:100%}
+
+.jx-stage__tag{
+  position:absolute;left:12px;top:10px;font-size:11px;font-weight:900;letter-spacing:3px;
+  color:rgba(255,255,255,.3);pointer-events:none;
+}
+
+/* the jet itself — the wobble rides an inner group so React can keep
+   rewriting the outer transform every frame */
+.jx-craft{transform-box:fill-box;transform-origin:center}
+.jx-craft.is-flying{animation:jx-wobble 1.7s ease-in-out infinite}
+@keyframes jx-wobble{50%{transform:translateY(-1.1px) rotate(1.6deg)}}
+
+.jx-jet__flame{transform-box:fill-box;transform-origin:right center;opacity:0}
+.jx.is-live .jx-jet__flame{opacity:1}
+.jx.is-live .jx-jet__flame.f1{animation:jx-burn .21s linear infinite}
+.jx.is-live .jx-jet__flame.f2{animation:jx-burn .15s linear infinite .04s}
+.jx.is-live .jx-jet__flame.f3{animation:jx-burn .11s linear infinite .07s}
+@keyframes jx-burn{50%{transform:scaleX(.68);opacity:.7}}
+
+/* the bust: the jet keeps going and leaves the frame, the way it does when
+   the round is gone */
+.jx-jet.is-gone{transform-box:fill-box;transform-origin:center;animation:jx-away .8s ease-in forwards}
+@keyframes jx-away{to{transform:translate(46px,-16px) scale(.6);opacity:0}}
+.jx.is-busted .jx-stage{animation:mg-shake .35s}
+.jx.is-busted .jx-stage::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 62% 32%,rgba(255,120,60,.55),transparent 58%);
+  animation:jx-flash .55s ease-out forwards;
+}
+@keyframes jx-flash{to{opacity:0}}
+
+/* the readout, centred over the sky */
+.jx-hud{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:5px;text-align:center;pointer-events:none;padding:0 12px;
+}
+.jx-hud__flew{
+  font-size:14px;font-weight:900;letter-spacing:2px;color:#ff5566;
+  text-shadow:0 0 18px rgba(255,45,85,.65);
+}
+.jx-hud__x{
+  font-size:clamp(40px,13vw,60px);font-weight:900;letter-spacing:-2px;line-height:1;color:#fff;
+  font-variant-numeric:tabular-nums;
+  text-shadow:0 0 30px rgba(255,130,60,.5),0 4px 20px rgba(0,0,0,.65);
+}
+.jx-hud__x.is-busted{color:#ff6472;text-shadow:0 0 30px rgba(255,45,85,.55)}
+.jx-hud__x.is-won{color:#7dffc4;text-shadow:0 0 30px rgba(63,224,189,.5)}
+.jx-hud__take,.jx-hud__idle{
+  font-size:12px;font-weight:800;color:#e8dcff;text-shadow:0 2px 10px rgba(0,0,0,.7);
+}
+.jx-hud__take.is-won{color:#7dffc4}
+.jx-hud__idle{color:rgba(232,220,255,.66)}
+
+/* the one big button under the board */
+.jx-go{
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  padding:11px 12px;border-radius:14px;font-weight:900;
+}
+.jx-go b{font-size:15px;line-height:1.2}
+.jx-go span{font-size:12px;opacity:.9;font-variant-numeric:tabular-nums}
+.jx-go--bet{
+  background:linear-gradient(180deg,#46e08c,#12a35a);color:#042a1c;
+  box-shadow:0 10px 26px rgba(18,163,90,.35);
+}
+.jx-go--bet:disabled{opacity:.6}
+.jx-go--cash{
+  background:linear-gradient(180deg,#ffb63f,#ff6a00);color:#2c1400;
+  box-shadow:0 10px 26px rgba(255,106,0,.42);animation:mg-pulse 1s ease-in-out infinite;
+}
+@media (prefers-reduced-motion:reduce){
+  .jx-stage__stars,.jx.is-live .jx-stage__grid,.jx-craft.is-flying,
+  .jx.is-live .jx-jet__flame,.jx.is-busted .jx-stage,.jx-go--cash{animation:none}
+  .jx-jet.is-gone{animation-duration:.01s}
+}
+
 /* --- the fairness receipt --- */
 .mg__foot{margin-top:auto;padding-top:14px}
 .mg__fairbtn{

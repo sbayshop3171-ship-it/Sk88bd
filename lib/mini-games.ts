@@ -58,7 +58,7 @@ export const MINI_GAMES: Record<MiniGameId, MiniGameDef> = {
     tagline: 'লাইন যত উপরে ওঠে গুণ তত বাড়ে — ভেঙে পড়ার আগে ক্যাশ আউট করুন।',
   },
   jetx: {
-    id: 'jetx', name: 'JetX', kind: 'flight', accent: '#3fa9ff', glyph: '🚀',
+    id: 'jetx', name: 'JetX', kind: 'flight', accent: '#9b5cff', glyph: '🚀',
     tagline: 'জেট ছুটতে থাকে, গুণ বাড়ে দ্রুত — বিস্ফোরণের আগে নেমে যান।',
   },
   limbo: {

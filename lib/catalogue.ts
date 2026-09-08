@@ -49,11 +49,10 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     /* ---- The house's own games (hand-kept, not generated).
        They run on our engine in lib/mini-games.ts and open at /game/<id>,
        so they carry no provider code and need no aggregator. The order
-       here is the order the home rail shows: Aviator, Crazy Time, then
-       ours. Tiles are drawn by GameArt from the id — deliberately no
-       `thumb`, since the artwork for these is ours to make. ---- */
+       here is the order the home rail shows: Aviator, then ours. Tiles are
+       drawn by GameArt from the id — deliberately no `thumb`, since the
+       artwork for these is ours to make. ---- */
     g('Aviator', 'Spribe', 'hot', '/games/icons/HOT/Spribe__Aviator.jpg', 'aviator', undefined, false),
-    g('Crazy Time', 'Evolution', 'hot', '/games/icons/HOT/Evolution__Crazy-Time.png', 'crazy-time', '22870', false),
     g('Crash', 'Sk88bd', 'hot', undefined, 'crash', undefined, false),
     g('JetX', 'Sk88bd', 'hot', undefined, 'jetx', undefined, false),
     g('Limbo', 'Sk88bd', 'new', undefined, 'limbo', undefined, false),
@@ -426,13 +425,19 @@ export const PLAYABLE_IDS = [
 export const hasDemo = (id: string): boolean =>
   PLAYABLE_IDS.includes(id) || id in CLIPS || id in DEMOS;
 
+/** Previewable, but deliberately not part of the front rail. Crazy Time has
+    only a looping clip — no real table behind it — so leading the lobby with
+    it oversells what a tap gets you. It still sits in লাইভ ক্যাসিনো and
+    জ্যাকপট for anyone who goes looking. */
+const NOT_FEATURED = new Set(['crazy-time']);
+
 /** Unique previewable games, in home-section order (first match wins). */
 export function demoGames(): Game[] {
   const seen = new Set<string>();
   const out: Game[] = [];
   for (const key of HOME_SECTIONS) {
     for (const g of CATALOGUE[key]) {
-      if (hasDemo(g.id) && !seen.has(g.id)) {
+      if (hasDemo(g.id) && !NOT_FEATURED.has(g.id) && !seen.has(g.id)) {
         seen.add(g.id);
         out.push(g);
       }
