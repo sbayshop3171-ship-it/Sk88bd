@@ -52,13 +52,46 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
        here is the order the home rail shows: Aviator, then ours. Tiles are
        drawn by GameArt from the id — deliberately no `thumb`, since the
        artwork for these is ours to make. ---- */
-    g('Aviator', 'Spribe', 'hot', '/games/icons/HOT/Spribe__Aviator.jpg', 'aviator', undefined, false),
+    g('Aviator', 'Spribe', 'hot', '/games/icons/CK44/aviator.webp', 'aviator', undefined, false),
     g('Crash', 'Sk88bd', 'hot', undefined, 'crash', undefined, false),
     g('JetX', 'Sk88bd', 'hot', undefined, 'jetx', undefined, false),
     g('Limbo', 'Sk88bd', 'new', undefined, 'limbo', undefined, false),
     g('Dice', 'Sk88bd', 'new', undefined, 'dice', undefined, false),
     g('Plinko', 'Sk88bd', 'new', undefined, 'plinko', undefined, false),
     g('Coin Flip', 'Sk88bd', 'new', undefined, 'coin-flip', undefined, false),
+
+    /* ---- The CK44 hot rail, tile for tile (hand-kept).
+       Key art lives in public/games/icons/CK44/, converted from the pack the
+       user supplied. No aggregator code yet, so these open the "coming soon"
+       placeholder and `playableFirst` keeps them behind everything that
+       actually runs — the artwork is here so the lobby reads right the day a
+       contract is signed. ---- */
+    g('Anubis Wrath', 'JILI', 'hot', '/games/icons/CK44/anubis-wrath.webp', 'anubis-wrath', undefined, false),
+    g('Treasures of Aztec', 'PG Soft', 'hot', '/games/icons/CK44/treasures-of-aztec.webp', 'treasures-of-aztec', undefined, false),
+    g('Circus Joker 4096', 'JILI', 'hot', '/games/icons/CK44/circus-joker-4096.webp', 'circus-joker-4096', undefined, false),
+    g('Clover Coins 4x4', 'JILI', 'hot', '/games/icons/CK44/clover-coins-4x4.webp', 'clover-coins-4x4', undefined, false),
+    g('Coin UP: Lightning', 'Booongo', 'hot', '/games/icons/CK44/coin-up-lightning.webp', 'coin-up-lightning', undefined, false),
+    g('Coin UP: Hot Fire 3x3', 'Booongo', 'hot', '/games/icons/CK44/coin-up-hot-fire.webp', 'coin-up-hot-fire', undefined, false),
+    g('9 Wickets', 'JILI', 'hot', '/games/icons/CK44/9-wickets.webp', '9-wickets', undefined, false),
+    g('FlyX', 'Microgaming', 'hot', '/games/icons/CK44/flyx.webp', 'flyx', undefined, false),
+    g('FlyX Cash Turbo', 'Microgaming', 'hot', '/games/icons/CK44/flyx-cash-turbo.webp', 'flyx-cash-turbo', undefined, false),
+    g('Fortune Coins 2', 'JILI', 'hot', '/games/icons/CK44/fortune-coins-2.webp', 'fortune-coins-2', undefined, false),
+    g('Fortune Gems 3', 'JILI', 'hot', '/games/icons/CK44/fortune-gems-3.webp', 'fortune-gems-3', undefined, false),
+    g('Fruity Bonanza', 'JILI', 'hot', '/games/icons/CK44/fruity-bonanza.webp', 'fruity-bonanza', undefined, false),
+    g('Funky Time', 'Evolution', 'hot', '/games/icons/CK44/funky-time.webp', 'funky-time', undefined, false),
+    g('Queen of Inca', 'JILI', 'hot', '/games/icons/CK44/queen-of-inca.webp', 'queen-of-inca', undefined, false),
+    g('Jackpot Joker', 'JILI', 'hot', '/games/icons/CK44/jackpot-joker.webp', 'jackpot-joker', undefined, false),
+    g('Jackpot Joker Fever', 'JILI', 'hot', '/games/icons/CK44/jackpot-joker-fever.webp', 'jackpot-joker-fever', undefined, false),
+    g('Magic Ace Wild Lock', 'JILI', 'hot', '/games/icons/CK44/magic-ace-wild-lock.webp', 'magic-ace-wild-lock', undefined, false),
+    g('Mighty Sevens', 'JILI', 'hot', '/games/icons/CK44/mighty-sevens.webp', 'mighty-sevens', undefined, false),
+    g('Money Pot', 'JILI', 'hot', '/games/icons/CK44/money-pot.webp', 'money-pot', undefined, false),
+    g('Pinata Wins', 'PG Soft', 'hot', '/games/icons/CK44/pinata-wins.webp', 'pinata-wins', undefined, false),
+    g('Pirate Legends', 'Yellow Bat', 'hot', '/games/icons/CK44/pirate-legends.webp', 'pirate-legends', undefined, false),
+    g('Egypt Power x1000', 'Booongo', 'hot', '/games/icons/CK44/egypt-power-1000.webp', 'egypt-power-1000', undefined, false),
+    g('Sugar Bang Bang 2', 'JILI', 'hot', '/games/icons/CK44/sugar-bang-bang-2.webp', 'sugar-bang-bang-2', undefined, false),
+    g('Super Ace', 'JILI', 'hot', '/games/icons/CK44/super-ace.webp', 'super-ace', undefined, false),
+    g('Super Elements', 'JILI', 'hot', '/games/icons/CK44/super-elements.webp', 'super-elements', undefined, false),
+    g('Wild Bounty Showdown', 'PG Soft', 'hot', '/games/icons/CK44/wild-bounty-showdown.webp', 'wild-bounty-showdown', undefined, false),
     g('3 Charge Buffalo', 'JILI', 'hot', '/games/icons/HOT/JILI__3-Charge-Buffalo.avif', '3-charge-buffalo', '1185', true),
     g('Bikini Paradise', 'PG Soft', 'hot', '/games/icons/HOT/PG-Soft__Bikini-Paradise.avif', 'bikini-paradise', '102', true),
     g('Beer Tycoon', 'JDB', 'hot', '/games/icons/HOT/JDB__Beer-Tycoon.avif', 'beer-tycoon', '817', true),
@@ -117,7 +150,7 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('Soccer Solo Striker', 'Evoplay', undefined, '/games/icons/SPORTS/Evoplay__Soccer-Solo-Striker.jpg', 'soccer-solo-striker', '3848', false),
   ],
   live: [
-    g('Crazy Time', 'Evolution', 'hot', '/games/icons/HOT/Evolution__Crazy-Time.png', 'crazy-time', '22870', false),
+    g('Crazy Time', 'Evolution', 'hot', '/games/icons/CK44/crazy-time.webp', 'crazy-time', '22870', false),
     g('Andar Bahar', 'JILI', undefined, '/games/icons/LIVE-CASINO/JILI__Andar-Bahar.avif', 'andar-bahar', '505', true),
     g('Baccarat Deluxe', 'PG Soft', undefined, '/games/icons/LIVE-CASINO/PG-Soft__Baccarat-Deluxe.avif', 'baccarat-deluxe', '145', true),
     g('Dragon Tiger - Joker Bonus', 'JDB', undefined, '/games/icons/LIVE-CASINO/JDB__Dragon-Tiger---Joker-Bonus.avif', 'dragon-tiger-joker-bonus', '28', true),
@@ -173,7 +206,7 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('20 Blazing Clover', 'JILI', undefined, '/games/icons/SLOTS/JILI__20-Blazing-Clover.avif', '20-blazing-clover', '10515', true),
     g('Alibaba\'s Cave of Fortune', 'PG Soft', undefined, '/games/icons/SLOTS/PG-Soft__Alibaba-039-s-Cave-of-Fortune.avif', 'alibaba-s-cave-of-fortune', '10126', true),
     g('Trader', 'Spribe', undefined, '/games/icons/SLOTS/Spribe__Trader.avif', 'trader', '5808', true),
-    g('Chinese New Year', 'FaChai', 'hot', '/games/icons/SLOTS/FaChai__CHINESE-NEW-YEAR.avif', 'chinese-new-year', '1739', true),
+    g('Chinese New Year', 'FaChai', 'hot', '/games/icons/CK44/chinese-new-year.webp', 'chinese-new-year', '1739', true),
     g('3 Dancing Monkeys', 'Pragmatic Play', undefined, '/games/icons/SLOTS/Pragmatic-Play__3-Dancing-Monkeys.avif', '3-dancing-monkeys', '21896', true),
     g('Boom Boom Marmot', 'Yellow Bat', 'hot', '/games/icons/SLOTS/Yellow-Bat__BOOM-BOOM-MARMOT.png', 'boom-boom-marmot', '13248', false),
     g('Beauty SPA', 'Eazy Gaming', 'hot', '/games/icons/SLOTS/Eazy-Gaming__Beauty-SPA.avif', 'beauty-spa', '5824', false),
@@ -301,8 +334,8 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
        here is the order the home rail shows: Aviator, Crazy Time, then
        ours. Tiles are drawn by GameArt from the id — deliberately no
        `thumb`, since the artwork for these is ours to make. ---- */
-    g('Aviator', 'Spribe', 'hot', '/games/icons/HOT/Spribe__Aviator.jpg', 'aviator', undefined, false),
-    g('Crazy Time', 'Evolution', 'hot', '/games/icons/HOT/Evolution__Crazy-Time.png', 'crazy-time', '22870', false),
+    g('Aviator', 'Spribe', 'hot', '/games/icons/CK44/aviator.webp', 'aviator', undefined, false),
+    g('Crazy Time', 'Evolution', 'hot', '/games/icons/CK44/crazy-time.webp', 'crazy-time', '22870', false),
     g('Crash', 'Sk88bd', 'hot', undefined, 'crash', undefined, false),
     g('JetX', 'Sk88bd', 'hot', undefined, 'jetx', undefined, false),
     g('Limbo', 'Sk88bd', 'new', undefined, 'limbo', undefined, false),
@@ -316,7 +349,7 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('3 Super Ace', 'JILI', 'hot', '/games/icons/JACKPOT/JILI__3-Super-Ace.png', '3-super-ace', '17372', true),
     g('Aztec Priestess', 'JILI', 'hot', '/games/icons/JACKPOT/JILI__Aztec-Priestess.avif', 'aztec-priestess', '480', true),
     g('Book of Gold', 'JILI', 'hot', '/games/icons/JACKPOT/JILI__Book-of-Gold.avif', 'book-of-gold', '482', true),
-    g('Boxing King', 'JILI', 'hot', '/games/icons/JACKPOT/JILI__Boxing-King.avif', 'boxing-king', '699', true),
+    g('Boxing King', 'JILI', 'hot', '/games/icons/CK44/boxing-king.webp', 'boxing-king', '699', true),
     g('Boxing King Title Match', 'JILI', 'hot', '/games/icons/JACKPOT/JILI__Boxing-King-Title-Match.avif', 'boxing-king-title-match', '10505', true),
     g('Charge Buffalo', 'JILI', 'hot', '/games/icons/JACKPOT/JILI__Charge-Buffalo.avif', 'charge-buffalo', '700', true),
     g('Charge Buffalo Ascent', 'JILI', 'hot', '/games/icons/JACKPOT/JILI__Charge-Buffalo-Ascent.avif', 'charge-buffalo-ascent', '182', true),
@@ -418,6 +451,27 @@ export function findGame(id: string): Game | undefined {
    shows the "aggregator not connected yet" placeholder — so the
    home page floats the previewable ones up and lets the rest sink.
    ============================================================ */
+/* The front of the lobby, in the order the user set: Aviator first, then the
+   games a visitor can open right now and actually spin — Pragmatic's own
+   demo host needs no operator account, so these are the only tiles that are
+   a real game rather than a placeholder. Everything else previewable follows
+   in catalogue order. Ids not in the catalogue are ignored, so this list is
+   safe to prune. */
+export const FEATURED_IDS = [
+  'aviator',
+  'gates-of-olympus', 'gates-of-olympus-1000',
+  'sweet-bonanza', 'sweet-bonanza-1000',
+  'sugar-rush', 'starlight-princess',
+  'fish-eye',
+  'big-bass-bonanza', 'big-bass-amazon-xtreme',
+  'the-dog-house', 'wolf-gold', 'wild-west-gold',
+];
+
+const featuredRank = (id: string): number => {
+  const i = FEATURED_IDS.indexOf(id);
+  return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+};
+
 export const PLAYABLE_IDS = [
   'aviator', 'crash', 'jetx', 'limbo', 'dice', 'plinko', 'coin-flip',
 ];
@@ -431,7 +485,8 @@ export const hasDemo = (id: string): boolean =>
     জ্যাকপট for anyone who goes looking. */
 const NOT_FEATURED = new Set(['crazy-time']);
 
-/** Unique previewable games, in home-section order (first match wins). */
+/** Unique previewable games: the featured order first, then the rest in
+    home-section order (first match wins). */
 export function demoGames(): Game[] {
   const seen = new Set<string>();
   const out: Game[] = [];
@@ -443,7 +498,9 @@ export function demoGames(): Game[] {
       }
     }
   }
-  return out;
+  /* A stable sort, so anything unfeatured keeps the catalogue order it
+     already had and only the named ids move to the front. */
+  return out.sort((a, b) => featuredRank(a.id) - featuredRank(b.id));
 }
 
 /** Catalogue order, but every game that actually opens comes first and the
@@ -454,5 +511,9 @@ export function playableFirst(games: Game[]): Game[] {
   const open: Game[] = [];
   const soon: Game[] = [];
   for (const g of games) (hasDemo(g.id) ? open : soon).push(g);
+  /* Within the half that opens, the featured order wins — so a category that
+     holds Gates of Olympus leads with it rather than with whatever the
+     generator happened to list first. */
+  open.sort((a, b) => featuredRank(a.id) - featuredRank(b.id));
   return open.concat(soon);
 }
