@@ -24,6 +24,11 @@ import { t } from '@/lib/strings';
 
 type Step = 'pick' | 'pay' | 'done';
 
+/** The one step whose text the method's own menu name replaces. The shipped
+    steps have been English and Bangla at different times and the operator may
+    have typed either, so match both rather than the language of the day. */
+const PICK_MENU_STEPS = ['Pick the menu above', 'উপরের মেনু বেছে নিন'];
+
 /** Three screens, like the cashiers players already know: pick a method and
     an amount → pay into the number shown and type the TrxID → done. Every
     label, method and amount comes from the admin's cashier design. */
@@ -274,7 +279,7 @@ export default function DepositPage() {
                   {steps.map((s, i) => (
                     <span key={i}>
                       {i > 0 && <em> → </em>}
-                      {s === 'Pick the menu above' ? <b>{payLabel}</b> : s}
+                      {PICK_MENU_STEPS.includes(s) ? <b>{payLabel}</b> : s}
                     </span>
                   ))}
                 </p>

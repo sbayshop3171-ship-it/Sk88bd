@@ -175,14 +175,14 @@ export function englishCopy<T>(value: T): T {
    ============================================================ */
 export const PAY_SCREEN_BANGLA: Record<string, string> = {
   'This number accepts payments through the selected method only':
-    'এই নাম্বারে শুধুমাত্র ক্যাশআউট গ্রহণ করা হয়',
-  'Do not send more or less': 'কম বা বেশি ক্যাশআউট করবেন না',
+    'এই নাম্বারে শুধুমাত্র নির্ধারিত মেথডে পেমেন্ট গ্রহণ করা হয়',
+  'Do not send more or less': 'কম বা বেশি পাঠাবেন না',
   'If you change the amount you will not be able to receive the credit.':
     'আপনি যদি টাকার পরিমাণ পরিবর্তন করেন, আপনি ক্রেডিট পেতে সক্ষম হবেন না।',
-  'How to send': 'কিভাবে ক্যাশ আউট করবেন',
+  'How to send': 'কিভাবে পাঠাবেন',
   'Open the app\nPick the menu above\nEnter the number\nEnter the amount\nEnter the reference\nConfirm with your PIN\nCopy the TrxID':
     'অ্যাপ খুলুন\nউপরের মেনু বেছে নিন\nনাম্বার দিন\nটাকার পরিমাণ দিন\nPIN দিয়ে নিশ্চিত করুন\nTrxID কপি করুন',
-  'Enter the TrxID of your payment': 'ক্যাশআউটের TrxID নাম্বারটি লিখুন',
+  'Enter the TrxID of your payment': 'পেমেন্টের TrxID নাম্বারটি লিখুন',
   'Click to see how to find your TrxID': 'কিভাবে TrxID পাবেন দেখে নিন',
   'e.g. 9F2K4L8M': 'TrxID অবশ্যই পূরণ করতে হবে!',
   Confirm: 'নিশ্চিত করুন',
