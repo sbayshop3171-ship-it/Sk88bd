@@ -252,7 +252,7 @@ export const CASHIER_DEFAULTS: CashierConfig = {
       accountHint: c.id === 'bank' ? 'Account number' : c.id === 'usdt' ? 'TRC20 address' : '01XXXXXXXXX',
       active: true,
     })),
-    processingTime: '24 hours',
+    processingTime: '৫ মিনিট',
     reminder: 'Before withdrawing, please make sure your e-wallet (bKash, Nagad) is added correctly. Wrong details can delay or fail the transaction.',
     dailyLimit: 5,
     maxWallets: 5,

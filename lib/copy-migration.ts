@@ -206,6 +206,19 @@ export const PAY_SCREEN_BANGLA: Record<string, string> = {
     'চার্জটি শুধুমাত্র আমাদের দেওয়া এজেন্ট নাম্বারেই পাঠাবেন, নাহলে উত্তোলনটি হবে না।',
   'Agent Cash-Out Charge': 'এজেন্ট ক্যাশআউট চার্জ',
   'Withdrawal Rules': 'উত্তোলনের নিয়ম',
+  'Give a correct account number held in your own name':
+    'নিজের নামে থাকা সঠিক অ্যাকাউন্ট নাম্বার দিন',
+  'You can withdraw up to {max} in a single request':
+    'এক রিকোয়েস্টে সর্বোচ্চ {max} তোলা যাবে',
+  '!The agent cash-out charge is calculated on your total wallet balance':
+    '!এজেন্ট ক্যাশআউট চার্জ মোট ওয়ালেট ব্যালেন্সের উপর হিসাব করা হয়',
+  '!{rate} charge per ৳1,000': '!প্রতি ১,০০০ টাকায় {rate} চার্জ',
+  '!The full charge must be paid in one go': '!সম্পূর্ণ চার্জ একবারেই পরিশোধ করতে হবে',
+  'The money is sent within {time} once the charge is verified':
+    'চার্জ যাচাই হলে {time} এর মধ্যে টাকা পাঠানো হবে',
+  'Apply for withdrawal': 'উত্তোলনের জন্য আবেদন করুন',
+  'The withdrawal is not released until the charge is paid.':
+    'চার্জ পরিশোধ না করলে উত্তোলনের টাকা ছাড় করা হবে না।',
   'Pay the charge': 'চার্জ পরিশোধ করুন',
   'Send the charge to the agent number below and enter the TrxID — only then does the withdrawal start processing.':
     'নিচের এজেন্ট নাম্বারে চার্জটি পাঠিয়ে TrxID দিন — তবেই উত্তোলনটি প্রসেস হবে।',
@@ -221,7 +234,18 @@ export const PAY_SCREEN_BANGLA: Record<string, string> = {
     swapped whole where it matches and left alone where it does not. */
 export function payScreenBangla<T>(value: T): T {
   if (typeof value === 'string') {
-    return (PAY_SCREEN_BANGLA[value] ?? value) as unknown as T;
+    const whole = PAY_SCREEN_BANGLA[value];
+    if (whole !== undefined) return whole as unknown as T;
+    /* The rules and the how-to steps are one field holding many lines, and
+       englishCopy took them apart line by line on the way out. Put them back
+       the same way, or a list is left in English because one line of it was
+       the operator's own. */
+    if (value.includes('\n')) {
+      const lines = value.split('\n');
+      const next = lines.map((line) => PAY_SCREEN_BANGLA[line] ?? line);
+      if (next.some((line, i) => line !== lines[i])) return next.join('\n') as unknown as T;
+    }
+    return value;
   }
   if (Array.isArray(value)) return value.map((v) => payScreenBangla(v)) as unknown as T;
   if (value && typeof value === 'object') {

@@ -500,7 +500,7 @@ export default function WithdrawPage() {
 
           {cfg.chargeCaution && (
             <div className="cz-caution">
-              <b>Caution:</b>
+              <b>সতর্কতাঃ</b>
               <p>{cfg.chargeCaution}</p>
             </div>
           )}
@@ -532,11 +532,11 @@ export default function WithdrawPage() {
             <b>{method.name}</b>
           </div>
 
-          <div className="cz-label">Account number<span>*</span></div>
-          <p className="cz-sub">Your withdrawal is sent to this number</p>
+          <div className="cz-label">অ্যাকাউন্ট নাম্বার<span>*</span></div>
+          <p className="cz-sub">এই নাম্বারেই আপনার উত্তোলনের টাকা পাঠানো হবে</p>
           <div className="cz-ro">{raised.account}</div>
 
-          <div className="cz-label">Withdrawal amount</div>
+          <div className="cz-label">উত্তোলনের পরিমাণ</div>
           <div className="cz-ro cz-ro--gold">{money(raised.amount)}</div>
 
           {chargeOn && raised.charge > 0 && (
@@ -567,18 +567,20 @@ export default function WithdrawPage() {
 
           {chargeOn && raised.charge > 0 && (
             <div className="cz-calc">
-              <b>🧮 Charge calculation</b>
-              <p><span>{cfg.chargeBasis === 'balance' ? 'Your balance' : 'Withdrawal amount'}</span><b>{money(base)}</b></p>
-              <p><span>Charge rate</span><b>{money(cfg.chargePerThousand)} per ৳1,000</b></p>
-              <p className="cz-calc__total"><span>Total charge</span><b>{money(raised.charge)}</b></p>
+              <b>🧮 চার্জের হিসাব</b>
+              <p><span>{cfg.chargeBasis === 'balance' ? 'আপনার ব্যালেন্স' : 'উত্তোলনের পরিমাণ'}</span><b>{money(base)}</b></p>
+              <p><span>চার্জের হার</span><b>প্রতি ৳1,000-এ {money(cfg.chargePerThousand)}</b></p>
+              <p className="cz-calc__total"><span>মোট চার্জ</span><b>{money(raised.charge)}</b></p>
             </div>
           )}
 
           {err.apply && <p className="cz-err">{err.apply}</p>}
 
-          <button type="button" className="btn btn--gold cz-confirm" disabled={busy} onClick={() => void apply()}>
-            {busy ? 'Sending…' : cfg.applyLabel}
-          </button>
+          <div className="cz-next cz-next--inline">
+            <button type="button" className="btn btn--gold btn--block" disabled={busy} onClick={() => void apply()}>
+              {busy ? 'পাঠানো হচ্ছে…' : cfg.applyLabel}
+            </button>
+          </div>
 
           {cfg.chargeWarning && (
             <div className="cz-caution">
