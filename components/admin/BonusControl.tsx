@@ -1,9 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import type { BonusConfig, PromoCode, WheelSegment } from '@/lib/bonus-config';
+import type { BonusConfig, Mission, PromoCode, WheelSegment } from '@/lib/bonus-config';
 
 const ERROR_LABEL: Record<string, string> = {
+  'empty-mission': 'A mission needs a name.',
+  'duplicate-mission': 'Two missions share an id — rename one.',
+  'mission-target': 'A mission target has to be above 0.',
+  'too-many-missions': 'That is more missions than this screen will hold (20).',
   'wheel-slices': 'The wheel needs between 2 and 12 slices.',
   'wheel-weights': 'At least one slice has to be able to come up — give one of them a weight above 0.',
   'sign-in-days': 'The sign-in ladder needs between 1 and 30 days, none of them negative.',
@@ -58,9 +62,110 @@ export default function BonusControl({ initial }: { initial: BonusConfig }) {
   const setCodes = (codes: PromoCode[]) => setForm((f) => ({ ...f, promo: { ...f.promo, codes } }));
   const setSlices = (segments: WheelSegment[]) => setForm((f) => ({ ...f, wheel: { ...f.wheel, segments } }));
   const weightTotal = form.wheel.segments.reduce((n, s2) => n + s2.weight, 0);
+  const setMissions = (list: Mission[]) => setForm((f) => ({ ...f, missions: { ...f.missions, list } }));
 
   return (
     <form onSubmit={submit}>
+      {/* --------------------------------------------------- missions ---- */}
+      <div className="adm__card">
+        <h2 className="adm__cardh">Missions</h2>
+        <label className="adm__check">
+          <input
+            type="checkbox" checked={form.missions.active} disabled={busy}
+            onChange={(e) => setForm((f) => ({ ...f, missions: { ...f.missions, active: e.target.checked } }))}
+          />
+          <span>Show missions on the Mission screen</span>
+        </label>
+        <p className="adm__hint">
+          A target and what reaching it pays. Progress is counted from the ledger over the
+          window — today, this week, or the whole account — so it is the same figure Betting
+          Record shows. Daily and weekly missions can be claimed again each period; once means
+          once, ever.
+        </p>
+
+        <table className="adm__table adm__table--edit">
+          <thead>
+            <tr><th>Name</th><th>Counts</th><th>Target (৳)</th><th>Pays (৳)</th><th>Resets</th><th>On</th><th /></tr>
+          </thead>
+          <tbody>
+            {form.missions.list.length === 0 && (
+              <tr><td colSpan={7} className="adm__empty">No missions yet — the screen shows the promotions instead.</td></tr>
+            )}
+            {form.missions.list.map((m, i) => (
+              <tr key={i}>
+                <td>
+                  <input
+                    className="adm__mini" value={m.title} disabled={busy} maxLength={80}
+                    onChange={(e) => setMissions(form.missions.list.map((x, j) =>
+                      j === i ? { ...x, title: e.target.value } : x))}
+                  />
+                </td>
+                <td>
+                  <select
+                    className="adm__mini" value={m.measure} disabled={busy}
+                    onChange={(e) => setMissions(form.missions.list.map((x, j) =>
+                      j === i ? { ...x, measure: e.target.value as Mission['measure'] } : x))}
+                  >
+                    <option value="bet">Bets</option>
+                    <option value="deposit">Deposits</option>
+                  </select>
+                </td>
+                <td>
+                  <input
+                    className="adm__mini" type="number" min={1} step={1} value={num(m.target)} disabled={busy}
+                    onChange={(e) => setMissions(form.missions.list.map((x, j) =>
+                      j === i ? { ...x, target: Number(e.target.value) } : x))}
+                  />
+                </td>
+                <td>
+                  <input
+                    className="adm__mini" type="number" min={0} step={1} value={num(m.reward)} disabled={busy}
+                    onChange={(e) => setMissions(form.missions.list.map((x, j) =>
+                      j === i ? { ...x, reward: Number(e.target.value) } : x))}
+                  />
+                </td>
+                <td>
+                  <select
+                    className="adm__mini" value={m.period} disabled={busy}
+                    onChange={(e) => setMissions(form.missions.list.map((x, j) =>
+                      j === i ? { ...x, period: e.target.value as Mission['period'] } : x))}
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="once">Once</option>
+                  </select>
+                </td>
+                <td>
+                  <input
+                    type="checkbox" checked={m.active} disabled={busy}
+                    onChange={(e) => setMissions(form.missions.list.map((x, j) =>
+                      j === i ? { ...x, active: e.target.checked } : x))}
+                  />
+                </td>
+                <td>
+                  <button
+                    type="button" className="adm__iconbtn adm__iconbtn--danger" disabled={busy}
+                    onClick={() => setMissions(form.missions.list.filter((_, j) => j !== i))}
+                    aria-label="Delete"
+                  >
+                    ×
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <button
+          type="button" className="btn btn--ghost" disabled={busy || form.missions.list.length >= 20}
+          onClick={() => setMissions([...form.missions.list, {
+            id: '', title: '', measure: 'bet', target: 1000, reward: 10, period: 'daily', active: true,
+          }])}
+        >
+          Add a mission
+        </button>
+      </div>
+
       {/* ------------------------------------------------------ wheel ---- */}
       <div className="adm__card">
         <h2 className="adm__cardh">Free spin wheel</h2>

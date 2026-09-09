@@ -30,7 +30,21 @@ export type ClaimResult =
   | { ok: true; kind: BonusKind; amount: number; balance: number; slot?: number }
   | { ok: false; reason: ClaimReason; message?: string };
 
+export type MissionView = {
+  id: string;
+  title: string;
+  measure: 'bet' | 'deposit';
+  /** paisa */
+  target: number;
+  progress: number;
+  reward: number;
+  period: 'daily' | 'weekly' | 'once';
+  done: boolean;
+  claimed: boolean;
+};
+
 export type BonusState = {
+  missions: MissionView[];
   wheel: {
     active: boolean;
     /** taka each slice pays, clockwise from the top — what the UI draws */
@@ -150,10 +164,30 @@ export async function bonusState(cookies: CookieStore): Promise<BonusState | nul
   const staked = dayTotals(rows, yesterday).staked;
   const rebateAmount = Math.round((staked * cfg.rebate.percent) / 100);
 
+  const missionRefs = claimedRefs(rows, 'mission');
+  const missions: MissionView[] = cfg.missions.active
+    ? cfg.missions.list.filter((m) => m.active).map((m) => {
+        const progress = measured(rows, m.measure, m.period, today);
+        const target = toPaisaFloor(m.target);
+        return {
+          id: m.id,
+          title: m.title,
+          measure: m.measure,
+          target,
+          progress,
+          reward: toPaisaFloor(m.reward),
+          period: m.period,
+          done: progress >= target,
+          claimed: missionRefs.has(claimRef('mission', `${m.id}:${periodKey(m.period, today)}`)),
+        };
+      })
+    : [];
+
   const spun = claimedRefs(rows, 'spin').has(claimRef('spin', SPIN_KEY));
   const wheelReady = deposited >= toPaisaFloor(cfg.wheel.minDeposited);
 
   return {
+    missions,
     wheel: {
       active: cfg.wheel.active,
       segments: cfg.wheel.segments.map((seg) => seg.amount),
@@ -189,7 +223,40 @@ export async function bonusState(cookies: CookieStore): Promise<BonusState | nul
     unique index enforces it rather than this file. */
 const SPIN_KEY = 'first';
 
+/** The window a mission counts over. `once` never resets, so its key is a
+    constant and the ledger ref makes it a one-off by itself. */
+function periodKey(period: 'daily' | 'weekly' | 'once', today: string): string {
+  if (period === 'once') return 'once';
+  if (period === 'daily') return today;
+  // the Monday the day falls in, so a week is a week and not the last seven days
+  const d = new Date(`${today}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+  return `w${d.toISOString().slice(0, 10)}`;
+}
+
+/** How much of the thing a mission measures has happened in its window. */
+function measured(
+  rows: Txn[],
+  measure: 'bet' | 'deposit',
+  period: 'daily' | 'weekly' | 'once',
+  today: string,
+): number {
+  const kind = measure === 'deposit' ? 'deposit' : 'bet';
+  const from = period === 'once'
+    ? ''
+    : spanOf(period === 'daily' ? today : periodKey(period, today).slice(1))[0];
+
+  let total = 0;
+  for (const r of rows) {
+    if (r.kind !== kind) continue;
+    if (from && r.created_at < from) continue;
+    total += measure === 'deposit' ? r.amount : -r.amount;
+  }
+  return total;
+}
+
 const blankState = (cfg: BonusConfig): BonusState => ({
+  missions: [],
   wheel: {
     active: cfg.wheel.active,
     segments: cfg.wheel.segments.map((seg) => seg.amount),
@@ -248,6 +315,17 @@ export async function claimBonus(
 
     amount = Math.round((dayTotals(rows, yesterday).staked * cfg.rebate.percent) / 100);
     if (amount < toPaisaFloor(cfg.rebate.minClaim)) return { ok: false, reason: 'below-minimum' };
+  } else if (kind === 'mission') {
+    if (!cfg.missions.active) return { ok: false, reason: 'inactive' };
+    const mission = cfg.missions.list.find((m) => m.id === code && m.active);
+    if (!mission) return { ok: false, reason: 'unknown-mission' };
+
+    ref = claimRef('mission', `${mission.id}:${periodKey(mission.period, today)}`);
+    if (claimedRefs(rows, 'mission').has(ref)) return { ok: false, reason: 'already-claimed' };
+
+    const progress = measured(rows, mission.measure, mission.period, today);
+    if (progress < toPaisaFloor(mission.target)) return { ok: false, reason: 'not-finished' };
+    amount = toPaisaFloor(mission.reward);
   } else if (kind === 'spin') {
     if (!cfg.wheel.active) return { ok: false, reason: 'inactive' };
     ref = claimRef('spin', SPIN_KEY);

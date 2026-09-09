@@ -3,37 +3,109 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import PageHeader from '@/components/PageHeader';
+import { useBonus } from '@/components/useBonus';
 import { useLightSheet } from '@/components/useLightSheet';
+import { useUI } from '@/components/UIProvider';
+import { toTaka } from '@/lib/auth';
+import { money } from '@/lib/brand';
 import { PROMOTIONS } from '@/lib/promotions';
 
 /* ============================================================
    Mission.
 
-   The reference tracks milestones a player is part way through:
-   bet this much, collect that bonus, seven of them to a set. We
-   have no mission engine — nothing counts a player towards a
-   target and nothing pays one out — so what is listed here is
-   what we actually run, which is the promotions.
+   A mission is a target and what reaching it pays, and the whole
+   screen is the distance between them: how far along, how much
+   further, and the button that appears when there is no further
+   to go. Both numbers are the operator's, at /admin/bonus.
 
-   The tabs are the reference's and they are honest: everything
-   we offer is running, so Finished is empty and says why. When
-   there is an engine, progress goes on these same cards.
+   Progress is counted from the ledger over the mission's own
+   window — a day, a week, or the whole account — so it is the
+   same figure Betting Record and Account Record show, and it
+   cannot drift from them.
+
+   With no missions set, the screen still has something true to
+   show: the promotions we run. It is the offers either way.
    ============================================================ */
 
-export default function PromotionsPage() {
+const PERIOD_LABEL: Record<string, string> = {
+  daily: 'আজকের মধ্যে',
+  weekly: 'এই সপ্তাহে',
+  once: 'একবারের জন্য',
+};
+
+export default function MissionPage() {
   useLightSheet();
+  const { state, busy, claim } = useBonus();
+  const { toast } = useUI();
   const [tab, setTab] = useState<'live' | 'done'>('live');
+
+  const all = state?.missions ?? [];
+  const live = all.filter((m) => !m.claimed);
+  const done = all.filter((m) => m.claimed);
+  const shown = tab === 'live' ? live : done;
 
   return (
     <>
       <PageHeader title="Mission" />
 
       <div className="ms__tabs">
-        <button type="button" className={tab === 'live' ? 'on' : ''} onClick={() => setTab('live')}>In Progress</button>
-        <button type="button" className={tab === 'done' ? 'on' : ''} onClick={() => setTab('done')}>Finished</button>
+        <button type="button" className={tab === 'live' ? 'on' : ''} onClick={() => setTab('live')}>
+          In Progress{live.length > 0 && ` (${live.length})`}
+        </button>
+        <button type="button" className={tab === 'done' ? 'on' : ''} onClick={() => setTab('done')}>
+          Finished{done.length > 0 && ` (${done.length})`}
+        </button>
       </div>
 
-      {tab === 'live' ? (
+      {all.length > 0 ? (
+        shown.length === 0 ? (
+          <p className="ml__empty">
+            No data
+            <small>{tab === 'live' ? 'সব মিশন শেষ — নতুনটির অপেক্ষায় থাকুন।' : 'এখনো কোনো মিশন শেষ হয়নি।'}</small>
+          </p>
+        ) : (
+          <div className="ms">
+            {shown.map((m) => {
+              const pct = m.target > 0 ? Math.min(100, Math.round((m.progress / m.target) * 100)) : 0;
+              return (
+                <article className="ms__card" key={m.id}>
+                  <span className="ms__art a3" aria-hidden>{m.measure === 'deposit' ? '💰' : '🎯'}</span>
+                  <div className="ms__b">
+                    <h3>{m.title}<i>{PERIOD_LABEL[m.period]}</i></h3>
+                    <p>
+                      {m.measure === 'deposit' ? 'ডিপোজিট' : 'বাজি'}{' '}
+                      {money(toTaka(Math.min(m.progress, m.target)))} / {money(toTaka(m.target))}
+                      {' · '}বোনাস <b className="ms__rw">{money(toTaka(m.reward))}</b>
+                    </p>
+                    <div className="ms__bar"><i style={{ width: `${pct}%` }} /></div>
+                    {m.claimed ? (
+                      <span className="ms__got">নেওয়া হয়েছে</span>
+                    ) : m.done ? (
+                      <button
+                        type="button"
+                        className="ms__go"
+                        disabled={busy !== null}
+                        onClick={async () => {
+                          const reply = await claim('mission', m.id);
+                          toast(reply.ok
+                            ? `${money(toTaka(reply.amount))} যোগ হয়েছে`
+                            : reply.message ?? 'নেওয়া গেল না');
+                        }}
+                      >
+                        {money(toTaka(m.reward))} নিন
+                      </button>
+                    ) : (
+                      <span className="ms__left">
+                        আর {money(toTaka(m.target - m.progress))} বাকি
+                      </span>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )
+      ) : (
         <div className="ms">
           {PROMOTIONS.map((p) => (
             <article className="ms__card" key={p.id}>
@@ -46,11 +118,6 @@ export default function PromotionsPage() {
             </article>
           ))}
         </div>
-      ) : (
-        <p className="ml__empty">
-          No data
-          <small>শেষ হওয়া মিশন এখানে জমা হবে। এখন সব কটি অফারই চালু আছে।</small>
-        </p>
       )}
     </>
   );

@@ -15,4 +15,4 @@ create unique index if not exists transactions_claim_once
   where ref is not null
     and (ref like 'signin:%' or ref like 'rescue:%'
       or ref like 'rebate:%' or ref like 'promo:%'
-      or ref like 'spin:%');
+      or ref like 'spin:%' or ref like 'mission:%');

@@ -11,6 +11,7 @@ import path from 'node:path';
 import {
   BONUS_DEFAULTS,
   type BonusConfig,
+  type Mission,
   type PromoCode,
   type WheelSegment,
 } from './bonus-config';
@@ -21,6 +22,7 @@ const STORE_FILE = path.join(process.cwd(), '.data', 'bonus-config.json');
 const MAX_DAYS = 30;
 const MAX_CODES = 50;
 const MAX_SLICES = 12;
+const MAX_MISSIONS = 20;
 
 export type BonusMutationResult =
   | { ok: true; config: BonusConfig }
@@ -38,6 +40,42 @@ export async function updateBonusConfig(patch: unknown): Promise<BonusMutationRe
   return mutateStore((store) => {
     const current = merge(store.config);
     const next: BonusConfig = { ...current };
+
+    if (record.missions && typeof record.missions === 'object') {
+      const r = record.missions as Record<string, unknown>;
+      const raw = Array.isArray(r.list) ? r.list : [];
+      if (raw.length > MAX_MISSIONS) return bad('too-many-missions');
+
+      const seen = new Set<string>();
+      const list: Mission[] = [];
+      for (const item of raw) {
+        const c = (item && typeof item === 'object' ? item : {}) as Record<string, unknown>;
+        const title = String(c.title ?? '').trim().slice(0, 80);
+        if (!title) return bad('empty-mission');
+
+        /* The id is the ledger ref, so it is folded to something safe and
+           stable: renaming a mission must not hand its reward out twice. */
+        const id = String(c.id ?? '').toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 24)
+          || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 24);
+        if (!id) return bad('empty-mission');
+        if (seen.has(id)) return bad('duplicate-mission');
+        seen.add(id);
+
+        const target = nonNeg(c.target, 0);
+        if (target <= 0) return bad('mission-target');
+
+        list.push({
+          id,
+          title,
+          measure: c.measure === 'deposit' ? 'deposit' : 'bet',
+          target,
+          reward: nonNeg(c.reward, 0),
+          period: c.period === 'weekly' ? 'weekly' : c.period === 'once' ? 'once' : 'daily',
+          active: bool(c.active, true),
+        });
+      }
+      next.missions = { active: bool(r.active, current.missions.active), list };
+    }
 
     if (record.wheel && typeof record.wheel === 'object') {
       const r = record.wheel as Record<string, unknown>;
@@ -140,6 +178,7 @@ const nonNeg = (v: unknown, fallback: number) => Math.max(0, num(v, fallback));
 
 function merge(saved: Partial<BonusConfig>): BonusConfig {
   return {
+    missions: { ...BONUS_DEFAULTS.missions, ...(saved.missions ?? {}) },
     wheel: { ...BONUS_DEFAULTS.wheel, ...(saved.wheel ?? {}) },
     signIn: { ...BONUS_DEFAULTS.signIn, ...(saved.signIn ?? {}) },
     rescue: { ...BONUS_DEFAULTS.rescue, ...(saved.rescue ?? {}) },

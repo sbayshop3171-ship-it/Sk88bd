@@ -3,7 +3,20 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { BonusKind } from '@/lib/bonus-config';
 
+export type MissionView = {
+  id: string;
+  title: string;
+  measure: 'bet' | 'deposit';
+  target: number;
+  progress: number;
+  reward: number;
+  period: 'daily' | 'weekly' | 'once';
+  done: boolean;
+  claimed: boolean;
+};
+
 export type BonusState = {
+  missions: MissionView[];
   wheel: {
     active: boolean;
     segments: number[];

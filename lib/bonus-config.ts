@@ -66,8 +66,28 @@ export type WheelConfig = {
   segments: WheelSegment[];
 };
 
+export type Mission = {
+  id: string;
+  title: string;
+  /** what counts towards it: everything staked, or everything deposited */
+  measure: 'bet' | 'deposit';
+  /** taka to reach */
+  target: number;
+  /** taka paid on reaching it */
+  reward: number;
+  /** the window it counts over, and resets on */
+  period: 'daily' | 'weekly' | 'once';
+  active: boolean;
+};
+
+export type MissionConfig = {
+  active: boolean;
+  list: Mission[];
+};
+
 export type BonusConfig = {
   wheel: WheelConfig;
+  missions: MissionConfig;
   signIn: SignInConfig;
   rescue: RescueConfig;
   rebate: RebateConfig;
@@ -75,6 +95,9 @@ export type BonusConfig = {
 };
 
 export const BONUS_DEFAULTS: BonusConfig = {
+  /* Nothing ships switched on with a made-up target: a mission is a promise
+     about somebody's money, and the operator writes it. */
+  missions: { active: true, list: [] },
   wheel: {
     active: true,
     minDeposited: 100,
@@ -118,7 +141,7 @@ export const BONUS_DEFAULTS: BonusConfig = {
   },
 };
 
-export type BonusKind = 'signin' | 'rescue' | 'rebate' | 'promo' | 'spin';
+export type BonusKind = 'signin' | 'rescue' | 'rebate' | 'promo' | 'spin' | 'mission';
 
 export const BONUS_LABEL: Record<BonusKind, string> = {
   signin: 'Sign In',
@@ -126,6 +149,7 @@ export const BONUS_LABEL: Record<BonusKind, string> = {
   rebate: 'Rebate',
   promo: 'Promo Code',
   spin: 'Free Spin',
+  mission: 'Mission',
 };
 
 /** Why a claim was refused. Every one of these is shown to the player, so
@@ -141,6 +165,8 @@ export type ClaimReason =
   | 'unknown-code'
   | 'code-used-up'
   | 'no-spin-left'
+  | 'unknown-mission'
+  | 'not-finished'
   | 'db-error';
 
 export const CLAIM_MESSAGE: Record<ClaimReason, string> = {
@@ -154,6 +180,8 @@ export const CLAIM_MESSAGE: Record<ClaimReason, string> = {
   'unknown-code': 'কোডটি ঠিক নেই',
   'code-used-up': 'কোডটির সীমা শেষ',
   'no-spin-left': 'আপনার ফ্রি স্পিন শেষ',
+  'unknown-mission': 'মিশনটি আর নেই',
+  'not-finished': 'মিশনটি এখনো শেষ হয়নি',
   'db-error': 'সমস্যা হয়েছে — আবার চেষ্টা করুন',
 };
 

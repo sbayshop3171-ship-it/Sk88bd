@@ -4574,3 +4574,14 @@ body.cz-light .rc__bar{background:rgba(31,36,48,.14)}
   background:linear-gradient(180deg,#ffdf9a,#f0b13c);
   color:#8a5a12;font-size:17px;font-weight:800;
 }
+
+/* mission progress: the distance between a target and where somebody is */
+.ms__bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin:2px 0 9px}
+.ms__bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#ffd76a,#f4262c)}
+.ms__rw{color:#c02626;font-weight:800}
+.ms__left{font-size:12px;font-weight:700;color:var(--muted)}
+.ms__got{
+  display:inline-block;padding:5px 12px;border-radius:var(--r-pill);
+  background:#e3f5ef;color:#0d6a58;font-size:12px;font-weight:800;
+}
+.ms__b h3 i{background:#eef1f6;color:#5c6270}
