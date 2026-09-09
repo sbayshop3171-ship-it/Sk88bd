@@ -3340,6 +3340,8 @@ body.cz-light .cz-method__name{
 }
 body.cz-light .cz-method .cz-icon{width:auto;height:34px;max-width:56px;border-radius:4px}
 body.cz-light .cz-method__bonus{font-size:9.5px;font-weight:700;color:#ec2529}
+/* the folded corner sits where the bonus line ends — give it room */
+body.cz-light .cz-method.on .cz-method__bonus{padding-right:12px}
 
 /* the ribbon: a folded tab that overhangs the top-left corner */
 body.cz-light .cz-method::before,
@@ -3382,7 +3384,8 @@ body.cz-light .cz-channel{
   font-family:Georgia,'Times New Roman',serif;font-size:11px;font-weight:700;
   color:#1a1a1a;line-height:1.35;overflow-wrap:break-word;
 }
-body.cz-light .cz-channel>span{min-width:0;max-width:100%;text-align:center;word-break:break-word}
+body.cz-light .cz-channel>span{min-width:0;max-width:100%;text-align:center;
+  word-break:normal;overflow-wrap:break-word}
 body.cz-light .cz-channel em{font-style:normal;color:#dcdcdc;margin:0 4px}
 body.cz-light .cz-channel i{font-style:italic}
 body.cz-light .cz-channel.on i{color:#ec2529}
