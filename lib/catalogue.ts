@@ -128,6 +128,30 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('The Dog House', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/Pragmatic-Play__The-Dog-House.png', 'the-dog-house', undefined, true),
     g('Wolf Gold', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/Pragmatic-Play__Wolf-Gold.png', 'wolf-gold', undefined, true),
     g('Wild West Gold', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/Pragmatic-Play__Wild-West-Gold.png', 'wild-west-gold', undefined, true),
+
+    /* ---- Eighteen more Pragmatic titles that open on the studio's own demo
+       host. Same deal as the block above: no operator account, no token, so
+       a tap is a real spin rather than a placeholder. Each symbol below was
+       fetched once before being listed — a wrong one answers "an error has
+       occurred" instead of rendering. ---- */
+    g('Fruit Party', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/fruit-party.webp', 'fruit-party', undefined, true),
+    g('Great Rhino Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/great-rhino-megaways.webp', 'great-rhino-megaways', undefined, true),
+    g('Buffalo King Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/buffalo-king-megaways.webp', 'buffalo-king-megaways', undefined, true),
+    g('Release the Kraken', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/release-the-kraken.webp', 'release-the-kraken', undefined, true),
+    g('Madame Destiny', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/madame-destiny.webp', 'madame-destiny', undefined, true),
+    g('Power of Thor Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/power-of-thor-megaways.webp', 'power-of-thor-megaways', undefined, true),
+    g('Fire Strike', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/fire-strike.webp', 'fire-strike', undefined, true),
+    g('Mustang Gold', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/mustang-gold.webp', 'mustang-gold', undefined, true),
+    g('Aztec Gems', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/aztec-gems.webp', 'aztec-gems', undefined, true),
+    g('5 Lions Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/5-lions-megaways.webp', '5-lions-megaways', undefined, true),
+    g('Hot Fiesta', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/hot-fiesta.webp', 'hot-fiesta', undefined, true),
+    g('Juicy Fruits', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/juicy-fruits.webp', 'juicy-fruits', undefined, true),
+    g('Gems Bonanza', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/gems-bonanza.webp', 'gems-bonanza', undefined, true),
+    g('The Hand of Midas', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/the-hand-of-midas.webp', 'the-hand-of-midas', undefined, true),
+    g('Wisdom of Athena', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/wisdom-of-athena.webp', 'wisdom-of-athena', undefined, true),
+    g('Chilli Heat', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/chilli-heat.webp', 'chilli-heat', undefined, true),
+    g('Zeus vs Hades - Gods of War', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/zeus-vs-hades-gods-of-war.webp', 'zeus-vs-hades-gods-of-war', undefined, true),
+    g('Curse of the Werewolf Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/curse-of-the-werewolf-megaways.webp', 'curse-of-the-werewolf-megaways', undefined, true),
   ],
   sports: [
     g('Animal Racing', 'FaChai', 'hot', '/games/icons/HOT/FaChai__ANIMAL-RACING.avif', 'animal-racing', '1342', true),
@@ -222,6 +246,28 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('The Dog House', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/Pragmatic-Play__The-Dog-House.png', 'the-dog-house', undefined, true),
     g('Wolf Gold', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/Pragmatic-Play__Wolf-Gold.png', 'wolf-gold', undefined, true),
     g('Wild West Gold', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/Pragmatic-Play__Wild-West-Gold.png', 'wild-west-gold', undefined, true),
+
+    /* ---- The same eighteen, listed here too: they are slots, and স্লট is
+       where a player goes looking for them. The catalogue already carries
+       Gates of Olympus in both rails for the same reason. ---- */
+    g('Fruit Party', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/fruit-party.webp', 'fruit-party', undefined, true),
+    g('Great Rhino Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/great-rhino-megaways.webp', 'great-rhino-megaways', undefined, true),
+    g('Buffalo King Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/buffalo-king-megaways.webp', 'buffalo-king-megaways', undefined, true),
+    g('Release the Kraken', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/release-the-kraken.webp', 'release-the-kraken', undefined, true),
+    g('Madame Destiny', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/madame-destiny.webp', 'madame-destiny', undefined, true),
+    g('Power of Thor Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/power-of-thor-megaways.webp', 'power-of-thor-megaways', undefined, true),
+    g('Fire Strike', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/fire-strike.webp', 'fire-strike', undefined, true),
+    g('Mustang Gold', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/mustang-gold.webp', 'mustang-gold', undefined, true),
+    g('Aztec Gems', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/aztec-gems.webp', 'aztec-gems', undefined, true),
+    g('5 Lions Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/5-lions-megaways.webp', '5-lions-megaways', undefined, true),
+    g('Hot Fiesta', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/hot-fiesta.webp', 'hot-fiesta', undefined, true),
+    g('Juicy Fruits', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/juicy-fruits.webp', 'juicy-fruits', undefined, true),
+    g('Gems Bonanza', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/gems-bonanza.webp', 'gems-bonanza', undefined, true),
+    g('The Hand of Midas', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/the-hand-of-midas.webp', 'the-hand-of-midas', undefined, true),
+    g('Wisdom of Athena', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/wisdom-of-athena.webp', 'wisdom-of-athena', undefined, true),
+    g('Chilli Heat', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/chilli-heat.webp', 'chilli-heat', undefined, true),
+    g('Zeus vs Hades - Gods of War', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/zeus-vs-hades-gods-of-war.webp', 'zeus-vs-hades-gods-of-war', undefined, true),
+    g('Curse of the Werewolf Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/curse-of-the-werewolf-megaways.webp', 'curse-of-the-werewolf-megaways', undefined, true),
   ],
   poker: [
     g('American Roulette 3D', 'Evoplay', undefined, '/games/icons/POKER/Evoplay__American-Roulette-3D.avif', 'american-roulette-3d-evoplay-2', '20720', false),
@@ -413,6 +459,24 @@ export const DEMOS: Record<string, string> = {
   'the-dog-house': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs20doghouse&lang=en&cur=USD',
   'wolf-gold': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs25wolfgold&lang=en&cur=USD',
   'wild-west-gold': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs40wildwest&lang=en&cur=USD',
+  'fruit-party': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs20fruitparty&lang=en&cur=USD',
+  'great-rhino-megaways': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vswaysrhino&lang=en&cur=USD',
+  'buffalo-king-megaways': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vswaysbufking&lang=en&cur=USD',
+  'release-the-kraken': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs20kraken&lang=en&cur=USD',
+  'madame-destiny': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs10madame&lang=en&cur=USD',
+  'power-of-thor-megaways': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vswayshammthor&lang=en&cur=USD',
+  'fire-strike': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs10firestrike&lang=en&cur=USD',
+  'mustang-gold': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs25mustang&lang=en&cur=USD',
+  'aztec-gems': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs5aztecgems&lang=en&cur=USD',
+  '5-lions-megaways': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vswayslions&lang=en&cur=USD',
+  'hot-fiesta': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs25hotfiesta&lang=en&cur=USD',
+  'juicy-fruits': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs50juicyfr&lang=en&cur=USD',
+  'gems-bonanza': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs20goldfever&lang=en&cur=USD',
+  'the-hand-of-midas': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs20midas&lang=en&cur=USD',
+  'wisdom-of-athena': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs20procount&lang=en&cur=USD',
+  'chilli-heat': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs25chilli&lang=en&cur=USD',
+  'zeus-vs-hades-gods-of-war': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs15godsofwar&lang=en&cur=USD',
+  'curse-of-the-werewolf-megaways': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vswayswerewolf&lang=en&cur=USD',
 
   /* Evolution live game shows have no fun mode at all, so there is no demo
      URL to give — a real launch URL would be one player's real-money session,
@@ -465,6 +529,15 @@ export const FEATURED_IDS = [
   'fish-eye',
   'big-bass-bonanza', 'big-bass-amazon-xtreme',
   'the-dog-house', 'wolf-gold', 'wild-west-gold',
+  'fruit-party', 'great-rhino-megaways',
+  'buffalo-king-megaways', 'release-the-kraken',
+  'madame-destiny', 'power-of-thor-megaways',
+  'fire-strike', 'mustang-gold',
+  'aztec-gems', '5-lions-megaways',
+  'hot-fiesta', 'juicy-fruits',
+  'gems-bonanza', 'the-hand-of-midas',
+  'wisdom-of-athena', 'chilli-heat',
+  'zeus-vs-hades-gods-of-war', 'curse-of-the-werewolf-megaways',
 ];
 
 const featuredRank = (id: string): number => {
