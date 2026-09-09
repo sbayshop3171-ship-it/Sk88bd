@@ -21,10 +21,14 @@ const PANEL_BASE_HEADER = 'x-panel-base';
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // /agent, and everything under it, is the panel
+  /* /agent, and everything under it, is the panel. The path itself is
+     mapped by a rewrite in next.config.mjs — a `NextResponse.rewrite` here
+     answers with an absolute `x-middleware-rewrite`, and behind Cloudflare
+     that URL comes out as https://localhost:3251/… , an origin nothing is
+     listening on, which Next then tries to proxy to and 500s. All this has
+     to do is name the door for the layout. */
   if (pathname === '/agent' || pathname.startsWith('/agent/')) {
-    const rest = pathname.slice('/agent'.length).replace(/\/$/, '');
-    return panel(request, rest ? `/admin${rest}` : '/admin');
+    return panel(request);
   }
 
   /* The subdomain's root only. Everything else on that host — /agent/…,
@@ -32,27 +36,23 @@ export function proxy(request: NextRequest) {
      would turn every asset request into /admin/_next/… and serve nothing. */
   const host = request.headers.get('host')?.toLowerCase() ?? '';
   if (pathname === '/' && AGENT_HOSTS.some((prefix) => host.startsWith(prefix))) {
-    return panel(request, '/admin');
+    const url = request.nextUrl.clone();
+    url.pathname = '/admin';
+    return NextResponse.rewrite(url, { request: { headers: withBase(request) } });
   }
 
   return NextResponse.next();
 }
 
-/** Serve an /admin route while the browser keeps the address it asked for.
+/** Let the request through, carrying the door it came in by. */
+function panel(request: NextRequest) {
+  return NextResponse.next({ request: { headers: withBase(request) } });
+}
 
-    The destination is built by cloning `nextUrl`, not from `request.url`:
-    behind nginx the latter is http://127.0.0.1:3251/…, so `new URL()` on it
-    produced an absolute address on another origin. Next read that as an
-    external proxy target and the edge answered 500 — while the origin,
-    asked directly, was fine. `nextUrl.clone()` keeps the deployment's own
-    origin and carries the query string with it. */
-function panel(request: NextRequest, destination: string) {
-  const url = request.nextUrl.clone();
-  url.pathname = destination;
-
+function withBase(request: NextRequest) {
   const headers = new Headers(request.headers);
   headers.set(PANEL_BASE_HEADER, '/agent');
-  return NextResponse.rewrite(url, { request: { headers } });
+  return headers;
 }
 
 export const config = {

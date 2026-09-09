@@ -37,6 +37,18 @@ const nextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
+  /* The agent's door. It is done here rather than in proxy.ts because a
+     rewrite from the proxy answers with an absolute `x-middleware-rewrite`
+     built from the origin's own address — behind Cloudflare that arrives as
+     https://localhost:3251/… and Next tries to proxy to it. A config rewrite
+     is handled by the router itself and never leaves the process. The proxy
+     still runs first, and marks which door was used. */
+  async rewrites() {
+    return [
+      { source: '/agent', destination: '/admin' },
+      { source: '/agent/:path*', destination: '/admin/:path*' },
+    ];
+  },
 };
 
 export default nextConfig;
