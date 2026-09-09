@@ -1,72 +1,152 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
-import Footer from '@/components/Footer';
-import Header from '@/components/Header';
-import { VIP_TIERS } from '@/lib/promotions';
+import PageHeader from '@/components/PageHeader';
+import { CopyIcon, GiftIcon, MedalIcon, PencilIcon, RefreshIcon, UserIcon, UsersIcon } from '@/components/Icons';
+import { useUI } from '@/components/UIProvider';
+import { toTaka } from '@/lib/auth';
+import { money } from '@/lib/brand';
 
-/** Where each mission sends a signed-in player. A guest is sent to log in
-    first, since none of these can be done without an account. */
-const MISSIONS: [string, string, string, string][] = [
-  ['📅', 'Daily check-in', 'Log in every day and take the bonus', '/member'],
-  ['💰', 'First deposit', 'An extra bonus on today’s first deposit', '/deposit'],
-  ['🎰', '10 slot rounds', 'Play 10 rounds on any slot', '/casino'],
-  ['🏏', 'Cricket bet', 'Place a bet on any cricket match', '/sports'],
-  ['👥', 'Bring a friend', 'Refer someone and take the bonus', '/refer'],
+/* ============================================================
+   Reward Center.
+
+   The reference's version is a hub, not a list: the same account
+   card the member screen carries — with the VIP bar and a way
+   into the benefits — over a block of big colour tiles, one per
+   thing that pays.
+
+   Three of those five need a payout behind them that we do not
+   have yet (a daily check-in, a loss-back fund and a promo code
+   to redeem). They are on the board because the board is the
+   point, and each says so rather than opening an empty screen:
+   a tile that quietly goes nowhere is worse than one that is
+   honest about being next.
+   ============================================================ */
+
+type Tile = {
+  key: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  /** the tile's own colour, as the reference gives each one its own */
+  tone: string;
+  href?: string;
+  badge?: number;
+};
+
+const TILES: Tile[] = [
+  { key: 'bonus',  label: 'Bonus',         icon: GiftIcon,  tone: 'green', href: '/promotions' },
+  { key: 'signin', label: 'Sign In',       icon: MedalIcon, tone: 'blue' },
+  { key: 'rescue', label: 'Rescue fund',   icon: RefreshIcon, tone: 'amber' },
+  { key: 'invite', label: 'Invite Friends', icon: UsersIcon, tone: 'pink', href: '/refer' },
+  { key: 'promo',  label: 'Promo Code',    icon: CopyIcon,  tone: 'cyan' },
 ];
 
 export default function RewardPage() {
-  const { ready, session, profile } = useAuth();
+  const { ready, session, profile, wallet, refresh } = useAuth();
+  const { toast } = useUI();
+  const [spinning, setSpinning] = useState(false);
+
   const signedIn = ready && Boolean(session);
+  const userId = profile?.phone ?? '';
+  const nickname = profile?.display_name || userId || 'Player';
   const level = profile?.vip_level ?? 0;
+
+  const copyId = async () => {
+    if (!userId) return;
+    try {
+      await navigator.clipboard.writeText(userId);
+      toast('ID copied');
+    } catch {
+      toast('Could not copy');
+    }
+  };
+
+  const reload = async () => {
+    setSpinning(true);
+    await refresh();
+    setTimeout(() => setSpinning(false), 600);
+  };
 
   return (
     <>
-      <Header />
-      <div className="hero">
-        <h1>Reward Center</h1>
-        <p>Finish the daily missions and win bonuses</p>
-      </div>
+      <PageHeader title="Reward Center" />
 
-      <section className="sec">
-        <div className="sec__hd"><h2 className="sec__title">Daily Missions</h2></div>
-        <div className="list-card" style={{ margin: 0 }}>
-          {MISSIONS.map(([e, title, sub, href]) => (
-            <div key={title} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '13px 14px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
-              <span className="e" aria-hidden style={{ fontSize: 17 }}>{e}</span>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 13, fontWeight: 700 }}>{title}</span>
-                <span style={{ display: 'block', fontSize: 11, color: 'var(--muted)' }}>{sub}</span>
-              </span>
-              <Link href={signedIn ? href : '/login'} className="winners__play">Start</Link>
-            </div>
-          ))}
-        </div>
-      </section>
+      <div className="rc">
+        <div className="rc__card">
+          <Link href="/member" className="mc__signin">
+            <span aria-hidden>☑</span> Sign In <i aria-hidden>›</i>
+          </Link>
 
-      <section className="sec">
-        <div className="sec__hd">
-          <h2 className="sec__title">VIP Levels</h2>
-          <div className="sec__ctrl"><Link href="/vip">Details</Link></div>
-        </div>
-        <div className="list-card" style={{ margin: 0 }}>
-          {VIP_TIERS.map((v, i) => {
-            const mine = signedIn && i + 1 === level;
-            return (
-              <div key={v.level} className={mine ? 'vip-now' : undefined}
-                   style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '13px 14px', fontSize: 12.5, borderBottom: '1px solid rgba(255,255,255,.05)' }}>
-                <span style={{ fontWeight: 800, color: 'var(--gold)', width: 58 }}>{v.level}</span>
-                <span style={{ color: 'var(--muted)', flex: 1 }}>Rebate {v.rebate}</span>
-                <span style={{ fontWeight: 700 }}>{v.gift}</span>
-                {mine && <span className="vip-tag">You</span>}
+          <div className="rc__top">
+            <span className="mc__av" aria-hidden><UserIcon /></span>
+            <div className="rc__who">
+              {signedIn ? (
+                <>
+                  <div className="mc__id">
+                    <b>{userId}</b>
+                    <button type="button" onClick={copyId} aria-label="Copy ID"><CopyIcon /></button>
+                  </div>
+                  <div className="mc__meta">
+                    <span>Nickname: {nickname}</span>
+                    <Link href="/my-profile" aria-label="Change name"><PencilIcon /></Link>
+                  </div>
+                </>
+              ) : (
+                <div className="mc__id"><b>Guest</b></div>
+              )}
+              <div className="rc__balrow">
+                <b className="mc__bal">{money(toTaka(wallet?.balance ?? 0), 2)}</b>
+                {signedIn && (
+                  <button
+                    type="button"
+                    className={`mc__refresh${spinning ? ' is-spin' : ''}`}
+                    onClick={reload}
+                    aria-label="Refresh balance"
+                  >
+                    <RefreshIcon />
+                  </button>
+                )}
               </div>
+            </div>
+          </div>
+
+          <div className="rc__vip">
+            <span className="rc__vipname"><MedalIcon /> VIP{level}</span>
+            <Link href="/vip" className="rc__benefits">Benefits ›</Link>
+          </div>
+          <div className="rc__bar"><i style={{ width: `${Math.min(level, 1) * 100}%` }} /></div>
+          <div className="rc__barnum">{level} / {Math.max(level + 1, 1)}</div>
+        </div>
+
+        <div className="rc__grid">
+          {TILES.map((tile) => {
+            const inner = (
+              <>
+                <span className="rc__ico">
+                  <tile.icon />
+                  {tile.badge ? <i className="rc__badge">{tile.badge}</i> : null}
+                </span>
+                <b>{tile.label}</b>
+                {!tile.href && <small>শীঘ্রই</small>}
+              </>
+            );
+            return tile.href ? (
+              <Link key={tile.key} href={tile.href} className={`rc__tile is-${tile.tone}`}>{inner}</Link>
+            ) : (
+              <button
+                key={tile.key}
+                type="button"
+                className={`rc__tile is-${tile.tone} is-soon`}
+                onClick={() => toast('এই অফারটি শীঘ্রই চালু হবে')}
+              >
+                {inner}
+              </button>
             );
           })}
         </div>
-      </section>
-
-      <Footer />
+      </div>
     </>
   );
 }

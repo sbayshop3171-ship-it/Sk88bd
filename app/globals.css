@@ -3625,3 +3625,57 @@ body.cz-light .cz-wallet-row__x{background:#f6f6f6;color:#9a9a9a}
 .sg__box small{justify-self:end;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .sg__note{margin:0;font-size:12px;line-height:1.8;color:var(--muted)}
 .sg__send{margin-top:2px}
+
+/* ---------- Reward Center ----------
+   The reference builds this as a hub: the member card again, then a block
+   of big colour tiles. Each tile keeps its own hue, which is what makes the
+   board readable at a glance rather than a wall of one green. */
+.rc{padding-bottom:22px}
+.rc__card{
+  position:relative;overflow:hidden;margin:0 0 4px;padding:16px 15px 14px;
+  background:linear-gradient(160deg,#5d6470,#3d434e 62%,#343a44);
+  border-radius:0 0 var(--r-md) var(--r-md);
+}
+.rc__top{display:flex;align-items:center;gap:13px}
+.rc__who{flex:1;min-width:0}
+.rc__balrow{display:flex;align-items:center;gap:10px;margin-top:6px}
+.rc__vip{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
+.rc__vipname{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:800;color:#e9eef7}
+.rc__vipname svg{width:18px;height:18px;color:#ffc42e}
+.rc__benefits{font-size:12.5px;font-weight:700;color:#cdd6e4}
+.rc__bar{height:5px;border-radius:3px;background:rgba(255,255,255,.16);margin-top:9px;overflow:hidden}
+.rc__bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,#ffd76a,#ffb02e)}
+.rc__barnum{margin-top:5px;text-align:right;font-size:11.5px;font-weight:700;color:#cdd6e4;font-variant-numeric:tabular-nums}
+
+.rc__grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px}
+.rc__tile{
+  position:relative;display:grid;justify-items:center;gap:9px;
+  padding:22px 12px 18px;border-radius:14px;color:#fff;text-align:center;
+  box-shadow:0 8px 20px rgba(0,0,0,.28);
+}
+.rc__tile b{font-size:14.5px;font-weight:800;letter-spacing:.2px}
+.rc__tile small{font-size:10.5px;font-weight:700;opacity:.9;
+  padding:2px 8px;border-radius:var(--r-pill);background:rgba(0,0,0,.22)}
+.rc__tile.is-soon{opacity:.92}
+.rc__ico{
+  position:relative;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;
+  background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.18);
+}
+.rc__ico svg{width:26px;height:26px}
+.rc__badge{
+  position:absolute;top:-3px;right:-3px;min-width:19px;height:19px;padding:0 5px;
+  border-radius:10px;background:#e5484d;color:#fff;font-size:10.5px;font-weight:800;
+  display:grid;place-items:center;font-style:normal;border:2px solid #fff;
+}
+.rc__tile.is-green{background:linear-gradient(150deg,#4ad991,#16b06a)}
+.rc__tile.is-green .rc__ico{color:#16b06a}
+.rc__tile.is-blue{background:linear-gradient(150deg,#4aa8ff,#3a6ff0)}
+.rc__tile.is-blue .rc__ico{color:#3a6ff0}
+.rc__tile.is-amber{background:linear-gradient(150deg,#ffc247,#ff9410)}
+.rc__tile.is-amber .rc__ico{color:#ff9410}
+.rc__tile.is-pink{background:linear-gradient(150deg,#ff9a8b,#e2467f)}
+.rc__tile.is-pink .rc__ico{color:#e2467f}
+.rc__tile.is-cyan{background:linear-gradient(150deg,#38d7e6,#12b4c9)}
+.rc__tile.is-cyan .rc__ico{color:#12b4c9}
+/* the last tile sits alone on its row, as it does in the reference */
+.rc__grid>.rc__tile:last-child:nth-child(odd){grid-column:1}
