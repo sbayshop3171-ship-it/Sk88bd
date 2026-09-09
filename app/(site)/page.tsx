@@ -9,7 +9,7 @@ import Header from '@/components/Header';
 import Jackpot from '@/components/Jackpot';
 import Winners from '@/components/Winners';
 import NoticeBar from '@/components/NoticeBar';
-import { HOME_SECTIONS, PROVIDERS, demoGames } from '@/lib/catalogue';
+import { HOME_SECTIONS, PROVIDERS, demoGames, trialRail } from '@/lib/catalogue';
 import { t } from '@/lib/strings';
 import Link from 'next/link';
 import { DepositIcon, WithdrawIcon } from '@/components/Icons';
@@ -38,6 +38,15 @@ export default function HomePage() {
           gameplay previews — floated to the top; the rest sit in their
           categories below with a "coming soon" placeholder. */}
       <GameSection games={demoGames()} title="জনপ্রিয় গেম" />
+
+      {/* ~650 games that open with play money on the studio's own demo host —
+          no account, no deposit. The rail shows a slice; the page has them
+          all with a search box. */}
+      <GameSection
+        games={trialRail(60)}
+        title={t.freeTrial}
+        href="/free-trial"
+      />
 
       {/* only rendered once the visitor has starred a tile */}
       <FavouriteGames />

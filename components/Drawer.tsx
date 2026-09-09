@@ -9,6 +9,7 @@ import { useUI } from './UIProvider';
 type Item = [emoji: string, label: string, href: string];
 
 const GAME_LINKS: Item[] = [
+  ['🎁', 'ফ্রি ট্রায়াল', '/free-trial'],
   ['🔥', 'হট গেমস', '/#sec-hot'],
   ['🏏', 'স্পোর্টস', '/sports'],
   ['🎲', 'লাইভ ক্যাসিনো', '/#sec-live'],

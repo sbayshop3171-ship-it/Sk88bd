@@ -50,6 +50,24 @@ artwork full-bleed instead — never a deposit wall.
 Keep them short (20-40s), muted, and encoded for mobile (H.264, <6 MB); they
 are served straight from `public/`.
 
+## Free-trial art
+
+`icons/TRIAL/` is generated, not curated — one `<game id>.webp` for every game
+in `lib/demo-library.ts`, which is itself built from Pragmatic Play's own game
+list:
+
+    python3 scripts/gen_trial_library.py            # library + art
+    python3 scripts/gen_trial_library.py --no-art   # library only
+
+The key art is the studio's own, taken from each game's page on
+pragmaticplay.com and re-encoded to 480px webp (~18 KB a tile, ~12 MB for the
+set). The script prunes art whose game has left the library, so the folder
+never outlives it. Do not hand-edit either the folder or `lib/demo-library.ts`
+— re-run the script.
+
+A game that also has an entry in `lib/catalogue.ts` keeps the icon pack's
+artwork; the library only supplies its demo URL.
+
 ## Where the art comes from
 
 Once an aggregator is licensed, its game-list API returns official thumbnail

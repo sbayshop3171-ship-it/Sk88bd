@@ -84,10 +84,13 @@ export default function GameSection({
   category,
   games,
   title,
+  href,
 }: {
   category?: CategoryKey;
   games?: Game[];
   title?: string;
+  /** Where "সব" goes for a rail built from a hand-passed list. */
+  href?: string;
 }) {
   /* Every rail leads with the games that actually open — its own engine, a
      provider demo or a clip — and the "coming soon" tiles fall to the end,
@@ -116,7 +119,9 @@ export default function GameSection({
       <div className="sec__hd">
         <h2 className="sec__title">{heading}</h2>
         <div className="sec__ctrl">
-          {category && <Link href={`/casino?category=${category}`}>{t.all}</Link>}
+          {(href ?? category) && (
+            <Link href={href ?? `/casino?category=${category}`}>{t.all}</Link>
+          )}
           <button type="button" aria-label={t.previous} onClick={() => nudge(-1)}><LeftIcon /></button>
           <button type="button" aria-label={t.next} onClick={() => nudge(1)}><RightIcon /></button>
         </div>

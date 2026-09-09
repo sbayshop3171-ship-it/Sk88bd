@@ -12,6 +12,7 @@
    ============================================================ */
 
 import { CLIPS } from './clips';
+import { TRIAL_GAMES, TRIAL_PROVIDER, trialArt, trialUrl } from './demo-library';
 
 export type Tag = 'hot' | 'new' | 'top';
 
@@ -492,18 +493,89 @@ export const DEMOS: Record<string, string> = {
      not need it: GameSection routes it to the in-house /game/aviator. */
 };
 
-/* A self-hosted clip wins over a provider page: it always loads, never
-   expires, and for the live tables it is the only thing there is. */
-export const demoUrl = (id: string): string | undefined => CLIPS[id] ?? DEMOS[id];
+/* ============================================================
+   The free-trial library.
 
-/** Flattened lookup — the same game sits in several categories, so the first
-    match wins and every duplicate id resolves to one game. */
-export function findGame(id: string): Game | undefined {
+   lib/demo-library.ts is generated from Pragmatic Play's own game
+   list (scripts/gen_trial_library.py): every game the studio
+   publishes an open demo for, ~650 of them, each with its key art
+   under public/games/icons/TRIAL/. They need no operator account
+   and no token, so they are the games /free-trial opens today.
+
+   Some of them are already in the catalogue above with the icon
+   pack's artwork and a HOT badge. Those keep their catalogue entry
+   — the library only supplies the demo URL — so a game never shows
+   up twice under two ids.
+   ============================================================ */
+const TRIALS: Record<string, string> = Object.fromEntries(
+  TRIAL_GAMES.map((g) => [g.id, trialUrl(g.symbol)]),
+);
+
+/* A self-hosted clip wins over a provider page: it always loads, never
+   expires, and for the live tables it is the only thing there is. The
+   generated library comes before the hand-kept map because it is read from
+   each game's own page, so it is the one that stays right as the studio
+   renames or re-releases a game. */
+export const demoUrl = (id: string): string | undefined =>
+  CLIPS[id] ?? TRIALS[id] ?? DEMOS[id];
+
+/** The trial library as catalogue games, in the studio's A–Z order. */
+const TRIAL_CATALOGUE: Game[] = TRIAL_GAMES.map((g) => ({
+  id: g.id,
+  name: g.name,
+  provider: TRIAL_PROVIDER,
+  thumb: trialArt(g),
+  demo: true,
+}));
+
+/** Every trial, with the catalogue's own entry (icon-pack art, HOT badge)
+    preferred wherever the two carry the same game. Studio A–Z order, which
+    is what a searchable page of 650 wants. */
+export function trialGames(): Game[] {
+  return TRIAL_CATALOGUE.map((g) => findCatalogueGame(g.id) ?? g);
+}
+
+/** The trials worth leading a rail with — hand-kept, because A–Z opens on
+    games nobody came looking for. These are the studio's own headliners, the
+    ones a player already recognises from every other lobby. */
+const TRIAL_FEATURED = [
+  'gates-of-olympus', 'sweet-bonanza', 'sugar-rush', 'starlight-princess',
+  'big-bass-bonanza', 'the-dog-house', 'wolf-gold', 'fruit-party',
+  'gates-of-olympus-1000', 'sweet-bonanza-1000', 'sugar-rush-1000',
+  'starlight-princess-1000', 'buffalo-king-megaways', '5-lions-megaways',
+  'great-rhino-megaways', 'wild-west-gold', 'the-dog-house-megaways',
+  'power-of-thor-megaways', 'gems-bonanza', 'release-the-kraken',
+  'mustang-gold', 'aztec-gems',
+];
+
+/** Headliners first, then the rest of the library — for the home rail. */
+export function trialRail(limit: number): Game[] {
+  const byId = new Map(trialGames().map((g) => [g.id, g]));
+  const out: Game[] = [];
+  for (const id of TRIAL_FEATURED) {
+    const g = byId.get(id);
+    if (g) { out.push(g); byId.delete(id); }
+  }
+  for (const g of byId.values()) {
+    if (out.length >= limit) break;
+    out.push(g);
+  }
+  return out.slice(0, limit);
+}
+
+function findCatalogueGame(id: string): Game | undefined {
   for (const games of Object.values(CATALOGUE)) {
     const hit = games.find((g) => g.id === id);
     if (hit) return hit;
   }
   return undefined;
+}
+
+/** Flattened lookup — the same game sits in several categories, so the first
+    match wins and every duplicate id resolves to one game. Falls through to
+    the trial library, so /play/<id> opens a game that only lives there. */
+export function findGame(id: string): Game | undefined {
+  return findCatalogueGame(id) ?? TRIAL_CATALOGUE.find((g) => g.id === id);
 }
 
 /* ============================================================
@@ -550,7 +622,7 @@ export const PLAYABLE_IDS = [
 ];
 
 export const hasDemo = (id: string): boolean =>
-  PLAYABLE_IDS.includes(id) || id in CLIPS || id in DEMOS;
+  PLAYABLE_IDS.includes(id) || id in CLIPS || id in TRIALS || id in DEMOS;
 
 /** Previewable, but deliberately not part of the front rail. Crazy Time has
     only a looping clip — no real table behind it — so leading the lobby with
