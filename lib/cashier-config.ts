@@ -277,6 +277,7 @@ export const CASHIER_DEFAULTS: CashierConfig = {
       '!এজেন্ট ক্যাশআউট চার্জ আপনার মোট ওয়ালেট ব্যালেন্সের উপর হিসাব হয়',
       '!প্রতি ৳১,০০০-এ {rate} চার্জ',
       '!পুরো চার্জটি একবারেই দিতে হবে',
+      'চার্জ যাচাই হলে {time} এর মধ্যে টাকা পাঠানো হবে',
     ].join('\n'),
     applyLabel: 'Apply for withdrawal',
     payTitle: 'চার্জ পরিশোধ করুন',

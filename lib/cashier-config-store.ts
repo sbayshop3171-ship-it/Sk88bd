@@ -271,6 +271,10 @@ const LEGACY_WITHDRAW_RULES = [
   'চার্জ যাচাই হলে {time} এর মধ্যে টাকা পাঠানো হবে',
 ].join('\n');
 
+/** Payout time, before it was cut to five minutes. englishCopy has already
+    turned a stored ২৪ ঘন্টা into this by the time merge sees it. */
+const LEGACY_PROCESSING_TIME = '24 hours';
+
 function merge(partial: Partial<CashierConfig>): CashierConfig {
   const deposit = { ...CASHIER_DEFAULTS.deposit, ...(partial.deposit ?? {}) };
   const withdraw = { ...CASHIER_DEFAULTS.withdraw, ...(partial.withdraw ?? {}) };
@@ -291,6 +295,11 @@ function merge(partial: Partial<CashierConfig>): CashierConfig {
         withdraw.rules,
         LEGACY_WITHDRAW_RULES,
         CASHIER_DEFAULTS.withdraw.rules,
+      ),
+      processingTime: supersededDefault(
+        withdraw.processingTime,
+        LEGACY_PROCESSING_TIME,
+        CASHIER_DEFAULTS.withdraw.processingTime,
       ),
     },
     updatedAt: partial.updatedAt ?? null,
