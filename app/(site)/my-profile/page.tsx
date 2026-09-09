@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
-import Field from '@/components/Field';
 import PageHeader from '@/components/PageHeader';
 import { useUI } from '@/components/UIProvider';
 import { t } from '@/lib/strings';
@@ -17,7 +16,6 @@ export default function MyProfilePage() {
   const { toast } = useUI();
   const { ready, session, profile, supabase, refresh } = useAuth();
   const [name, setName] = useState('');
-  const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
@@ -56,76 +54,62 @@ export default function MyProfilePage() {
 
     if (error) { setErr('Could not change the name — try again'); return; }
     await refresh();
-    setEditing(false);
     toast('Name changed');
   };
 
   return (
     <>
-      <PageHeader title="My Profile" />
+      <PageHeader title="My Account" />
 
-      <div className="profile">
-        <i className="profile__av" aria-hidden>👤</i>
-        <div style={{ minWidth: 0 }}>
-          <div className="profile__n">
-            {signedIn ? (profile?.display_name || profile?.phone || 'Player') : 'Guest'}
+      <div className="ma">
+        <p className="ma__user">Username: <b>{signedIn ? profile?.phone ?? '—' : 'Guest'}</b></p>
+
+        {!signedIn && ready && (
+          <div className="wallet-bar" style={{ margin: '0 0 12px' }}>
+            <Link href="/login" className="btn btn--ghost" style={{ padding: 12 }}>{t.login}</Link>
+            <Link href="/register" className="btn btn--gold" style={{ padding: 12 }}>{t.register}</Link>
           </div>
-          <div className="profile__id">
-            {signedIn ? `VIP ${profile?.vip_level ?? 0}` : 'Log in to see your details'}
-          </div>
+        )}
+
+        {/* The one field on this screen a player owns. The reference asks for
+            a Facebook, a Google, a WhatsApp, an email and a second phone as
+            well; `profiles` has nowhere to put any of them, and a box that
+            forgets what it was told is worse than no box, so they are not
+            drawn until there is a column behind them. */}
+        <label className="ma__field">
+          <span aria-hidden>✎</span>
+          <input
+            value={name}
+            onChange={(e) => { setName(e.target.value); setErr(''); }}
+            placeholder="Please fill in Nickname"
+            maxLength={40}
+            disabled={!signedIn}
+          />
+        </label>
+        {err && <p className="ma__err">{err}</p>}
+
+        {/* what the account is, as it stands — set by the system, not here */}
+        <div className="ma__facts">
+          {rows.slice(1).map(([k, v]) => (
+            <div key={k}><span>{k}</span><b>{v}</b></div>
+          ))}
         </div>
+
+        <p className="ma__privacy">We care about your privacy</p>
+        <p className="ma__note">
+          আপনার তথ্য এনক্রিপ্ট করে রাখা হয়। মোবাইল নাম্বার বদলাতে সাপোর্টে যোগাযোগ
+          করুন — ওটাই আপনার লগইন আইডি।
+        </p>
+
+        <button
+          type="button"
+          className="ma__submit"
+          disabled={!signedIn || busy || name.trim() === (profile?.display_name ?? '')}
+          onClick={(e) => void save(e as unknown as React.FormEvent)}
+        >
+          {busy ? 'Saving…' : 'Submit'}
+        </button>
       </div>
-
-      {!signedIn && ready && (
-        <div className="wallet-bar">
-          <Link href="/login" className="btn btn--ghost" style={{ padding: 12 }}>{t.login}</Link>
-          <Link href="/register" className="btn btn--gold" style={{ padding: 12 }}>{t.register}</Link>
-        </div>
-      )}
-
-      <div className="list-card">
-        {rows.map(([k, v]) => (
-          <div key={k} style={{ display: 'flex', padding: '13px 14px', fontSize: 13, borderBottom: '1px solid rgba(255,255,255,.05)' }}>
-            <span style={{ color: 'var(--muted)' }}>{k}</span>
-            <span style={{ marginLeft: 'auto', fontWeight: 700 }}>{v}</span>
-          </div>
-        ))}
-      </div>
-
-      {signedIn && (
-        <div style={{ margin: 12 }}>
-          {editing ? (
-            <form onSubmit={save} noValidate>
-              <Field label="New name" error={err}>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="What you would like to be called"
-                  maxLength={40}
-                  autoFocus
-                />
-              </Field>
-              <div className="wallet-bar" style={{ margin: 0 }}>
-                <button type="button" className="btn btn--ghost" style={{ padding: 12 }}
-                        onClick={() => { setEditing(false); setErr(''); setName(profile?.display_name ?? ''); }}
-                        disabled={busy}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn--gold" style={{ padding: 12 }} disabled={busy}>
-                  {busy ? 'Saving…' : 'Save'}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <button type="button" className="btn btn--gold btn--block" onClick={() => setEditing(true)}>
-              Change name
-            </button>
-          )}
-          <div className="note" style={{ marginTop: 12 }}>
-            To change your mobile number please contact support — the number is your login ID.
-          </div>
-        </div>
-      )}
     </>
   );
 }

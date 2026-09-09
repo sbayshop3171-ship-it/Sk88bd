@@ -103,11 +103,12 @@ export default function SecurityPage() {
         </span>
       </div>
 
-      {score < 100 && (
+      {level !== 'High' && (
         <p className="sc__warn">
           Your account security level is {level}, please improve your safety information
         </p>
       )}
+
 
       <div className="sc__rows">
         {checks.map(([title, sub, ok, href]) => (
@@ -142,16 +143,6 @@ export default function SecurityPage() {
             <span className="arrow" aria-hidden>›</span>
           </Link>
         )}
-        <Link href="/my-profile">
-          <span className="e" aria-hidden>📱</span>
-          Mobile number
-          <span className="arrow" aria-hidden>›</span>
-        </Link>
-        <Link href="/withdraw">
-          <span className="e" aria-hidden>🏦</span>
-          Withdrawal account
-          <span className="arrow" aria-hidden>›</span>
-        </Link>
       </div>
 
       {signedIn && open && (

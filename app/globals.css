@@ -4050,3 +4050,35 @@ body.cz-light .rc__bar{background:rgba(31,36,48,.14)}
 .sc__text b i.is-todo{background:#e5484d}
 .sc__text small{font-size:11.5px;line-height:1.6;color:var(--muted)}
 .sc__chev{color:var(--muted);font-size:19px;line-height:1}
+
+/* ---------- My Account (the details form) ---------- */
+.ma{padding:16px 14px 26px}
+.ma__user{margin:0 0 14px;font-size:15px;color:var(--text)}
+.ma__user b{font-weight:800;margin-left:4px}
+.ma__field{
+  display:flex;align-items:center;gap:11px;margin-bottom:12px;padding:0 14px;
+  border-radius:var(--r-sm);background:#f1f2f4;border:1px solid transparent;
+}
+.ma__field:focus-within{border-color:#2f6fe0;background:#fff}
+.ma__field span{color:var(--muted);font-size:15px}
+.ma__field input{
+  flex:1;min-width:0;padding:15px 0;background:none;border:0;
+  color:var(--text);font-size:14.5px;font-weight:600;font-family:inherit;
+}
+.ma__field input:focus{outline:none}
+.ma__field input::placeholder{color:#a7adb6}
+.ma__field input:disabled{color:var(--muted)}
+.ma__err{margin:-6px 0 12px;font-size:12.5px;font-weight:700;color:#c02626}
+.ma__facts{margin:4px 0 16px;border-radius:var(--r-sm);border:1px solid var(--line);overflow:hidden}
+.ma__facts div{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff}
+.ma__facts div+div{border-top:1px solid var(--line)}
+.ma__facts span{font-size:13px;color:var(--muted)}
+.ma__facts b{margin-left:auto;font-size:13px;font-weight:700;color:var(--text)}
+.ma__privacy{margin:0 0 4px;font-size:14px;font-weight:700;color:#2f6fe0}
+.ma__note{margin:0 0 18px;font-size:12px;line-height:1.8;color:var(--muted)}
+.ma__submit{
+  display:block;width:100%;padding:15px;border-radius:var(--r-sm);
+  background:#f4262c;color:#fff;font-size:15.5px;font-weight:700;
+  box-shadow:0 6px 18px rgba(244,38,44,.28);
+}
+.ma__submit[disabled]{background:#dfe2e6;color:#9aa1a9;box-shadow:none}
