@@ -3777,3 +3777,45 @@ body.cz-light .cz-wallet-row__x{background:#f6f6f6;color:#9a9a9a}
 .br__sum span{font-size:11.5px;color:var(--muted);font-weight:600}
 .br__sum b{font-size:13px;font-weight:800;color:#3fd68b;font-variant-numeric:tabular-nums}
 .br__sum b.is-down{color:#ff8f8f}
+
+/* ---------- Personal Report (Profit and Loss) ---------- */
+.pr__chips{display:flex;gap:8px;padding:12px;border-bottom:1px solid var(--line)}
+.pr__chips button{
+  flex:0 0 auto;padding:8px 15px;border-radius:var(--r-sm);
+  border:1px solid var(--line);background:rgba(0,0,0,.25);
+  font-size:12.5px;font-weight:700;color:var(--muted);
+}
+.pr__chips button.on{background:#2f6fe0;border-color:#2f6fe0;color:#fff}
+.pr__range{
+  flex:0 0 auto;display:flex;align-items:center;gap:5px;padding:7px 10px;
+  border-radius:var(--r-sm);border:1px solid var(--line);background:rgba(0,0,0,.25);
+}
+.pr__range.on{border-color:#2f6fe0}
+.pr__range input{
+  background:none;border:0;color:#fff;font-size:11.5px;font-weight:600;font-family:inherit;
+}
+.pr__range input:focus{outline:none}
+.pr__range em{font-style:normal;color:var(--muted)}
+.pr__table{margin:12px;border-radius:var(--r-md);border:1px solid var(--line);overflow:hidden}
+.pr__table div{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px 14px;background:rgba(255,255,255,.03);
+}
+.pr__table div+div{border-top:1px solid var(--line)}
+.pr__table span{font-size:13px;color:var(--muted);font-weight:600}
+.pr__table b{font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums}
+.pr__table .is-total{background:rgba(255,196,46,.07)}
+.pr__table .is-total span{color:#e8fff9;font-weight:800}
+.pr__note{
+  display:flex;align-items:flex-start;gap:8px;margin:14px 12px 24px;
+  padding:10px 12px;border-radius:var(--r-sm);
+  background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.22);
+  font-size:12px;line-height:1.75;color:#ff9a9a;
+}
+.pr__note i{
+  flex:0 0 17px;width:17px;height:17px;border-radius:50%;background:#e5484d;color:#fff;
+  font-style:normal;font-size:11px;font-weight:900;display:grid;place-items:center;margin-top:1px;
+}
+
+/* the floating rail would sit on top of the betting totals bar */
+body:has(.br__sum) .fabs{bottom:calc(var(--nav-h) + 100px)}
