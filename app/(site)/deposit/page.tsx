@@ -198,7 +198,7 @@ export default function DepositPage() {
           <span className="cz-done__tick" aria-hidden>✓</span>
           <h2>{cfg.successTitle}</h2>
           <p>{cfg.successText}</p>
-          <button type="button" className="btn btn--gold" onClick={resubmit}>Resubmit TrxID</button>
+          <button type="button" className="btn btn--gold" onClick={resubmit}>TrxID আবার দিন</button>
           <div className="cz-done__links">
             <Link href="/deposit-history">View history</Link>
             <Link href="/">Back to home</Link>
@@ -313,7 +313,7 @@ export default function DepositPage() {
             disabled={busy || loadingAccount || !account || (method.trxRequired && !trxOk)}
             onClick={askConfirm}
           >
-            {busy ? 'Sending…' : 'Confirm'}
+            {busy ? 'পাঠানো হচ্ছে…' : 'নিশ্চিত'}
           </button>
 
           {(cfg.cautionTitle || cfg.cautionText) && (
@@ -334,8 +334,8 @@ export default function DepositPage() {
                 {trxClean && <> <b className="cz-modal__trx">{trxClean}</b></>}
               </p>
               <div className="cz-modal__acts">
-                <button type="button" className="btn btn--ghost" onClick={() => setConfirming(false)}>Cancel</button>
-                <button type="button" className="btn btn--gold" onClick={submit}>Confirm</button>
+                <button type="button" className="btn btn--ghost" onClick={() => setConfirming(false)}>বাতিল</button>
+                <button type="button" className="btn btn--gold" onClick={submit}>নিশ্চিত</button>
               </div>
             </div>
           </>

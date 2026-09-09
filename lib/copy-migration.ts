@@ -158,3 +158,70 @@ export function englishCopy<T>(value: T): T {
   }
   return value;
 }
+
+/* ============================================================
+   English → Bangla, for the pay screens only.
+
+   The lobby and the cashier's first step are English, because that is what
+   the reference shows and what players arriving from it expect. The screen
+   where money actually leaves somebody's hand is not: there the reference
+   writes Bangla, and so do we — a warning about losing a deposit has to be
+   read, not decoded.
+
+   This runs after englishCopy on the cashier store, so a server still
+   holding the older Bangla defaults goes Bangla → English → this Bangla and
+   lands on one wording either way. Only strings that were shipped defaults
+   are listed; anything the operator typed is left alone.
+   ============================================================ */
+export const PAY_SCREEN_BANGLA: Record<string, string> = {
+  'This number accepts payments through the selected method only':
+    'এই নাম্বারে শুধুমাত্র ক্যাশআউট গ্রহণ করা হয়',
+  'Do not send more or less': 'কম বা বেশি ক্যাশআউট করবেন না',
+  'If you change the amount you will not be able to receive the credit.':
+    'আপনি যদি টাকার পরিমাণ পরিবর্তন করেন, আপনি ক্রেডিট পেতে সক্ষম হবেন না।',
+  'How to send': 'কিভাবে ক্যাশ আউট করবেন',
+  'Open the app\nPick the menu above\nEnter the number\nEnter the amount\nEnter the reference\nConfirm with your PIN\nCopy the TrxID':
+    'অ্যাপ খুলুন\nউপরের মেনু বেছে নিন\nনাম্বার দিন\nটাকার পরিমাণ দিন\nPIN দিয়ে নিশ্চিত করুন\nTrxID কপি করুন',
+  'Enter the TrxID of your payment': 'ক্যাশআউটের TrxID নাম্বারটি লিখুন',
+  'Click to see how to find your TrxID': 'কিভাবে TrxID পাবেন দেখে নিন',
+  'e.g. 9F2K4L8M': 'TrxID অবশ্যই পূরণ করতে হবে!',
+  Confirm: 'নিশ্চিত করুন',
+  'This order can only be submitted once. Make sure your transaction ID is correct:':
+    'এই অর্ডারটি একবারই জমা দেওয়া যাবে। আপনার লেনদেন আইডি ঠিক আছে কিনা দেখে নিন:',
+  'Caution:': 'সতর্কতাঃ',
+  'The transaction ID must be filled in correctly or the order will fail. Please make sure you sent the money to the number shown here — money sent to any other number cannot be recovered.':
+    'লেনদেন আইডি সঠিকভাবে পূরণ করতে হবে, অন্যথায় অর্ডারটি ব্যর্থ হবে। অনুগ্রহ করে নিশ্চিত হয়ে নিন যে এখানে দেখানো নাম্বারেই টাকা পাঠিয়েছেন — অন্য কোনো নাম্বারে পাঠানো টাকা ফেরত পাওয়ার সুযোগ নেই।',
+  'Submitted successfully!': 'সফলভাবে জমা হয়েছে!',
+  'Your deposit order has been submitted. The system starts verifying it within 5 minutes.':
+    'আপনার ডিপোজিট অর্ডারটি জমা হয়েছে। ৫ মিনিটের মধ্যে যাচাই শুরু হবে।',
+
+  'Withdrawal Summary': 'উত্তোলনের বিবরণ',
+  'Send the charge only to the agent number we give you, otherwise the withdrawal will not go through.':
+    'চার্জটি শুধুমাত্র আমাদের দেওয়া এজেন্ট নাম্বারেই পাঠাবেন, নাহলে উত্তোলনটি হবে না।',
+  'Agent Cash-Out Charge': 'এজেন্ট ক্যাশআউট চার্জ',
+  'Withdrawal Rules': 'উত্তোলনের নিয়ম',
+  'Pay the charge': 'চার্জ পরিশোধ করুন',
+  'Send the charge to the agent number below and enter the TrxID — only then does the withdrawal start processing.':
+    'নিচের এজেন্ট নাম্বারে চার্জটি পাঠিয়ে TrxID দিন — তবেই উত্তোলনটি প্রসেস হবে।',
+  'This number accepts cash out only': 'এই নাম্বারে শুধুমাত্র ক্যাশআউট গ্রহণ করা হয়',
+  'Send exactly this amount — no more, no less': 'ঠিক এই পরিমাণই পাঠান — কম বা বেশি নয়',
+  'Important instructions': 'গুরুত্বপূর্ণ নির্দেশনা',
+  'Enter the TrxID of the charge payment': 'চার্জ পেমেন্টের TrxID নাম্বারটি লিখুন',
+  'The transaction ID must be correct, or the withdrawal is cancelled.':
+    'লেনদেন আইডি সঠিক হতে হবে, নাহলে উত্তোলনটি বাতিল হয়ে যাবে।',
+};
+
+/** Line-for-line, so a multi-line field (the rules, the how-to steps) is
+    swapped whole where it matches and left alone where it does not. */
+export function payScreenBangla<T>(value: T): T {
+  if (typeof value === 'string') {
+    return (PAY_SCREEN_BANGLA[value] ?? value) as unknown as T;
+  }
+  if (Array.isArray(value)) return value.map((v) => payScreenBangla(v)) as unknown as T;
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, payScreenBangla(v)]),
+    ) as T;
+  }
+  return value;
+}

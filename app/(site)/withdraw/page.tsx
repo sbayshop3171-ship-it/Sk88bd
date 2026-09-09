@@ -495,7 +495,7 @@ export default function WithdrawPage() {
           {err.trx && <p className="cz-err">{err.trx}</p>}
 
           <button type="button" className="btn btn--gold cz-confirm" disabled={busy} onClick={() => void confirmCharge()}>
-            {busy ? 'Sending…' : 'Confirm'}
+            {busy ? 'পাঠানো হচ্ছে…' : 'নিশ্চিত'}
           </button>
 
           {cfg.chargeCaution && (

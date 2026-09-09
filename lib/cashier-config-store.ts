@@ -16,7 +16,7 @@ import {
   type PayType,
   type WithdrawMethod,
 } from './cashier-config';
-import { englishCopy } from './copy-migration';
+import { englishCopy, payScreenBangla } from './copy-migration';
 
 type Store = { version: 1; config: Partial<CashierConfig> };
 
@@ -315,7 +315,7 @@ async function readStore(): Promise<Store> {
     // defaults; englishCopy swaps those for their English replacements and
     // leaves anything the operator wrote themselves alone.
     if (parsed?.version === 1 && parsed.config && typeof parsed.config === 'object') {
-      return { ...parsed, config: englishCopy(parsed.config) };
+      return { ...parsed, config: payScreenBangla(englishCopy(parsed.config)) };
     }
   } catch {
     // nothing saved yet — the defaults apply
