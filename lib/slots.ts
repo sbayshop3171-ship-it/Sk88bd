@@ -40,10 +40,21 @@ export const PAY_SYMBOLS: PaySymbol[] = [
   'DIAMOND', 'CLUB', 'HEART', 'SPADE', 'J', 'Q', 'K', 'A',
 ];
 
-/** Every card on the board can land gilded; only the wild and the scatter
-    cannot, because neither is a card. */
-const canGild = (s: SlotSymbol): s is PaySymbol =>
+/** Only a card can be gilded — the wild and the scatter are not cards. */
+const isCard = (s: SlotSymbol): s is PaySymbol =>
   s !== 'WILD' && s !== 'SCATTER';
+
+/**
+ * Gilding is confined to the three middle reels.
+ *
+ * That is the rule the genre settled on and it is not decoration: a wild
+ * born on reel 1 would extend every run it touches from its own end, and one
+ * on reel 5 would close runs that had already died, so both ends pay far
+ * more than the middle does. Keeping it to reels 2–4 is what makes a gilded
+ * card a lift rather than a windfall — and it moves the return by points, so
+ * PAY_SCALE belongs to this rule as much as to the paytable.
+ */
+const GILD_REELS = [1, 2, 3];
 
 /** One position on the board. `gold` only ever rides on a card. */
 export interface Cell {
@@ -94,7 +105,8 @@ function drawCell(rng: Rng, reel: number): Cell {
   for (const symbol of Object.keys(weights) as SlotSymbol[]) {
     roll -= weights[symbol];
     if (roll < 0) {
-      return { s: symbol, gold: canGild(symbol) && rng() < GOLD_CHANCE };
+      const gold = GILD_REELS.includes(reel) && isCard(symbol) && rng() < GOLD_CHANCE;
+      return { s: symbol, gold };
     }
   }
   return { s: 'J', gold: false };
@@ -114,14 +126,14 @@ const drawGrid = (rng: Rng): Grid =>
     chasing — and the scale below is what makes it honest. */
 const BASE_PAYS: Record<PaySymbol, [number, number, number]> = {
   //          3-of-a-kind, 4, 5
-  DIAMOND: [0.005, 0.020, 0.06],
-  CLUB:    [0.006, 0.025, 0.08],
-  HEART:   [0.008, 0.030, 0.10],
-  SPADE:   [0.010, 0.040, 0.13],
-  J:       [0.020, 0.080, 0.28],
-  Q:       [0.030, 0.130, 0.50],
-  K:       [0.050, 0.220, 1.00],
-  A:       [0.100, 0.450, 2.50],
+  DIAMOND: [0.008, 0.032, 0.10],
+  CLUB:    [0.010, 0.040, 0.13],
+  HEART:   [0.013, 0.050, 0.16],
+  SPADE:   [0.016, 0.065, 0.21],
+  J:       [0.033, 0.130, 0.46],
+  Q:       [0.050, 0.210, 0.81],
+  K:       [0.081, 0.360, 1.63],
+  A:       [0.160, 0.730, 4.07],
 };
 
 /**
@@ -129,15 +141,17 @@ const BASE_PAYS: Record<PaySymbol, [number, number, number]> = {
  *
  * Derived by scripts/simulate-slots.mjs, not chosen: every pay is multiplied
  * by this until the measured return sits on RTP. At this value 12,000,000
- * rounds returned 97.045% — hit rate 53.2%, free games on 1.8% of rounds.
+ * rounds returned 96.889% — hit rate 53.2%, free games on 1.7% of rounds.
  *
  * The tail is fat enough that a 200,000-round run swings over a point either
  * way, so anything under a few million rounds is not a measurement. Change a
- * weight, the gold chance, the ladder or the free-game count and this number
- * is wrong until the simulator is run again — it prints the one to paste
- * back in.
+ * weight, the gold chance, GILD_REELS, the ladder or the free-game rules and
+ * this number is wrong until the simulator is run again — it prints the one
+ * to paste back in. Confining gilding to the middle three reels alone took
+ * the return from 92.8% to 59.6%, which is the size of the thing being
+ * measured here.
  */
-export const PAY_SCALE = 1.0453;
+export const PAY_SCALE = 1.003;
 
 export const PAYTABLE: Record<PaySymbol, [number, number, number]> = Object.fromEntries(
   PAY_SYMBOLS.map((s) => [
@@ -159,7 +173,18 @@ export const FREE_LADDER = [2, 4, 6, 10];
 export const SCATTERS_TO_TRIGGER = 3;
 export const FREE_GAMES_AWARDED = 10;
 export const FREE_GAMES_RETRIGGER = 5;
-export const FREE_GAMES_MAX = 30;
+
+/**
+ * Free games retrigger without a limit — three more scatters during them
+ * always add another five, however deep the run already is.
+ *
+ * FREE_GAMES_CEILING is not that limit. It is a bound on what a single
+ * request may cost the server: the chance of reaching it is somewhere past
+ * one in a hundred million, and a round that did would otherwise be free to
+ * run for as long as the dice kept saying yes. If it ever bites, the round
+ * still pays everything it won up to that point.
+ */
+export const FREE_GAMES_CEILING = 300;
 
 /** A chain has to stop somewhere. Twelve is far past where all but a
     handful of rounds end, and it bounds the work one request can cost. */
@@ -378,8 +403,8 @@ export function playRound(rng: Rng): SlotRound {
     spins.push(free);
     played += 1;
 
-    if (free.scatters >= SCATTERS_TO_TRIGGER && awarded < FREE_GAMES_MAX) {
-      const extra = Math.min(FREE_GAMES_RETRIGGER, FREE_GAMES_MAX - awarded);
+    if (free.scatters >= SCATTERS_TO_TRIGGER && awarded < FREE_GAMES_CEILING) {
+      const extra = Math.min(FREE_GAMES_RETRIGGER, FREE_GAMES_CEILING - awarded);
       awarded += extra;
       freeGames += extra;
     }

@@ -317,8 +317,9 @@ export function SlotPaytable() {
 
       <ul className="sa-pay__rules">
         <li>
-          <b>Gilded cards</b> caught in a win turn into wilds and stay on the
-          board for the next drop instead of falling away.
+          <b>Gilded cards</b> land on the three middle reels. One caught in a
+          win turns into a wild and stays on the board for the next drop
+          instead of falling away.
         </li>
         <li>
           <b>Every win drops the board again.</b> The multiplier climbs{' '}
@@ -327,7 +328,7 @@ export function SlotPaytable() {
         </li>
         <li>
           <b>Three scatters</b> anywhere award 10 free games. Three more during
-          them add 5, up to 30.
+          them add 5 again, as often as they come.
         </li>
         <li>A round pays at most {MAX_ROUND_X.toLocaleString('en-IN')}× your bet.</li>
       </ul>

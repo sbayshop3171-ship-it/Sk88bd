@@ -226,15 +226,42 @@ const Joker = () => (
   </>
 );
 
+/**
+ * The scatter. It is the one card on the board that is not read as part of
+ * a run, so it has to be told apart from twenty other cards at a glance and
+ * from across a chain of drops — hence the rays, the gold rim and the word
+ * itself. The artwork is ours, like the rest of the deck.
+ */
 const Scatter = () => (
   <>
+    <defs>
+      <radialGradient id="sa-burst">
+        <stop offset="0%" stopColor="#fff6c9" stopOpacity=".95" />
+        <stop offset="100%" stopColor="#ffb32e" stopOpacity="0" />
+      </radialGradient>
+      <linearGradient id="sa-star" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stopColor="#fff3b0" />
+        <stop offset="55%" stopColor="#ffc42e" />
+        <stop offset="100%" stopColor="#d98800" />
+      </linearGradient>
+    </defs>
+
+    <circle cx="50" cy="46" r="34" fill="url(#sa-burst)" />
+    {/* rays, so it reads as a scatter and not a decorated ace */}
+    <g stroke="#ffd35c" strokeWidth="2.5" strokeLinecap="round" opacity=".8">
+      <path d="M50 12v-4M50 80v4M18 46h-4M82 46h4M27 23l-3-3M73 23l3-3M27 69l-3 3M73 69l3 3" />
+    </g>
+
     <path
-      d="M50 16 59 40 84 42 65 58 71 82 50 68 29 82 35 58 16 42 41 40Z"
-      fill="#ffc42e" stroke="#8a5a00" strokeWidth="2.5" strokeLinejoin="round"
+      d="M50 18 58 39 81 41 63 55 69 78 50 65 31 78 37 55 19 41 42 39Z"
+      fill="url(#sa-star)" stroke="#8a5a00" strokeWidth="2.5" strokeLinejoin="round"
     />
+
+    <rect x="20" y="80" width="60" height="14" rx="4" fill="#3a0d0b" />
+    <rect x="20" y="80" width="60" height="14" rx="4" fill="none" stroke="#ffc42e" strokeWidth="1.6" />
     <text
-      x="50" y="90" textAnchor="middle" fontSize="10" fontWeight="900"
-      fontFamily="Georgia, 'Times New Roman', serif" fill="#ffd35c" letterSpacing="1"
+      x="50" y="90.5" textAnchor="middle" fontSize="9.5" fontWeight="900"
+      fontFamily="Georgia, 'Times New Roman', serif" fill="#ffd35c" letterSpacing="1.2"
     >
       SCATTER
     </text>
