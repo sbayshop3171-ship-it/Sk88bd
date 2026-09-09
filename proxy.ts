@@ -38,10 +38,17 @@ export function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-/** Serve an /admin route while the browser keeps the address it asked for. */
+/** Serve an /admin route while the browser keeps the address it asked for.
+
+    The destination is built by cloning `nextUrl`, not from `request.url`:
+    behind nginx the latter is http://127.0.0.1:3251/…, so `new URL()` on it
+    produced an absolute address on another origin. Next read that as an
+    external proxy target and the edge answered 500 — while the origin,
+    asked directly, was fine. `nextUrl.clone()` keeps the deployment's own
+    origin and carries the query string with it. */
 function panel(request: NextRequest, destination: string) {
-  const url = new URL(destination, request.url);
-  url.search = request.nextUrl.search;
+  const url = request.nextUrl.clone();
+  url.pathname = destination;
 
   const headers = new Headers(request.headers);
   headers.set(PANEL_BASE_HEADER, '/agent');
