@@ -859,17 +859,18 @@ ul{margin:0;padding:0;list-style:none}
 /* ---------- flight stage ---------- */
 .av-stage{
   position:relative;margin:8px 12px 0;border-radius:var(--r-lg);overflow:hidden;
-  aspect-ratio:16/8.6;
+  /* Taller than it was: 16/8.6 cropped the sky to a letterbox, and the
+     SVG behind it is 100x62 — 16/10 sits almost exactly on that, so the
+     board gains height downward and the plane stops being stretched
+     sideways to fill it. */
+  aspect-ratio:16/10;
   background:#08080d;
   border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow);
 }
 .av-stage__sky{position:absolute;inset:0;width:100%;height:100%}
-.av-stage--crashed{border-color:rgba(255,77,79,.55);animation:av-shake .32s ease-out}
-@keyframes av-shake{
-  0%,100%{transform:translateX(0)}
-  25%{transform:translateX(-3px)}
-  60%{transform:translateX(2px)}
-}
+/* The bust used to jolt the whole frame sideways and wash the border red.
+   The blast already says what happened, at the point where it happened; the
+   board itself has no reason to react. */
 
 /* --- the aircraft --- */
 /* SVG transforms need an explicit box before transform-origin means anything */
@@ -1744,7 +1745,6 @@ body:has(.gpv) .refer-bubble{display:none}
 .av-stage__crowd i:nth-child(2){background:radial-gradient(circle at 35% 35%,#ffc36b,#b3601a)}
 .av-stage__crowd i:nth-child(3){background:radial-gradient(circle at 35% 35%,#7fc8ff,#1f5a9a)}
 .av-stage__crowd b{margin-left:11px;font-size:12px;font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
-.av-skin .av-stage--crashed{border-color:var(--kill-hi)}
 .av-skin .av-stage__fair{color:#7de3c6}
 
 /* the plane: idle bob, cruise float, tumble on a bust */

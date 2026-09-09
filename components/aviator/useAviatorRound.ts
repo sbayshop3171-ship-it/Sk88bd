@@ -12,6 +12,15 @@ import {
 } from '@/lib/aviator';
 
 const BACKEND_POLL_MS = 2_000;
+/* Every poll measures the server clock afresh, and that measurement carries
+   the round trip with it — so the raw figure moves by tens of milliseconds
+   from one poll to the next. Assigning it outright stepped the whole flight
+   sideways twice a second, which is what read as the plane shaking. The
+   offset is now a target the live one eases toward, a fraction of the gap per
+   frame; a difference too large to be jitter is a real clock correction and
+   is taken at once. */
+const OFFSET_SNAP_MS = 1_500;
+const OFFSET_EASE = 0.02;
 
 export interface HistoryEntry {
   id: number;
@@ -93,6 +102,8 @@ export function useAviatorRound(clientSeed: string, onCrash?: (crashAt: number) 
     let localMode = false;
     let backend: BackendPayload | null = null;
     let serverOffset = 0;
+    let offsetTarget = 0;
+    let offsetReady = false;
     let pollTimer: ReturnType<typeof setInterval> | null = null;
     let localId = 1;
     let notifiedCrashId = 0;
@@ -170,7 +181,11 @@ export function useAviatorRound(clientSeed: string, onCrash?: (crashAt: number) 
         const payload = (await res.json()) as BackendPayload;
         if (!payload.ok || !payload.round) throw new Error('round api empty');
         backend = payload;
-        serverOffset = Date.parse(payload.serverTime) - Date.now();
+        offsetTarget = Date.parse(payload.serverTime) - Date.now();
+        if (!offsetReady) {
+          serverOffset = offsetTarget;
+          offsetReady = true;
+        }
       } catch {
         startLocalFallback();
       }
@@ -178,6 +193,11 @@ export function useAviatorRound(clientSeed: string, onCrash?: (crashAt: number) 
 
     const tickBackend = () => {
       if (cancelled || localMode) return;
+      if (Math.abs(offsetTarget - serverOffset) > OFFSET_SNAP_MS) {
+        serverOffset = offsetTarget;
+      } else {
+        serverOffset += (offsetTarget - serverOffset) * OFFSET_EASE;
+      }
       if (backend?.round) {
         const next = stateFromBackend(backend, Date.now() + serverOffset);
         setState(next);

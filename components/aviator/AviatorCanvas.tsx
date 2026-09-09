@@ -15,9 +15,9 @@ const CRUISE_AT = 2.4;
 
 /** the cruise ride: how far the plane (and the line's tip) swell, how fast,
     and how much the nose pitches with it */
-const BOB_AMPLITUDE = 3.2;
-const BOB_PERIOD_MS = 2600;
-const BOB_PITCH_DEG = 1.4;
+const BOB_AMPLITUDE = 2.2;
+const BOB_PERIOD_MS = 3400;
+const BOB_PITCH_DEG = 0.8;
 
 /** 0 on the runway, 1 once the nose reaches cruise — eased out, so the
     plane leaps off the corner and settles rather than crawling up. */
