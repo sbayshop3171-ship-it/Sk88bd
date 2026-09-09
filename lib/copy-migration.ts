@@ -192,6 +192,12 @@ export const PAY_SCREEN_BANGLA: Record<string, string> = {
   'The transaction ID must be filled in correctly or the order will fail. Please make sure you sent the money to the number shown here — money sent to any other number cannot be recovered.':
     'লেনদেন আইডি সঠিকভাবে পূরণ করতে হবে, অন্যথায় অর্ডারটি ব্যর্থ হবে। অনুগ্রহ করে নিশ্চিত হয়ে নিন যে এখানে দেখানো নাম্বারেই টাকা পাঠিয়েছেন — অন্য কোনো নাম্বারে পাঠানো টাকা ফেরত পাওয়ার সুযোগ নেই।',
   'Submitted successfully!': 'সফলভাবে জমা হয়েছে!',
+
+  // Step one, but it is the warning that decides whether a player loses a
+  // deposit by sending the wrong amount — so it reads in their language.
+  'Minimum deposit {min}': 'সর্বনিম্ন ডিপোজিট {min}',
+  'Do not send less than {min} in one transaction. Anything below that is not credited to your account and cannot be refunded. The most you can send at once is {max}.':
+    'একবারে {min} টাকার কম পাঠাবেন না। এর চেয়ে কম পাঠালে সেই টাকা অ্যাকাউন্টে যোগ করা হবে না এবং ফেরতও দেওয়া হবে না। একবারে সর্বোচ্চ {max} পাঠানো যাবে।',
   'Your deposit order has been submitted. The system starts verifying it within 5 minutes.':
     'আপনার ডিপোজিট অর্ডারটি জমা হয়েছে। ৫ মিনিটের মধ্যে যাচাই শুরু হবে।',
 

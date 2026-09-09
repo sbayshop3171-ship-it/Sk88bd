@@ -237,8 +237,8 @@ export const CASHIER_DEFAULTS: CashierConfig = {
     successText: 'আপনার ডিপোজিট অর্ডারটি জমা হয়েছে। ৫ মিনিটের মধ্যে যাচাই শুরু হবে।',
     promoTitle: 'Promotion',
     promoText: '',
-    noticeTitle: 'Minimum deposit {min}',
-    noticeText: 'Do not send less than {min} in one transaction. Anything below that is not credited to your account and cannot be refunded. The most you can send at once is {max}.',
+    noticeTitle: 'সর্বনিম্ন ডিপোজিট {min}',
+    noticeText: 'একবারে {min} টাকার কম পাঠাবেন না। এর চেয়ে কম পাঠালে সেই টাকা অ্যাকাউন্টে যোগ করা হবে না এবং ফেরতও দেওয়া হবে না। একবারে সর্বোচ্চ {max} পাঠানো যাবে।',
   },
   withdraw: {
     methods: WITHDRAW_CHANNELS.map((c) => ({
