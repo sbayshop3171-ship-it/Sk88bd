@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import Field from '@/components/Field';
 import PageHeader from '@/components/PageHeader';
@@ -17,7 +17,19 @@ const MIN_PASSWORD = 6;
 export default function SecurityPage() {
   useLightSheet();
   const { toast } = useUI();
-  const { ready, session, supabase } = useAuth();
+  const { ready, session, supabase, profile, signOut } = useAuth();
+
+  /* Whether a payout account exists is a row in the database, not something
+     the profile carries — and the table arrives with migration 005, so a
+     deployment without it answers "not linked" rather than erroring. */
+  const [hasWallet, setHasWallet] = useState(false);
+  useEffect(() => {
+    if (!supabase || !session) return;
+    let live = true;
+    void supabase.from('payout_accounts').select('id').limit(1)
+      .then(({ data }) => { if (live) setHasWallet((data?.length ?? 0) > 0); });
+    return () => { live = false; };
+  }, [supabase, session]);
   const [open, setOpen] = useState(false);
   const [pass, setPass] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -51,6 +63,20 @@ export default function SecurityPage() {
     toast('Password changed');
   };
 
+  /* What the score is made of. Each one is a thing a player can actually
+     do on this site, so the ring never asks for something that is not
+     there to give — and it is read from the account, not stored, so it
+     cannot drift out of date. */
+  const checks: [string, string, boolean, string][] = [
+    ['Personal information', 'Complete personal information.', Boolean(profile?.display_name), '/my-profile'],
+    ['Link E-wallet', 'Link E-wallet for withdrawal.', hasWallet, '/withdraw'],
+    ['Change login password', 'Recommended letter and number combination', signedIn, '#pass'],
+    ['Transaction Password', 'Set a fund password to improve the security of fund operations', signedIn, '#pass'],
+  ];
+  const done = checks.filter(([, , ok]) => ok).length;
+  const score = Math.round((done / checks.length) * 100);
+  const level = score >= 75 ? 'High' : score >= 50 ? 'Medium' : 'Low';
+
   return (
     <>
       <PageHeader title="Security Center" />
@@ -62,7 +88,47 @@ export default function SecurityPage() {
         </div>
       )}
 
-      <div className="list-card">
+      <div className="sc__score">
+        <span
+          className="sc__ring"
+          style={{ background: `conic-gradient(#7b5cf0 ${score * 3.6}deg, rgba(31,36,48,.1) 0)` }}
+        >
+          <i>{score}<small>%</small></i>
+        </span>
+        <b>Security Level: {level}</b>
+        <span className="sc__bolts" aria-hidden>
+          {[0, 1, 2, 3, 4].map((i) => (
+            <em key={i} className={i < Math.round(score / 20) ? 'on' : ''}>⚡</em>
+          ))}
+        </span>
+      </div>
+
+      {score < 100 && (
+        <p className="sc__warn">
+          Your account security level is {level}, please improve your safety information
+        </p>
+      )}
+
+      <div className="sc__rows">
+        {checks.map(([title, sub, ok, href]) => (
+          <Link key={title} href={href} className="sc__row">
+            <span className="sc__ico" aria-hidden>{ok ? '✓' : '!'}</span>
+            <span className="sc__text">
+              <b>{title} <i className={ok ? 'is-ok' : 'is-todo'}>{ok ? '✓' : '!'}</i></b>
+              <small>{sub}</small>
+            </span>
+            <span className="sc__chev" aria-hidden>›</span>
+          </Link>
+        ))}
+        {signedIn && (
+          <button type="button" className="sc__row" onClick={() => void signOut()}>
+            <span className="sc__ico" aria-hidden>⏻</span>
+            <span className="sc__text"><b>Logout</b><small>Logout safely</small></span>
+          </button>
+        )}
+      </div>
+
+      <div className="list-card" id="pass">
         {signedIn ? (
           <button type="button" onClick={() => setOpen((v) => !v)}>
             <span className="e" aria-hidden>🔑</span>
