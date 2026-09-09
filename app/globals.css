@@ -3488,3 +3488,10 @@ body.cz-light .cz-field>span{
 body.cz-light .cz-field input{padding:14px 0;font-size:15px;font-weight:400}
 body.cz-light .cz-field input::placeholder{color:#b7b7b7}
 body.cz-light .cz-field__eye{display:grid;place-items:center;color:#9a9a9a;background:none}
+
+/* a linked wallet, and the room the add button needs under the last one */
+body.cz-light .cz-wallets__list{margin-bottom:22px}
+body.cz-light .cz-wallet-row{padding:12px 14px;border-radius:6px;border-color:#e8e8e8}
+body.cz-light .cz-wallet-row.on{border-color:#ec2529;background:#fff}
+body.cz-light .cz-wallet-row input{accent-color:#ec2529}
+body.cz-light .cz-wallet-row__x{background:#f6f6f6;color:#9a9a9a}
