@@ -1,30 +1,53 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
+import { CopyIcon, FacebookIcon, TelegramIcon, WhatsAppIcon } from '@/components/Icons';
 import PageHeader from '@/components/PageHeader';
+import { useLedger } from '@/components/useLedger';
+import { useLightSheet } from '@/components/useLightSheet';
 import { useUI } from '@/components/UIProvider';
 import { toTaka } from '@/lib/auth';
 import { BRAND, money } from '@/lib/brand';
+import { VIP_TIERS } from '@/lib/promotions';
 import { t } from '@/lib/strings';
-import { useLightSheet } from '@/components/useLightSheet';
 
-const STEPS: [string, string][] = [
-  ['1', 'Share your referral link with friends'],
-  ['2', 'Your friend registers and makes a deposit'],
-  ['3', 'The more they play, the more commission you earn — for life'],
-];
+/* ============================================================
+   Invite Friends.
+
+   The reference opens on four figures, the link with the ways to
+   send it, and the table of what each VIP level is paid — in that
+   order, because that is the order somebody deciding whether to
+   share it reads them in.
+
+   The two income figures are the wallet's bonus and rebate
+   credits for those days. That is how a referrer is actually
+   paid here, so it is the true answer to "what did this earn me
+   today" — and it is read from the ledger rather than kept
+   anywhere, so it cannot disagree with the statement.
+   ============================================================ */
 
 type Stats = { total: number; active: number; commission: number };
 
-/** The player's own referral code, as a link that lands on /register with
-    the code filled in, plus how many people came through it. */
+type Tab = 'overview' | 'rewards';
+
+const dayOf = (d: Date) =>
+  new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+
+const shift = (days: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return dayOf(d);
+};
+
 export default function ReferPage() {
   useLightSheet();
   const { toast } = useUI();
   const { ready, session, profile } = useAuth();
+  const { rows } = useLedger(500);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [tab, setTab] = useState<Tab>('overview');
 
   const signedIn = ready && Boolean(session);
   const code = profile?.referral_code ?? '';
@@ -39,70 +62,103 @@ export default function ReferPage() {
     let live = true;
     fetch('/api/me/referrals', { cache: 'no-store' })
       .then((r) => r.json())
-      .then((d: { ok: true } & Stats | { ok: false }) => { if (live && d.ok) setStats(d); })
+      .then((d: ({ ok: true } & Stats) | { ok: false }) => { if (live && d.ok) setStats(d); })
       .catch(() => { /* keep zeros */ });
     return () => { live = false; };
   }, [session]);
 
+  const income = useMemo(() => {
+    const on = (day: string) => (rows ?? [])
+      .filter((r) => (r.kind === 'bonus' || r.kind === 'rebate') && r.created_at.slice(0, 10) === day)
+      .reduce((n, r) => n + r.amount, 0);
+    return { today: on(dayOf(new Date())), yesterday: on(shift(-1)) };
+  }, [rows]);
+
   const copy = async (text: string, what: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast(`${what} copied`);
+      toast(`${what} কপি হয়েছে`);
     } catch {
-      toast('Could not copy — copy it manually');
+      toast('কপি করা গেল না — হাতে কপি করুন');
     }
   };
 
+  const share = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
+  const msg = encodeURIComponent(`${BRAND.name} এ খেলুন — আমার লিংক দিয়ে রেজিস্টার করুন: ${link}`);
+
   return (
     <>
-      <PageHeader title="Refer & Commission" />
+      <PageHeader title="Invite Friends" />
 
-      <div className="hero">
-        <h1>Up to 40% commission</h1>
-        <p>Bring a friend, earn commission for life</p>
+      <div className="iv__tabs">
+        <button type="button" className={tab === 'overview' ? 'on' : ''} onClick={() => setTab('overview')}>Overview</button>
+        <button type="button" className={tab === 'rewards' ? 'on' : ''} onClick={() => setTab('rewards')}>Rewards</button>
       </div>
 
-      <div className="stat">
-        <div><b>{stats?.total ?? 0}</b><small>Total referrals</small></div>
-        <div><b>{stats?.active ?? 0}</b><small>Active referrals</small></div>
-        <div><b>{money(toTaka(stats?.commission ?? 0))}</b><small>Total commission</small></div>
-      </div>
-
-      {signedIn ? (
-        <div className="field" style={{ margin: 12 }}>
-          <label>Your referral code</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input readOnly value={code} onFocus={(e) => e.currentTarget.select()} />
-            <button className="btn btn--ghost" type="button" onClick={() => copy(code, 'Code')}>Copy</button>
+      {tab === 'overview' ? (
+        <div className="iv">
+          <div className="iv__tiles">
+            <div className="is-blue"><small>Today&apos;s Income</small><b>{money(toTaka(income.today))}</b></div>
+            <div className="is-violet"><small>Yesterday&apos;s Income</small><b>{money(toTaka(income.yesterday))}</b></div>
+            <div className="is-violet"><small>Registers</small><b>{stats?.total ?? 0}</b></div>
+            <div className="is-blue"><small>Valid Referral</small><b>{stats?.active ?? 0}</b></div>
           </div>
-          <label style={{ marginTop: 12 }}>Your referral link</label>
-          <input readOnly value={link} onFocus={(e) => e.currentTarget.select()} />
-          <button className="btn btn--gold btn--block" style={{ marginTop: 10 }} type="button"
-                  onClick={() => copy(link, 'Link')}>
-            Copy link
-          </button>
+
+          {signedIn ? (
+            <div className="iv__share">
+              <b>Share with your friends</b>
+              <div className="iv__link">
+                <input readOnly value={link} onFocus={(e) => e.currentTarget.select()} />
+                <button type="button" onClick={() => copy(link, 'লিংক')} aria-label="Copy link"><CopyIcon /></button>
+              </div>
+              <div className="iv__btns">
+                <button type="button" className="is-fb" onClick={() => share(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`)} aria-label="Facebook"><FacebookIcon /></button>
+                <button type="button" className="is-tg" onClick={() => share(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${msg}`)} aria-label="Telegram"><TelegramIcon /></button>
+                <button type="button" className="is-wa" onClick={() => share(`https://wa.me/?text=${msg}`)} aria-label="WhatsApp"><WhatsAppIcon /></button>
+                <button type="button" className="is-code" onClick={() => copy(code, 'কোড')}>{code || '—'}</button>
+              </div>
+            </div>
+          ) : ready && (
+            <div className="wallet-bar">
+              <Link href="/login" className="btn btn--ghost" style={{ padding: 12 }}>{t.login}</Link>
+              <Link href="/register" className="btn btn--gold" style={{ padding: 12 }}>{t.register}</Link>
+            </div>
+          )}
+
+          <p className="iv__head">একজনকে আনলে <b>৳{VIP_TIERS.length * 200}</b> পর্যন্ত আয়</p>
+          <p className="iv__line">নিচের স্তরের ডিপোজিটে <b>2.2%</b> আয়</p>
+          <p className="iv__line">নিচের স্তরের প্রতিটি বাজিতে <b>1%</b> আয়</p>
         </div>
-      ) : ready && (
-        <div className="wallet-bar">
-          <Link href="/login" className="btn btn--ghost" style={{ padding: 12 }}>{t.login}</Link>
-          <Link href="/register" className="btn btn--gold" style={{ padding: 12 }}>{t.register}</Link>
+      ) : (
+        <div className="iv">
+          <table className="iv__table">
+            <thead>
+              <tr>
+                <th>Inviter VIP level</th>
+                <th>Referral bonus/person</th>
+                <th>How to get it?</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>VIP0</td>
+                <td>৳100</td>
+                <td>ডিপোজিট ৳100 ও বাজি ৳2,000</td>
+              </tr>
+              {VIP_TIERS.map((v, i) => (
+                <tr key={v.level}>
+                  <td>{v.level.replace(' ', '')}</td>
+                  <td>৳{(150 + i * 50).toLocaleString('en-IN')}</td>
+                  <td>ডিপোজিট ৳100 ও বাজি ৳2,000</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="iv__note">
+            বন্ধু রেজিস্টার করার পর উপরের শর্ত পূরণ করলে বোনাসটি আপনার ওয়ালেটে যোগ হবে।
+          </p>
         </div>
       )}
-
-      <div className="list-card">
-        {STEPS.map(([n, text]) => (
-          <div key={n} style={{ display: 'flex', gap: 11, padding: '13px 14px', fontSize: 13, borderBottom: '1px solid rgba(255,255,255,.05)' }}>
-            <span className="winners__rank">{n}</span>
-            <span>{text}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="note" style={{ margin: 12 }}>
-        {signedIn
-          ? 'When a friend registers through your link the code fills itself in.'
-          : 'Log in and your own code and link show up here.'}
-      </div>
     </>
   );
 }
