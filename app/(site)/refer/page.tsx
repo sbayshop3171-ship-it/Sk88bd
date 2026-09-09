@@ -8,6 +8,7 @@ import { useUI } from '@/components/UIProvider';
 import { toTaka } from '@/lib/auth';
 import { BRAND, money } from '@/lib/brand';
 import { t } from '@/lib/strings';
+import { useLightSheet } from '@/components/useLightSheet';
 
 const STEPS: [string, string][] = [
   ['1', 'Share your referral link with friends'],
@@ -20,6 +21,7 @@ type Stats = { total: number; active: number; commission: number };
 /** The player's own referral code, as a link that lands on /register with
     the code filled in, plus how many people came through it. */
 export default function ReferPage() {
+  useLightSheet();
   const { toast } = useUI();
   const { ready, session, profile } = useAuth();
   const [stats, setStats] = useState<Stats | null>(null);

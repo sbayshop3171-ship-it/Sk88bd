@@ -7,6 +7,7 @@ import Field from '@/components/Field';
 import PageHeader from '@/components/PageHeader';
 import { useUI } from '@/components/UIProvider';
 import { t } from '@/lib/strings';
+import { useLightSheet } from '@/components/useLightSheet';
 
 const MIN_PASSWORD = 6;
 
@@ -14,6 +15,7 @@ const MIN_PASSWORD = 6;
     screens. Supabase Auth does the actual change; the session it hands back
     stays valid, so the player is not logged out afterwards. */
 export default function SecurityPage() {
+  useLightSheet();
   const { toast } = useUI();
   const { ready, session, supabase } = useAuth();
   const [open, setOpen] = useState(false);

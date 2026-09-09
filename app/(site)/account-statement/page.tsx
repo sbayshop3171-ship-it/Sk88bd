@@ -7,10 +7,12 @@ import { KIND_LABEL, useLedger, when } from '@/components/useLedger';
 import { toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import { t } from '@/lib/strings';
+import { useLightSheet } from '@/components/useLightSheet';
 
 /** Every movement on the wallet, newest first, with the balance it left
     behind — the same rows the admin sees, read through RLS as the player. */
 export default function AccountStatementPage() {
+  useLightSheet();
   const { ready, signedIn, rows } = useLedger(300);
 
   return (

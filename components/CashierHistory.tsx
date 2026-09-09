@@ -6,6 +6,7 @@ import { useAuth } from './AuthProvider';
 import Empty from './Empty';
 import { CopyIcon } from './Icons';
 import { useUI } from './UIProvider';
+import { useLightSheet } from './useLightSheet';
 import { toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import { KIND_LABEL } from '@/lib/payment-accounts';
@@ -67,6 +68,7 @@ export default function CashierHistory({
   emptyText: string;
   glyph: string;
 }) {
+  useLightSheet();
   const { ready, backendReady, session, supabase } = useAuth();
   const { toast } = useUI();
   const [rows, setRows] = useState<Row[] | null>(null);

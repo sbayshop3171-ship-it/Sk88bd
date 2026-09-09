@@ -5,6 +5,7 @@ import { useAuth } from '@/components/AuthProvider';
 import PageHeader from '@/components/PageHeader';
 import { useSiteSettings } from '@/components/useSiteSettings';
 import { useUI } from '@/components/UIProvider';
+import { useLightSheet } from '@/components/useLightSheet';
 
 /* ============================================================
    Complaint / suggestion.
@@ -33,6 +34,7 @@ const ISSUES = [
 const MAX = 500;
 
 export default function SuggestionPage() {
+  useLightSheet();
   const { profile } = useAuth();
   const { support } = useSiteSettings();
   const { toast } = useUI();

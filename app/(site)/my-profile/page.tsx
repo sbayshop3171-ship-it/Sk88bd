@@ -7,11 +7,13 @@ import Field from '@/components/Field';
 import PageHeader from '@/components/PageHeader';
 import { useUI } from '@/components/UIProvider';
 import { t } from '@/lib/strings';
+import { useLightSheet } from '@/components/useLightSheet';
 
 /** The account's own details, and the one thing a player may change here:
     the display name. Everything else (phone, VIP, referral code) is set by
     the system or the admin, so it is shown read-only. */
 export default function MyProfilePage() {
+  useLightSheet();
   const { toast } = useUI();
   const { ready, session, profile, supabase, refresh } = useAuth();
   const [name, setName] = useState('');

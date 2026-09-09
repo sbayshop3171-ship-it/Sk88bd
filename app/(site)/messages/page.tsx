@@ -9,6 +9,7 @@ import {
   type Announcement,
   type AnnouncementInput,
 } from '@/lib/site-content';
+import { useLightSheet } from '@/components/useLightSheet';
 
 /* ============================================================
    Internal Message.
@@ -32,6 +33,7 @@ type Tab = 'inbox' | 'outbox';
 const READ_KEY = 'sk88bd:mail-read';
 
 export default function MessagesPage() {
+  useLightSheet();
   const [cards, setCards] = useState<(AnnouncementInput | Announcement)[]>(DEFAULT_ANNOUNCEMENTS);
   const [tab, setTab] = useState<Tab>('inbox');
   const [read, setRead] = useState<string[]>([]);

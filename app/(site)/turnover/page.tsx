@@ -8,12 +8,14 @@ import { sumKind, useLedger } from '@/components/useLedger';
 import { toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import { t } from '@/lib/strings';
+import { useLightSheet } from '@/components/useLightSheet';
 
 /** Wagering requirement. `turnover_need` is set on the wallet when a bonus is
     granted and `turnover_done` is advanced by bets; both live on the wallet
     row so the header does not have to sum the ledger. Total bet volume comes
     from the ledger for the "so far" figure. */
 export default function TurnoverPage() {
+  useLightSheet();
   const { wallet } = useAuth();
   const { ready, signedIn, rows } = useLedger(1000);
 

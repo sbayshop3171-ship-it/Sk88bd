@@ -9,6 +9,7 @@ import { toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import { findGame } from '@/lib/catalogue';
 import { t } from '@/lib/strings';
+import { useLightSheet } from '@/components/useLightSheet';
 
 /* ============================================================
    Betting Record.
@@ -86,6 +87,7 @@ const dayOf = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60_000
   .toISOString().slice(0, 10);
 
 export default function BetsHistoryPage() {
+  useLightSheet();
   const { ready, signedIn, rows } = useLedger(500);
   const all = useMemo(() => pairBets(rows ?? []), [rows]);
 

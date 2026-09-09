@@ -8,6 +8,7 @@ import { useLedger, type LedgerRow } from '@/components/useLedger';
 import { toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import { t } from '@/lib/strings';
+import { useLightSheet } from '@/components/useLightSheet';
 
 /* ============================================================
    Personal Report — the reference's name for Profit and Loss.
@@ -36,6 +37,7 @@ const shift = (days: number) => {
 };
 
 export default function PersonalReportPage() {
+  useLightSheet();
   const { ready, signedIn, rows } = useLedger(1000);
 
   const today = dayOf(new Date());

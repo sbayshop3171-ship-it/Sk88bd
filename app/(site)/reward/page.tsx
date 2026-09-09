@@ -8,6 +8,7 @@ import { CopyIcon, GiftIcon, MedalIcon, PencilIcon, RefreshIcon, UserIcon, Users
 import { useUI } from '@/components/UIProvider';
 import { toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
+import { useLightSheet } from '@/components/useLightSheet';
 
 /* ============================================================
    Reward Center.
@@ -44,6 +45,7 @@ const TILES: Tile[] = [
 ];
 
 export default function RewardPage() {
+  useLightSheet();
   const { ready, session, profile, wallet, refresh } = useAuth();
   const { toast } = useUI();
   const [spinning, setSpinning] = useState(false);

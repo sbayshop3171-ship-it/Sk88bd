@@ -3866,3 +3866,113 @@ body:has(.br__sum) .fabs{bottom:calc(var(--nav-h) + 100px)}
 .cr__state--pending{color:#ffc42e}
 .cr__state--approved{color:#3fd68b}
 .cr__state--rejected,.cr__state--cancelled{color:#ff8f8f}
+
+/* ============================================================
+   The member area on the white sheet.
+
+   Everything behind My Account is a light screen in the book
+   players arrive from — a record, a report and a receipt are all
+   easier to read on white, and the dark lobby is the exception
+   rather than the rule. `useLightSheet` puts `cz-light` on the
+   body for those pages; the blocks below are the ones that were
+   written against the dark ground and need an ink that carries.
+   ============================================================ */
+
+/* the bar itself: teal band, gold title, centred — the reference's */
+body.cz-light .page-hd{
+  background:#155155;border-bottom:0;height:52px;color:#ffb800;
+}
+body.cz-light .page-hd h1{
+  text-align:center;font-size:18px;font-weight:800;color:#ffb800;
+}
+body.cz-light .page-hd .icon-btn{background:none;color:#ffb800}
+
+/* shared list furniture */
+body.cz-light .hist__row{background:#fff;border-color:var(--line)}
+body.cz-light .hist__main b{color:var(--text)}
+body.cz-light .hist__main b.is-up{color:#12855b}
+body.cz-light .hist__main b.is-down{color:#c02626}
+body.cz-light .hist__state--pending{background:#fff4d6;color:#8a6a12}
+body.cz-light .hist__state--approved{background:#e3f5ef;color:#0d6a58}
+body.cz-light .hist__state--rejected,
+body.cz-light .hist__state--cancelled{background:#fdeaea;color:#c02626}
+body.cz-light .stat div{background:#fff;border-color:var(--line)}
+body.cz-light .stat b{color:#a97400}
+body.cz-light .list-card{background:#fff;border-color:var(--line)}
+body.cz-light .empty{color:var(--muted)}
+body.cz-light .note{background:#fff8e6;border-color:#f0d489;color:#6b5a2e}
+body.cz-light .note a{color:#1f5fbf}
+
+/* Betting Record */
+body.cz-light .br__tabs{background:#fff;border-bottom-color:var(--line)}
+body.cz-light .br__tabs button{color:var(--muted)}
+body.cz-light .br__tabs button.on{color:#ec2529;border-bottom-color:#ec2529}
+body.cz-light .br__filters{border-bottom-color:var(--line)}
+body.cz-light .br__range,
+body.cz-light .br__pick{background:#fff;border-color:var(--line);color:var(--text)}
+body.cz-light .br__range input{color:var(--text)}
+body.cz-light .br__sum{
+  background:#f4f5f7;border-color:var(--line);
+  box-shadow:0 8px 22px rgba(16,24,40,.12);
+}
+body.cz-light .br__sum b{color:#12855b}
+body.cz-light .br__sum b.is-down{color:#c02626}
+
+/* Personal Report */
+body.cz-light .pr__chips{border-bottom-color:var(--line)}
+body.cz-light .pr__chips button{background:#fff;border-color:#cfe0fb;color:#2f6fe0}
+body.cz-light .pr__chips button.on{background:#2f6fe0;border-color:#2f6fe0;color:#fff}
+body.cz-light .pr__range{background:#fff;border-color:#cfe0fb}
+body.cz-light .pr__range input{color:var(--text)}
+body.cz-light .pr__table{border-color:var(--line)}
+body.cz-light .pr__table div{background:#fff}
+body.cz-light .pr__table div+div{border-top-color:var(--line)}
+body.cz-light .pr__table b{color:var(--text)}
+body.cz-light .pr__table .is-total{background:#fff8e6}
+body.cz-light .pr__table .is-total span{color:var(--text)}
+body.cz-light .pr__table b.is-up{color:#12855b}
+body.cz-light .pr__table b.is-down{color:#c02626}
+
+/* Deposit / Withdrawal Record */
+body.cz-light .cr__tabs{background:#fff;border-bottom-color:var(--line)}
+body.cz-light .cr__tabs button{color:var(--muted)}
+body.cz-light .cr__tabs button.on{color:#2f6fe0;border-bottom-color:#2f6fe0}
+body.cz-light .cr__filters{border-bottom-color:var(--line)}
+body.cz-light .cr__filters select,
+body.cz-light .cr__span{background:#fff;border-color:#cfe0fb;color:#2f6fe0}
+body.cz-light .cr__card{background:#fff;border-color:var(--line)}
+body.cz-light .cr__card>header b{color:var(--text)}
+body.cz-light .cr__detail{background:#f4f5f7}
+body.cz-light .cr__detail dd{color:var(--text)}
+body.cz-light .cr__figs b{color:var(--text)}
+body.cz-light .cr__state--pending{color:#8a6a12}
+body.cz-light .cr__state--approved{color:#0d6a58}
+body.cz-light .cr__state--rejected,
+body.cz-light .cr__state--cancelled{color:#c02626}
+
+/* Internal Message */
+body.cz-light .ml__tabs{border-bottom-color:var(--line)}
+body.cz-light .ml__tabs button.on{color:#2f6fe0;border-bottom-color:#2f6fe0}
+body.cz-light .ml__bar,
+body.cz-light .ml__row{border-bottom-color:var(--line)}
+body.cz-light .ml__act{color:#2f6fe0;border-color:#cfe0fb}
+body.cz-light .ml__title{color:var(--text)}
+body.cz-light .ml__check{color:var(--text)}
+
+/* Complaint / suggestion */
+body.cz-light .sg__field select,
+body.cz-light .sg__box{background:#fff;border-color:var(--line)}
+body.cz-light .sg__field select,
+body.cz-light .sg__box b,
+body.cz-light .sg__box textarea{color:var(--text)}
+
+/* Reward Center: the card goes silver, the way the reference has it */
+body.cz-light .rc__card{background:linear-gradient(160deg,#e9ecf1,#d8dde5 70%,#cfd5de)}
+body.cz-light .rc__card .mc__id b,
+body.cz-light .rc__card .mc__bal,
+body.cz-light .rc__vipname{color:#1f2430}
+body.cz-light .rc__card .mc__meta,
+body.cz-light .rc__benefits,
+body.cz-light .rc__barnum{color:#5c6270}
+body.cz-light .rc__card .mc__av{background:rgba(31,36,48,.08);color:#5c6270}
+body.cz-light .rc__bar{background:rgba(31,36,48,.14)}

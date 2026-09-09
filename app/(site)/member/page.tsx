@@ -14,6 +14,7 @@ import {
 import { toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import { t } from '@/lib/strings';
+import { useLightSheet } from '@/components/useLightSheet';
 
 type Tile = {
   icon: React.ComponentType<{ className?: string }>;
@@ -45,6 +46,7 @@ const TILES: Tile[] = [
 ];
 
 export default function MemberPage() {
+  useLightSheet();
   const router = useRouter();
   const { toast } = useUI();
   const { ready, session, profile, wallet, signOut, refresh } = useAuth();
