@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import { useGameGate } from '@/components/GameGate';
 import { useUI } from '@/components/UIProvider';
@@ -48,6 +48,15 @@ export function useMiniGame(game: MiniGameId) {
   const [settledBalance, setSettledBalance] = useState<number | null>(null);
   const balance = settledBalance ?? walletBalance;
 
+  /* Auto-bet fires rounds back to back, and a `play` closure captured before
+     the previous one settled would still be reading the old balance and the
+     old busy flag — it would either refuse a bet the player can afford or let
+     two rounds overlap. These two are written the moment the truth changes,
+     not on the next render, so a loop always sees the current state. */
+  const balanceRef = useRef(balance);
+  balanceRef.current = balance;
+  const busyRef = useRef(false);
+
   const [clientSeed, setClientSeed] = useState('');
   const [stake, setStake] = useState(50);
   const [busy, setBusy] = useState(false);
@@ -90,20 +99,30 @@ export function useMiniGame(game: MiniGameId) {
       | { ok: false; reason: MiniReason };
   }, [game, clientSeed]);
 
-  /** One instant round. Returns the settled result, or null if it was refused. */
-  const play = useCallback(async (terms: Record<string, unknown>): Promise<InstantResult | null> => {
-    if (busy) return null;
+  /**
+   * One instant round. Returns the settled result, or null if it was refused.
+   * `bet` overrides the stake box for this round alone — auto-bet walks the
+   * stake up and down between rounds without waiting for the box to re-render.
+   */
+  const play = useCallback(async (
+    terms: Record<string, unknown>,
+    bet?: number,
+  ): Promise<InstantResult | null> => {
+    if (busyRef.current) return null;
     if (!requireFunds()) return null;
-    if (!Number.isFinite(stake) || stake < MIN_STAKE) { setErr(MINI_ERROR['below-minimum']); return null; }
-    if (stake > MAX_STAKE) { setErr(MINI_ERROR['above-maximum']); return null; }
-    if (stake > balance) { setErr(MINI_ERROR['insufficient-balance']); return null; }
+    const amount = bet ?? stake;
+    if (!Number.isFinite(amount) || amount < MIN_STAKE) { setErr(MINI_ERROR['below-minimum']); return null; }
+    if (amount > MAX_STAKE) { setErr(MINI_ERROR['above-maximum']); return null; }
+    if (amount > balanceRef.current) { setErr(MINI_ERROR['insufficient-balance']); return null; }
 
+    busyRef.current = true;
     setBusy(true);
     setErr('');
     try {
-      const data = await call({ action: 'play', stake: toPaisa(stake), ...terms });
+      const data = await call({ action: 'play', stake: toPaisa(amount), ...terms });
       if (!data.ok) { setErr(MINI_ERROR[data.reason] ?? MINI_ERROR['db-error']); return null; }
       const result = data.result!;
+      balanceRef.current = toTaka(result.balance);
       setSettledBalance(toTaka(result.balance));
       remember(result.multiplier, result.won);
       void refresh();
@@ -112,9 +131,10 @@ export function useMiniGame(game: MiniGameId) {
       setErr(MINI_ERROR['db-error']);
       return null;
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
-  }, [busy, stake, balance, call, remember, refresh, requireFunds]);
+  }, [stake, call, remember, refresh, requireFunds]);
 
   return {
     balance, stake, setStake, busy, setBusy, err, setErr,

@@ -48,13 +48,13 @@ export default function LiveBoard({
   const rows = tab === 1 ? [...seats].sort((a, b) => b.stake - a.stake) : seats;
 
   return (
-    <section className="jx-live">
+    <section className="lb">
       {recent.length > 0 && (
-        <div className="jx-wins">
-          <span className="jx-wins__tag">Recent wins</span>
-          <div className="jx-wins__rail scroll-x">
+        <div className="lb-wins">
+          <span className="lb-wins__tag">Recent wins</span>
+          <div className="lb-wins__rail scroll-x">
             {recent.map((w) => (
-              <span className="jx-wins__chip" key={w.id}>
+              <span className="lb-wins__chip" key={w.id}>
                 <b>{w.user}</b>
                 <i>{fmtX(w.multiplier)}</i>
                 <em>{money(w.win)}</em>
@@ -64,7 +64,7 @@ export default function LiveBoard({
         </div>
       )}
 
-      <div className="jx-live__tabs" role="tablist">
+      <div className="lb__tabs" role="tablist">
         {TABS.map((label, i) => (
           <button
             key={label}
@@ -83,42 +83,42 @@ export default function LiveBoard({
         <FairPanel fairness={fairness} clientSeed={clientSeed} onNewSeed={onNewSeed} />
       ) : (
         <>
-          <div className="jx-live__meta">
-            <div className="jx-live__count">
-              <i className="jx-live__dot" aria-hidden />
+          <div className="lb__meta">
+            <div className="lb__count">
+              <i className="lb__dot" aria-hidden />
               <b>{players.toLocaleString('en-IN')}</b> playing now
             </div>
-            <div className="jx-live__total">
+            <div className="lb__total">
               <b>{money(totalWin)}</b>
               <small>Won on the board</small>
             </div>
           </div>
-          <div className="jx-live__fill"><i style={{ width: `${Math.round(share * 100)}%` }} /></div>
+          <div className="lb__fill"><i style={{ width: `${Math.round(share * 100)}%` }} /></div>
 
-          <div className="jx-bets">
-            <div className="jx-bets__head">
+          <div className="lb-bets">
+            <div className="lb-bets__head">
               <span>Player</span><span>Bet</span><span>x</span><span>Won</span>
             </div>
-            <div className="jx-bets__scroll">
+            <div className="lb-bets__scroll">
               {mine && (
-                <div className={`jx-bets__row is-mine${mine.out ? ' is-out' : ''}`}>
-                  <span className="jx-bets__u">You</span>
-                  <span className="jx-bets__s">{money(mine.stake)}</span>
-                  <span className="jx-bets__x">{mine.out ? fmtX(mine.multiplier) : '—'}</span>
-                  <span className="jx-bets__w">
+                <div className={`lb-bets__row is-mine${mine.out ? ' is-out' : ''}`}>
+                  <span className="lb-bets__u">You</span>
+                  <span className="lb-bets__s">{money(mine.stake)}</span>
+                  <span className="lb-bets__x">{mine.out ? fmtX(mine.multiplier) : '—'}</span>
+                  <span className="lb-bets__w">
                     {mine.out ? money(Math.round(mine.stake * mine.multiplier)) : '—'}
                   </span>
                 </div>
               )}
               {rows.map((s) => (
-                <div className={`jx-bets__row${s.out ? ' is-out' : ''}`} key={s.id}>
-                  <span className="jx-bets__u">{s.user}</span>
-                  <span className="jx-bets__s">{money(s.stake)}</span>
-                  <span className="jx-bets__x">{s.out ? fmtX(s.target) : '—'}</span>
-                  <span className="jx-bets__w">{s.out ? money(Math.round(s.stake * s.target)) : '—'}</span>
+                <div className={`lb-bets__row${s.out ? ' is-out' : ''}`} key={s.id}>
+                  <span className="lb-bets__u">{s.user}</span>
+                  <span className="lb-bets__s">{money(s.stake)}</span>
+                  <span className="lb-bets__x">{s.out ? fmtX(s.target) : '—'}</span>
+                  <span className="lb-bets__w">{s.out ? money(Math.round(s.stake * s.target)) : '—'}</span>
                 </div>
               ))}
-              {seats.length === 0 && <div className="jx-bets__empty">Loading the board…</div>}
+              {seats.length === 0 && <div className="lb-bets__empty">Loading the board…</div>}
             </div>
           </div>
         </>
