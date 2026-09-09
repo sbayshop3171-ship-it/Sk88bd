@@ -4315,3 +4315,68 @@ body.cz-light .rc__bar{background:rgba(31,36,48,.14)}
   background:#f4262c;color:#fff;font-size:12.5px;font-weight:700;
 }
 .rb__claim.is-on{background:#f4262c;color:#fff;box-shadow:0 6px 18px rgba(244,38,44,.28)}
+
+/* ---------- The free spin wheel ----------
+   Drawn rather than shipped as art: the slices come from the operator's own
+   list, so their number and their labels are not known until it renders. */
+.spin{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:98;
+  width:min(340px,calc(100vw - 32px));padding:20px 18px 22px;
+  border-radius:var(--r-lg);text-align:center;
+  background:linear-gradient(180deg,#123f3a,#06231f);
+  border:1px solid rgba(255,196,46,.35);
+  box-shadow:0 24px 60px rgba(0,0,0,.6);
+}
+.spin__x{
+  position:absolute;top:10px;right:12px;width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.1);color:var(--muted);font-size:19px;line-height:1;
+  display:grid;place-items:center;
+}
+.spin__h{margin:0 0 3px;font-size:19px;font-weight:900;color:var(--gold)}
+.spin__sub{margin:0 0 16px;font-size:12.5px;color:var(--muted);line-height:1.6}
+
+.spin__wrap{position:relative;width:236px;height:236px;margin:0 auto}
+/* the fire ring the reference puts round it */
+.spin__wrap::before{
+  content:'';position:absolute;inset:-10px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,170,40,.55),rgba(255,90,0,.15) 62%,transparent 72%);
+  filter:blur(6px);
+}
+.spin__wheel{
+  position:absolute;inset:0;border-radius:50%;
+  border:11px solid #f0b13c;
+  box-shadow:0 0 0 4px #e8452f,inset 0 0 0 3px #ffd98a;
+  transition-property:transform;transition-timing-function:cubic-bezier(.13,.85,.2,1);
+}
+.spin__slice{
+  position:absolute;left:50%;top:50%;width:0;height:50%;
+  transform-origin:top center;
+}
+.spin__slice b{
+  position:absolute;left:50%;top:26%;transform:translateX(-50%);
+  font-size:12.5px;font-weight:800;color:#8a5a12;white-space:nowrap;
+}
+.spin__pin{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);
+  width:0;height:0;z-index:3;
+  border-left:11px solid transparent;border-right:11px solid transparent;
+  border-bottom:22px solid #e8452f;
+}
+.spin__go{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;
+  width:74px;height:74px;border-radius:50%;
+  background:radial-gradient(circle at 40% 32%,#ffe08a,#f0b13c 62%,#d98800);
+  box-shadow:0 0 0 6px #e8452f,0 6px 16px rgba(0,0,0,.4);
+  color:#c2321f;font-size:20px;font-weight:900;letter-spacing:.5px;
+}
+.spin__go[disabled]{opacity:.85}
+.spin__note{margin:16px 0 0;font-size:11.5px;color:var(--muted);line-height:1.7}
+.spin__won{
+  margin:16px 0 12px;font-size:30px;font-weight:900;color:var(--gold);
+  text-shadow:0 0 22px rgba(255,196,46,.45);
+}
+.spin__claim{
+  display:block;width:100%;padding:14px;border-radius:var(--r-pill);
+  background:linear-gradient(180deg,#ffdf9a,#f0b13c);
+  color:#8a5a12;font-size:17px;font-weight:800;
+}

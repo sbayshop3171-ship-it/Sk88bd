@@ -51,7 +51,23 @@ export type PromoConfig = {
   codes: PromoCode[];
 };
 
+export type WheelSegment = {
+  /** taka this slice pays */
+  amount: number;
+  /** how often it comes up, relative to the others; 0 never does */
+  weight: number;
+};
+
+export type WheelConfig = {
+  active: boolean;
+  /** the free spin unlocks once this much has been deposited, ever */
+  minDeposited: number;
+  /** the slices, clockwise from the top */
+  segments: WheelSegment[];
+};
+
 export type BonusConfig = {
+  wheel: WheelConfig;
   signIn: SignInConfig;
   rescue: RescueConfig;
   rebate: RebateConfig;
@@ -59,6 +75,24 @@ export type BonusConfig = {
 };
 
 export const BONUS_DEFAULTS: BonusConfig = {
+  wheel: {
+    active: true,
+    minDeposited: 100,
+    /* Eight slices, the way the reference draws it. The weights are the
+       whole design: the big number has to be on the wheel to be worth
+       spinning and has to be rare enough to be affordable, and both of
+       those are the operator's call, not this file's. */
+    segments: [
+      { amount: 1, weight: 30 },
+      { amount: 3, weight: 25 },
+      { amount: 5, weight: 20 },
+      { amount: 10, weight: 12 },
+      { amount: 25, weight: 7 },
+      { amount: 100, weight: 4 },
+      { amount: 200, weight: 1.5 },
+      { amount: 500, weight: 0.5 },
+    ],
+  },
   signIn: {
     active: true,
     /* Seven days, climbing, then flat. Small enough that a week of it is
@@ -84,13 +118,14 @@ export const BONUS_DEFAULTS: BonusConfig = {
   },
 };
 
-export type BonusKind = 'signin' | 'rescue' | 'rebate' | 'promo';
+export type BonusKind = 'signin' | 'rescue' | 'rebate' | 'promo' | 'spin';
 
 export const BONUS_LABEL: Record<BonusKind, string> = {
   signin: 'Sign In',
   rescue: 'Rescue fund',
   rebate: 'Rebate',
   promo: 'Promo Code',
+  spin: 'Free Spin',
 };
 
 /** Why a claim was refused. Every one of these is shown to the player, so
@@ -105,6 +140,7 @@ export type ClaimReason =
   | 'below-minimum'
   | 'unknown-code'
   | 'code-used-up'
+  | 'no-spin-left'
   | 'db-error';
 
 export const CLAIM_MESSAGE: Record<ClaimReason, string> = {
@@ -117,6 +153,7 @@ export const CLAIM_MESSAGE: Record<ClaimReason, string> = {
   'below-minimum': 'পরিমাণ ন্যূনতমের চেয়ে কম',
   'unknown-code': 'কোডটি ঠিক নেই',
   'code-used-up': 'কোডটির সীমা শেষ',
+  'no-spin-left': 'আপনার ফ্রি স্পিন শেষ',
   'db-error': 'সমস্যা হয়েছে — আবার চেষ্টা করুন',
 };
 

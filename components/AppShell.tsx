@@ -2,6 +2,7 @@ import { AuthProvider } from './AuthProvider';
 import BottomNav from './BottomNav';
 import Drawer from './Drawer';
 import SideFabs from './SideFabs';
+import SpinWheel from './SpinWheel';
 import { UIProvider } from './UIProvider';
 
 /** Phone-width column plus the chrome every player-facing page shares. */
@@ -15,6 +16,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <Drawer />
         <SideFabs />
+        <SpinWheel />
       </UIProvider>
     </AuthProvider>
   );

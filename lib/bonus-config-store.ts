@@ -12,6 +12,7 @@ import {
   BONUS_DEFAULTS,
   type BonusConfig,
   type PromoCode,
+  type WheelSegment,
 } from './bonus-config';
 
 type Store = { version: 1; config: Partial<BonusConfig> };
@@ -19,6 +20,7 @@ type Store = { version: 1; config: Partial<BonusConfig> };
 const STORE_FILE = path.join(process.cwd(), '.data', 'bonus-config.json');
 const MAX_DAYS = 30;
 const MAX_CODES = 50;
+const MAX_SLICES = 12;
 
 export type BonusMutationResult =
   | { ok: true; config: BonusConfig }
@@ -36,6 +38,26 @@ export async function updateBonusConfig(patch: unknown): Promise<BonusMutationRe
   return mutateStore((store) => {
     const current = merge(store.config);
     const next: BonusConfig = { ...current };
+
+    if (record.wheel && typeof record.wheel === 'object') {
+      const r = record.wheel as Record<string, unknown>;
+      const raw = Array.isArray(r.segments) ? r.segments : current.wheel.segments;
+      if (raw.length < 2 || raw.length > MAX_SLICES) return bad('wheel-slices');
+
+      const segments: WheelSegment[] = raw.map((item) => {
+        const c = (item && typeof item === 'object' ? item : {}) as Record<string, unknown>;
+        return { amount: nonNeg(c.amount, 0), weight: nonNeg(c.weight, 0) };
+      });
+      /* A wheel where nothing can come up would spin forever and pay
+         nothing, so it is refused rather than saved and puzzled over. */
+      if (segments.reduce((n, seg) => n + seg.weight, 0) <= 0) return bad('wheel-weights');
+
+      next.wheel = {
+        active: bool(r.active, current.wheel.active),
+        minDeposited: nonNeg(r.minDeposited, current.wheel.minDeposited),
+        segments,
+      };
+    }
 
     if (record.signIn && typeof record.signIn === 'object') {
       const r = record.signIn as Record<string, unknown>;
@@ -118,6 +140,7 @@ const nonNeg = (v: unknown, fallback: number) => Math.max(0, num(v, fallback));
 
 function merge(saved: Partial<BonusConfig>): BonusConfig {
   return {
+    wheel: { ...BONUS_DEFAULTS.wheel, ...(saved.wheel ?? {}) },
     signIn: { ...BONUS_DEFAULTS.signIn, ...(saved.signIn ?? {}) },
     rescue: { ...BONUS_DEFAULTS.rescue, ...(saved.rescue ?? {}) },
     rebate: { ...BONUS_DEFAULTS.rebate, ...(saved.rebate ?? {}) },

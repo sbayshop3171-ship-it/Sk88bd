@@ -27,10 +27,18 @@ import { adminClient, serverClient } from './supabase';
 type CookieStore = Parameters<typeof serverClient>[0];
 
 export type ClaimResult =
-  | { ok: true; kind: BonusKind; amount: number; balance: number }
+  | { ok: true; kind: BonusKind; amount: number; balance: number; slot?: number }
   | { ok: false; reason: ClaimReason; message?: string };
 
 export type BonusState = {
+  wheel: {
+    active: boolean;
+    /** taka each slice pays, clockwise from the top — what the UI draws */
+    segments: number[];
+    available: boolean;
+    spun: boolean;
+    needsDeposit: boolean;
+  };
   signIn: { active: boolean; day: number; amount: number; claimed: boolean; needsDeposit: boolean };
   rescue: { active: boolean; amount: number; claimed: boolean };
   rebate: { active: boolean; day: string; staked: number; amount: number; claimed: boolean };
@@ -142,7 +150,17 @@ export async function bonusState(cookies: CookieStore): Promise<BonusState | nul
   const staked = dayTotals(rows, yesterday).staked;
   const rebateAmount = Math.round((staked * cfg.rebate.percent) / 100);
 
+  const spun = claimedRefs(rows, 'spin').has(claimRef('spin', SPIN_KEY));
+  const wheelReady = deposited >= toPaisaFloor(cfg.wheel.minDeposited);
+
   return {
+    wheel: {
+      active: cfg.wheel.active,
+      segments: cfg.wheel.segments.map((seg) => seg.amount),
+      available: cfg.wheel.active && wheelReady && !spun,
+      spun,
+      needsDeposit: !wheelReady,
+    },
     signIn: {
       active: cfg.signIn.active,
       day: dayIndex + 1,
@@ -166,7 +184,19 @@ export async function bonusState(cookies: CookieStore): Promise<BonusState | nul
   };
 }
 
+/** One free spin, ever. The key is a constant rather than a date because
+    that is exactly what "one per account" means — and it is the ref, so the
+    unique index enforces it rather than this file. */
+const SPIN_KEY = 'first';
+
 const blankState = (cfg: BonusConfig): BonusState => ({
+  wheel: {
+    active: cfg.wheel.active,
+    segments: cfg.wheel.segments.map((seg) => seg.amount),
+    available: false,
+    spun: false,
+    needsDeposit: true,
+  },
   signIn: { active: cfg.signIn.active, day: 1, amount: toPaisaFloor(cfg.signIn.days[0] ?? 0), claimed: false, needsDeposit: true },
   rescue: { active: cfg.rescue.active, amount: 0, claimed: false },
   rebate: { active: cfg.rebate.active, day: dayBefore(bdDay()), staked: 0, amount: 0, claimed: false },
@@ -190,6 +220,7 @@ export async function claimBonus(
 
   let amount = 0;
   let ref = '';
+  let slot: number | undefined;
 
   if (kind === 'signin') {
     if (!cfg.signIn.active) return { ok: false, reason: 'inactive' };
@@ -217,6 +248,16 @@ export async function claimBonus(
 
     amount = Math.round((dayTotals(rows, yesterday).staked * cfg.rebate.percent) / 100);
     if (amount < toPaisaFloor(cfg.rebate.minClaim)) return { ok: false, reason: 'below-minimum' };
+  } else if (kind === 'spin') {
+    if (!cfg.wheel.active) return { ok: false, reason: 'inactive' };
+    ref = claimRef('spin', SPIN_KEY);
+    if (claimedRefs(rows, 'spin').has(ref)) return { ok: false, reason: 'no-spin-left' };
+
+    const deposited = rows.filter((r) => r.kind === 'deposit').reduce((n, r) => n + r.amount, 0);
+    if (deposited < toPaisaFloor(cfg.wheel.minDeposited)) return { ok: false, reason: 'needs-deposit' };
+
+    slot = pickSlice(cfg.wheel.segments.map((seg) => seg.weight));
+    amount = toPaisaFloor(cfg.wheel.segments[slot]?.amount ?? 0);
   } else {
     if (!cfg.promo.active) return { ok: false, reason: 'inactive' };
     const wanted = String(code ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 24);
@@ -253,5 +294,20 @@ export async function claimBonus(
       : { ok: false, reason: 'db-error', message: credit.error.message };
   }
 
-  return { ok: true, kind, amount, balance: Number(credit.data ?? 0) };
+  return { ok: true, kind, amount, balance: Number(credit.data ?? 0), slot };
+}
+
+/** Which slice comes up, weighted. Decided here and only here: the browser
+    is told what it won, never asked. `Math.random` is right for this — the
+    wheel is a giveaway, not a game somebody bets into, and the provable
+    fairness the mini-games carry would be ceremony without a stake. */
+function pickSlice(weights: number[]): number {
+  const total = weights.reduce((n, w) => n + w, 0);
+  if (total <= 0) return 0;
+  let roll = Math.random() * total;
+  for (let i = 0; i < weights.length; i += 1) {
+    roll -= weights[i];
+    if (roll < 0) return i;
+  }
+  return weights.length - 1;
 }

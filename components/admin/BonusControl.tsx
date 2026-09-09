@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import type { BonusConfig, PromoCode } from '@/lib/bonus-config';
+import type { BonusConfig, PromoCode, WheelSegment } from '@/lib/bonus-config';
 
 const ERROR_LABEL: Record<string, string> = {
+  'wheel-slices': 'The wheel needs between 2 and 12 slices.',
+  'wheel-weights': 'At least one slice has to be able to come up — give one of them a weight above 0.',
   'sign-in-days': 'The sign-in ladder needs between 1 and 30 days, none of them negative.',
   'rescue-percent': 'The rescue share must be between 0 and 100.',
   'rebate-percent': 'The rebate share must be between 0 and 100.',
@@ -54,9 +56,87 @@ export default function BonusControl({ initial }: { initial: BonusConfig }) {
 
   const num = (v: number) => (Number.isFinite(v) ? v : '');
   const setCodes = (codes: PromoCode[]) => setForm((f) => ({ ...f, promo: { ...f.promo, codes } }));
+  const setSlices = (segments: WheelSegment[]) => setForm((f) => ({ ...f, wheel: { ...f.wheel, segments } }));
+  const weightTotal = form.wheel.segments.reduce((n, s2) => n + s2.weight, 0);
 
   return (
     <form onSubmit={submit}>
+      {/* ------------------------------------------------------ wheel ---- */}
+      <div className="adm__card">
+        <h2 className="adm__cardh">Free spin wheel</h2>
+        <label className="adm__check">
+          <input
+            type="checkbox" checked={form.wheel.active} disabled={busy}
+            onChange={(e) => setForm((f) => ({ ...f, wheel: { ...f.wheel, active: e.target.checked } }))}
+          />
+          <span>New players get one spin once they have deposited</span>
+        </label>
+        <p className="adm__hint">
+          One spin per account, ever. Weight is how often a slice comes up next to the others —
+          a slice at 30 against one at 0.5 comes up sixty times as often. The odds of any slice
+          are its weight over the total, so the expected cost of a spin is what you should read
+          off this table before saving it.
+        </p>
+        <div className="adm__formgrid">
+          <label className="adm__f">
+            <span>Unlocks after depositing (৳)</span>
+            <input
+              type="number" min={0} step={1} value={num(form.wheel.minDeposited)} disabled={busy}
+              onChange={(e) => setForm((f) => ({ ...f, wheel: { ...f.wheel, minDeposited: Number(e.target.value) } }))}
+            />
+          </label>
+        </div>
+
+        <table className="adm__table adm__table--edit">
+          <thead><tr><th>Slice</th><th>Pays (৳)</th><th>Weight</th><th>Chance</th><th /></tr></thead>
+          <tbody>
+            {form.wheel.segments.map((seg, i) => (
+              <tr key={i}>
+                <td>{i + 1}</td>
+                <td>
+                  <input
+                    className="adm__mini" type="number" min={0} step={1} value={num(seg.amount)} disabled={busy}
+                    onChange={(e) => setSlices(form.wheel.segments.map((x, j) =>
+                      j === i ? { ...x, amount: Number(e.target.value) } : x))}
+                  />
+                </td>
+                <td>
+                  <input
+                    className="adm__mini" type="number" min={0} step={0.1} value={num(seg.weight)} disabled={busy}
+                    onChange={(e) => setSlices(form.wheel.segments.map((x, j) =>
+                      j === i ? { ...x, weight: Number(e.target.value) } : x))}
+                  />
+                </td>
+                <td>{weightTotal > 0 ? `${((seg.weight / weightTotal) * 100).toFixed(1)}%` : '—'}</td>
+                <td>
+                  <button
+                    type="button" className="adm__iconbtn adm__iconbtn--danger"
+                    disabled={busy || form.wheel.segments.length <= 2}
+                    onClick={() => setSlices(form.wheel.segments.filter((_, j) => j !== i))}
+                    aria-label="Delete"
+                  >
+                    ×
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="adm__row">
+          <button
+            type="button" className="btn btn--ghost" disabled={busy || form.wheel.segments.length >= 12}
+            onClick={() => setSlices([...form.wheel.segments, { amount: 0, weight: 1 }])}
+          >
+            Add a slice
+          </button>
+          <span className="adm__hint" style={{ margin: 0 }}>
+            Average spin costs {weightTotal > 0
+              ? `৳${(form.wheel.segments.reduce((n, s2) => n + s2.amount * s2.weight, 0) / weightTotal).toFixed(2)}`
+              : '—'}
+          </span>
+        </div>
+      </div>
+
       {/* ---------------------------------------------------- sign in ---- */}
       <div className="adm__card">
         <h2 className="adm__cardh">Daily sign in</h2>

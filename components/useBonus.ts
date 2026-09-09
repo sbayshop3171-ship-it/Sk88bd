@@ -4,6 +4,13 @@ import { useCallback, useEffect, useState } from 'react';
 import type { BonusKind } from '@/lib/bonus-config';
 
 export type BonusState = {
+  wheel: {
+    active: boolean;
+    segments: number[];
+    available: boolean;
+    spun: boolean;
+    needsDeposit: boolean;
+  };
   signIn: { active: boolean; day: number; amount: number; claimed: boolean; needsDeposit: boolean };
   rescue: { active: boolean; amount: number; claimed: boolean };
   rebate: { active: boolean; day: string; staked: number; amount: number; claimed: boolean };
@@ -11,7 +18,7 @@ export type BonusState = {
 };
 
 type ClaimReply =
-  | { ok: true; kind: BonusKind; amount: number; balance: number }
+  | { ok: true; kind: BonusKind; amount: number; balance: number; slot?: number }
   | { ok: false; reason: string; message?: string };
 
 /** What each offer would pay this player right now, and the one call that
