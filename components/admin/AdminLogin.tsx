@@ -3,17 +3,22 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import type { PanelBase } from '@/lib/panel-base';
 
 const REASON_TEXT: Record<string, string> = {
-  'invalid-credentials': 'ইউজারনেম অথবা পাসওয়ার্ড সঠিক নয়।',
-  locked: 'অনেকবার ভুল হয়েছে — কিছুক্ষণ পর আবার চেষ্টা করুন।',
+  'invalid-credentials': 'That username or password is not correct.',
+  locked: 'Too many failed attempts — try again in a little while.',
   'not-configured':
-    'এই সার্ভারে অ্যাডমিন পাসওয়ার্ড সেট করা নেই। ADMIN_PASSWORD সেট করে অ্যাপ রিস্টার্ট করুন।',
+    'No admin password is set on this server. Set ADMIN_PASSWORD and restart the app.',
 };
 
-export default function AdminLogin() {
+/** The same form either way, but an agent arriving at /agent is not the
+    operator: they are not told the panel is an admin panel, and the username
+    box does not start filled in with the operator's own login name. */
+export default function AdminLogin({ base }: { base: PanelBase }) {
+  const agentDoor = base === '/agent';
   const router = useRouter();
-  const [username, setUsername] = useState('admin');
+  const [username, setUsername] = useState(agentDoor ? '' : 'admin');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -38,16 +43,16 @@ export default function AdminLogin() {
       if (!res.ok || !data.ok) {
         if (data.reason === 'locked' && data.retryInSeconds) {
           const minutes = Math.ceil(data.retryInSeconds / 60);
-          setError(`অনেকবার ভুল হয়েছে — ${minutes} মিনিট পর আবার চেষ্টা করুন।`);
+          setError(`Too many failed attempts — try again in ${minutes} minutes.`);
           return;
         }
-        setError(REASON_TEXT[data.reason ?? ''] ?? 'লগইন করা যায়নি।');
+        setError(REASON_TEXT[data.reason ?? ''] ?? 'Could not log in.');
         return;
       }
 
       router.refresh();
     } catch {
-      setError('নেটওয়ার্ক সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+      setError('Network problem. Try again.');
     } finally {
       setBusy(false);
     }
@@ -56,11 +61,15 @@ export default function AdminLogin() {
   return (
     <main className="adm-auth">
       <form className="adm-auth__card" onSubmit={submit}>
-        <h1>অ্যাডমিন লগইন</h1>
-        <p>Admin panel খুলতে আপনার credentials দিন।</p>
+        <h1>{agentDoor ? 'এজেন্ট লগইন' : 'Admin Login'}</h1>
+        <p>
+          {agentDoor
+            ? 'আপনার এজেন্ট আইডি আর পাসওয়ার্ড দিন।'
+            : 'Enter your credentials to open the admin panel.'}
+        </p>
 
         <label className="adm-auth__field">
-          <span>ইউজারনেম</span>
+          <span>{agentDoor ? 'এজেন্ট আইডি' : 'Username'}</span>
           <input
             autoComplete="username"
             value={username}
@@ -70,7 +79,7 @@ export default function AdminLogin() {
         </label>
 
         <label className="adm-auth__field">
-          <span>পাসওয়ার্ড</span>
+          <span>{agentDoor ? 'পাসওয়ার্ড' : 'Password'}</span>
           <input
             autoComplete="current-password"
             type="password"
@@ -83,7 +92,7 @@ export default function AdminLogin() {
         {error && <div className="adm-auth__error">{error}</div>}
 
         <button className="btn btn--gold btn--block" type="submit" disabled={busy}>
-          {busy ? 'লগইন হচ্ছে...' : 'লগইন'}
+          {busy ? 'Logging in…' : 'Log In'}
         </button>
       </form>
     </main>
