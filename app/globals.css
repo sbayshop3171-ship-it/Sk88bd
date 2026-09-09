@@ -4082,3 +4082,110 @@ body.cz-light .rc__bar{background:rgba(31,36,48,.14)}
   box-shadow:0 6px 18px rgba(244,38,44,.28);
 }
 .ma__submit[disabled]{background:#dfe2e6;color:#9aa1a9;box-shadow:none}
+
+/* ============================================================
+   Golden Ace — the house slot (components/mini/SlotBoard.tsx)
+
+   The board is one grid rather than five animated columns: the server
+   settles the whole round and the screen replays it drop by drop, so
+   what moves between drops is which cells are lit, not the reels. A
+   spinning reel that decides nothing is a lie told to the player, and
+   this way the animation cannot get ahead of the wallet.
+   ============================================================ */
+
+.mg-slot{gap:12px}
+
+.sl{display:flex;flex-direction:column;gap:10px}
+
+.sl__free{
+  align-self:center;padding:5px 16px;border-radius:var(--r-pill);
+  background:linear-gradient(90deg,var(--gold-2),var(--gold));
+  color:#3a2200;font-size:11.5px;font-weight:900;letter-spacing:.6px;
+}
+.sl__free b{font-size:13px}
+
+.sl__grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:4px;
+  padding:8px;border-radius:var(--r-md);
+  background:radial-gradient(120% 120% at 50% 0%,#0b3b37,#04211f);
+  border:1px solid var(--line);
+}
+/* the request is out; nothing is decided yet, so the board just breathes */
+.sl__grid.is-spinning{animation:sl-wait .5s ease-in-out infinite alternate}
+@keyframes sl-wait{from{opacity:.55}to{opacity:.85}}
+
+.sl__cell{
+  position:relative;aspect-ratio:1;display:grid;place-items:center;
+  border-radius:9px;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+  transition:background .18s,border-color .18s,transform .18s;
+}
+.sl__cell .sl-sym{width:88%;height:88%;display:block}
+
+.sl__cell.is-gold{background:rgba(255,196,46,.10);border-color:rgba(255,196,46,.35)}
+.sl__cell.is-scatter{background:rgba(255,90,90,.12);border-color:rgba(255,90,90,.4)}
+
+.sl__cell.is-win{
+  background:rgba(63,224,189,.18);border-color:var(--mint);
+  transform:scale(1.04);animation:sl-hit .4s ease-out;
+}
+@keyframes sl-hit{from{transform:scale(.9)}to{transform:scale(1.04)}}
+
+/* a gilded card that survived the win and is about to become a wild */
+.sl__cell.is-turning{
+  background:rgba(255,196,46,.28);border-color:var(--gold);
+  box-shadow:0 0 0 2px rgba(255,196,46,.35),0 0 18px rgba(255,196,46,.45);
+}
+
+.sl__meter{display:flex;gap:8px}
+.sl__mult,.sl__win{
+  flex:1;padding:8px 12px;border-radius:var(--r-md);
+  background:var(--surface);border:1px solid var(--line);
+}
+.sl__mult small,.sl__win small{display:block;font-size:10px;color:var(--muted)}
+.sl__mult b,.sl__win b{
+  font-size:17px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;
+}
+.sl__win.on b{color:var(--gold)}
+.sl__win.on{border-color:rgba(255,196,46,.45);background:rgba(255,196,46,.08)}
+
+.sl__capped{
+  margin:0;font-size:11.5px;color:var(--gold);text-align:center;
+}
+
+.mg-slot__spin{margin-top:2px}
+
+/* ---------- the paytable ---------- */
+
+.sl-pay__toggle{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:6px;
+  background:none;border:0;color:var(--muted);
+  font-size:12px;font-weight:800;padding:8px 0;cursor:pointer;
+}
+
+.sl-pay{
+  padding:12px;border-radius:var(--r-md);
+  background:var(--bg-1);border:1px solid var(--line);
+}
+.sl-pay__note{margin:0 0 10px;font-size:11.5px;color:var(--muted);line-height:1.6}
+
+.sl-pay__table{width:100%;border-collapse:collapse;font-size:12px}
+.sl-pay__table th{
+  text-align:right;font-size:10px;color:var(--muted);font-weight:800;
+  padding:0 0 6px;text-transform:uppercase;letter-spacing:.4px;
+}
+.sl-pay__table th:first-child{text-align:left}
+.sl-pay__table td{
+  padding:5px 0;text-align:right;color:#fff;font-variant-numeric:tabular-nums;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+.sl-pay__table td:first-child{
+  text-align:left;display:flex;align-items:center;gap:8px;
+  color:var(--muted);font-weight:800;
+}
+.sl-pay__ico{width:26px;height:26px;flex:0 0 auto}
+.sl-pay__ico .sl-sym{width:100%;height:100%;display:block}
+
+.sl-pay__rules{margin:12px 0 0;padding-left:16px;display:grid;gap:7px}
+.sl-pay__rules li{font-size:11.5px;color:var(--muted);line-height:1.65}
+.sl-pay__rules b{color:var(--text)}

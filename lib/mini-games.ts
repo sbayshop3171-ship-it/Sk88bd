@@ -15,6 +15,7 @@
    ============================================================ */
 
 import { randomHex, sha256Hex } from './aviator';
+import type { SlotRound } from './slots';
 
 export { randomHex, sha256Hex };
 
@@ -36,7 +37,8 @@ export const MAX_PAYOUT_PAISA = 50_000_000;
 
 export const capPayout = (payout: number) => Math.min(payout, MAX_PAYOUT_PAISA);
 
-export type MiniGameId = 'crash' | 'jetx' | 'limbo' | 'dice' | 'plinko' | 'coin-flip';
+export type MiniGameId =
+  | 'crash' | 'jetx' | 'limbo' | 'dice' | 'plinko' | 'coin-flip' | 'golden-ace';
 
 /** The two flying games settle over time; the rest resolve in one call. */
 export type MiniKind = 'flight' | 'instant';
@@ -76,6 +78,10 @@ export const MINI_GAMES: Record<MiniGameId, MiniGameDef> = {
   'coin-flip': {
     id: 'coin-flip', name: 'Coin Flip', kind: 'instant', accent: '#ffd95e', glyph: '🪙',
     tagline: 'Heads or tails — close to double on a single toss.',
+  },
+  'golden-ace': {
+    id: 'golden-ace', name: 'Golden Ace', kind: 'instant', accent: '#ffb32e', glyph: '🃏',
+    tagline: 'Gilded cards turn wild and stay — every win drops the board again at a higher multiplier.',
   },
 };
 
@@ -259,6 +265,9 @@ export interface InstantResult {
   fairness: FairnessInfo;
   /** whatever the game needs to draw its own outcome */
   detail: Record<string, number | string | number[]>;
+  /** Golden Ace only: every board, cascade and free game, in order, so the
+      screen can replay exactly what the server settled. */
+  slot?: SlotRound;
 }
 
 export interface FlightRoundView {

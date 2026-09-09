@@ -38,6 +38,7 @@ const RULES: [RegExp, Motif][] = [
   [/^limbo$/i, 'gem'],
   [/^plinko$/i, 'bingo'],
   [/^coin flip$/i, 'chip'],
+  [/^golden ace$/i, 'fan'],
   [/counter strike|valorant/i, 'crosshair'],
   [/dota|league of legends/i, 'sword'],
   [/mobile legends|pubg/i, 'mobile'],

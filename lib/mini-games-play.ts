@@ -44,6 +44,7 @@ import {
   type PlinkoRisk,
   type PlinkoRows,
 } from './mini-games';
+import { MAX_ROUND_X, slotRoundFromHash } from './slots';
 import { endRound, mutateRounds, openRound, startRound } from './mini-rounds-store';
 import { adminClient, serverClient } from './supabase';
 
@@ -139,6 +140,7 @@ export async function playInstant(cookies: CookieStore, bet: InstantBet): Promis
       // the round is over, so the seed is released with the result
       fairness: { serverSeedHash, serverSeed, clientSeed, nonce },
       detail: outcome.detail,
+      slot: outcome.slot,
     },
   };
 }
@@ -295,7 +297,8 @@ type Terms =
   | { game: 'limbo'; target: number }
   | { game: 'dice'; mode: DiceMode; target: number }
   | { game: 'plinko'; rows: PlinkoRows; risk: PlinkoRisk }
-  | { game: 'coin-flip'; side: CoinSide };
+  | { game: 'coin-flip'; side: CoinSide }
+  | { game: 'golden-ace' };
 
 function readTerms(bet: InstantBet): Terms | Fail {
   const bad: Fail = { ok: false, reason: 'invalid-bet' };
@@ -324,6 +327,9 @@ function readTerms(bet: InstantBet): Terms | Fail {
     if (side !== 'heads' && side !== 'tails') return bad;
     return { game: 'coin-flip', side };
   }
+  /* The slot has nothing to choose: the stake is the whole bet, and the
+     board is drawn from the seed. */
+  if (bet.game === 'golden-ace') return { game: 'golden-ace' };
   // crash and jetx do not come through here
   return bad;
 }
@@ -333,7 +339,31 @@ function settle(
   terms: Terms,
   hash: string,
   stake: number,
-): { payout: number; multiplier: number; detail: InstantResult['detail'] } {
+): {
+  payout: number;
+  multiplier: number;
+  detail: InstantResult['detail'];
+  slot?: InstantResult['slot'];
+} {
+  if (terms.game === 'golden-ace') {
+    /* The whole round — every board, cascade and free game — is derived
+       here and travels back with the result. The browser animates it; it
+       never draws a symbol of its own, so what it shows and what the wallet
+       moved cannot disagree. */
+    const round = slotRoundFromHash(hash);
+    const multiplier = Math.round(round.win * 100) / 100;
+    return {
+      payout: capPayout(Math.floor(stake * round.win)),
+      multiplier,
+      detail: {
+        freeGames: round.freeGames,
+        spins: round.spins.length,
+        maxX: MAX_ROUND_X,
+      },
+      slot: round,
+    };
+  }
+
   if (terms.game === 'limbo') {
     const result = limboResult(hash);
     const won = result >= terms.target;

@@ -60,6 +60,7 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('Dice', 'Sk88bd', 'new', undefined, 'dice', undefined, false),
     g('Plinko', 'Sk88bd', 'new', undefined, 'plinko', undefined, false),
     g('Coin Flip', 'Sk88bd', 'new', undefined, 'coin-flip', undefined, false),
+    g('Golden Ace', 'Sk88bd', 'new', undefined, 'golden-ace', undefined, false),
 
     /* ---- The CK44 hot rail, tile for tile (hand-kept).
        Key art lives in public/games/icons/CK44/, converted from the pack the
@@ -209,6 +210,10 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('2 Hand Casino Hold\'em', 'Evolution', undefined, '/games/icons/LIVE-CASINO/Evolution__2-Hand-Casino-Hold-em.png', '2-hand-casino-hold-em', '22874', false),
   ],
   slot: [
+    /* the house's own slot — it runs on our engine (lib/slots.ts) and opens
+       at /game/golden-ace, so it leads the rail rather than sitting behind
+       tiles that are still waiting on a licence */
+    g('Golden Ace', 'Sk88bd', 'new', undefined, 'golden-ace', undefined, false),
     g('Beer Tycoon', 'JDB', 'hot', '/games/icons/HOT/JDB__Beer-Tycoon.avif', 'beer-tycoon', '817', true),
     g('Apollo Pays', 'Big Time Gaming', 'hot', '/games/icons/HOT/Big-Time-Gaming__Apollo-Pays.avif', 'apollo-pays', '5878', true),
     g('Advent of the Dragon', 'Live22', 'hot', '/games/icons/HOT/Live22__Advent-of-the-Dragon.png', 'advent-of-the-dragon', '12995', false),
@@ -393,6 +398,7 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('Dice', 'Sk88bd', 'new', undefined, 'dice', undefined, false),
     g('Plinko', 'Sk88bd', 'new', undefined, 'plinko', undefined, false),
     g('Coin Flip', 'Sk88bd', 'new', undefined, 'coin-flip', undefined, false),
+    g('Golden Ace', 'Sk88bd', 'new', undefined, 'golden-ace', undefined, false),
     g('3 Charge Buffalo', 'JILI', 'hot', '/games/icons/HOT/JILI__3-Charge-Buffalo.avif', '3-charge-buffalo', '1185', true),
     g('3 Lucky Piggy', 'JILI', 'hot', '/games/icons/HOT/JILI__3-Lucky-Piggy.avif', '3-lucky-piggy', '1026', true),
     g('Crazy Hunter', 'JILI', 'hot', '/games/icons/FISH/JILI__Crazy-Hunter.avif', 'crazy-hunter', '468', true),
@@ -626,7 +632,7 @@ const featuredRank = (id: string): number => {
 };
 
 export const PLAYABLE_IDS = [
-  'aviator', 'crash', 'jetx', 'limbo', 'dice', 'plinko', 'coin-flip',
+  'aviator', 'crash', 'jetx', 'limbo', 'dice', 'plinko', 'coin-flip', 'golden-ace',
 ];
 
 export const hasDemo = (id: string): boolean =>
