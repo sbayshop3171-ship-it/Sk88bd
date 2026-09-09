@@ -3,7 +3,7 @@
     shade of #f0f1f3) a PNG would band, and the whole thing is 2KB of paths. */
 export default function EmptyWalletArt() {
   return (
-    <svg className="ck-empty__art" viewBox="0 0 300 200" role="img" aria-label="কোনো ওয়ালেট যুক্ত করা হয়নি">
+    <svg className="ck-empty__art" viewBox="0 0 300 200" role="img" aria-label="No wallet added">
       {/* the hill the card stands on */}
       <ellipse cx="150" cy="212" rx="132" ry="52" fill="#f7f8f9" />
       {/* clouds */}

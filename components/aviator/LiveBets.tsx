@@ -10,7 +10,7 @@ const VISIBLE_ROWS = 40;
 
 const STAKES = [50, 100, 150, 200, 250, 300, 500, 500, 600, 800, 1000, 1000, 1200, 1500, 2000, 2500, 3000, 5000];
 
-const TABS = ['সব বেট', 'আগের', 'টপ'] as const;
+const TABS = ['All Bets', 'Previous', 'Top'] as const;
 
 type Seat = { user: string; stake: number; target: number };
 
@@ -83,19 +83,19 @@ export default function LiveBets({
       <div className="av-live__meta">
         <div>
           <div className="av-live__count">
-            <b>{(settled ? cashed : players).toLocaleString('en-IN')}</b>/{players.toLocaleString('en-IN')} বেট
+            <b>{(settled ? cashed : players).toLocaleString('en-IN')}</b>/{players.toLocaleString('en-IN')} bets
           </div>
           <div className="av-live__fill"><i style={{ width: `${Math.round(share * 100)}%` }} /></div>
         </div>
         <div className="av-live__total">
           <b>{money(totalWin)}</b>
-          <small>মোট জিত</small>
+          <small>Total won</small>
         </div>
       </div>
 
       <div className="av-bets">
         <div className="av-bets__head">
-          <span>প্লেয়ার</span><span>বেট</span><span>x</span><span>জিত</span>
+          <span>Player</span><span>Bet</span><span>x</span><span>Won</span>
         </div>
         <div className="av-bets__scroll">
           {rows.map((s, i) => {

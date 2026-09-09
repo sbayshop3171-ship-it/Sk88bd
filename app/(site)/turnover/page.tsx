@@ -24,10 +24,10 @@ export default function TurnoverPage() {
 
   return (
     <>
-      <PageHeader title="টার্নওভার" />
+      <PageHeader title="Turnover" />
 
       <div className="note" style={{ margin: 12 }}>
-        বোনাস নেওয়ার পর নির্দিষ্ট টার্নওভার সম্পূর্ণ করলে ব্যালেন্স উইথড্র করা যাবে।
+        Once you take a bonus, the balance becomes withdrawable after you complete the required turnover.
       </div>
 
       {ready && !signedIn && (
@@ -40,30 +40,30 @@ export default function TurnoverPage() {
       {signedIn && need > 0 && (
         <div className="tov">
           <div className="tov__hd">
-            <span>চলমান টার্নওভার</span>
+            <span>Turnover in progress</span>
             <b>{pct}%</b>
           </div>
           <div className="tov__bar"><i style={{ width: `${pct}%` }} /></div>
           <div className="tov__row">
-            <span>সম্পন্ন</span><b>{money(toTaka(done))}</b>
+            <span>Completed</span><b>{money(toTaka(done))}</b>
           </div>
           <div className="tov__row">
-            <span>প্রয়োজন</span><b>{money(toTaka(need))}</b>
+            <span>Required</span><b>{money(toTaka(need))}</b>
           </div>
           <div className="tov__row">
-            <span>বাকি</span><b>{money(toTaka(Math.max(0, need - done)))}</b>
+            <span>Remaining</span><b>{money(toTaka(Math.max(0, need - done)))}</b>
           </div>
         </div>
       )}
 
       {signedIn && need === 0 && (
-        <Empty glyph="🔄" text="এখন কোনো চলমান টার্নওভার নেই — ব্যালেন্স উইথড্র করা যাবে।" />
+        <Empty glyph="🔄" text="No turnover in progress — your balance is withdrawable." />
       )}
 
       {signedIn && (
         <div className="stat" style={{ gridTemplateColumns: 'repeat(2,1fr)' }}>
-          <div><b>{money(toTaka(betVolume))}</b><small>মোট বেট ভলিউম</small></div>
-          <div><b>{money(toTaka(wallet?.bonus_balance ?? 0))}</b><small>বোনাস ব্যালেন্স</small></div>
+          <div><b>{money(toTaka(betVolume))}</b><small>Total bet volume</small></div>
+          <div><b>{money(toTaka(wallet?.bonus_balance ?? 0))}</b><small>Bonus balance</small></div>
         </div>
       )}
     </>

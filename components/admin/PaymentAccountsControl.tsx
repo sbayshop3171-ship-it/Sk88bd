@@ -13,14 +13,14 @@ import {
 type Channel = { id: string; name: string; glyph: string; art: string };
 
 const ERROR_LABEL: Record<string, string> = {
-  forbidden: 'পেমেন্ট নাম্বার বদলানোর অনুমতি আপনার নেই — সুপার অ্যাডমিনকে বলুন।',
-  'channel-full': `একটি চ্যানেলে সর্বোচ্চ ${MAX_PER_CHANNEL} টি নাম্বার রাখা যায়।`,
-  'duplicate-number': 'এই নাম্বারটি ঐ চ্যানেলে আগে থেকেই আছে।',
-  'invalid-number': 'নাম্বারটি ঠিক নয় — ৪ থেকে ৬৪ ক্যারেক্টার হতে হবে।',
-  'invalid-holder': 'অ্যাকাউন্টের নাম দিন (কমপক্ষে ২ অক্ষর)।',
-  'unknown-channel': 'চ্যানেলটি চেনা গেল না।',
-  'not-found': 'অ্যাকাউন্টটি পাওয়া যায়নি — পেজ রিফ্রেশ করুন।',
-  unauthorized: 'সেশন শেষ হয়ে গেছে — আবার লগইন করুন।',
+  forbidden: 'You are not allowed to change payment numbers — ask the super admin.',
+  'channel-full': `A channel can hold at most ${MAX_PER_CHANNEL} numbers.`,
+  'duplicate-number': 'That number is already on this channel.',
+  'invalid-number': 'That number is not valid — it must be 4 to 64 characters.',
+  'invalid-holder': 'Enter the account name (at least 2 characters).',
+  'unknown-channel': 'That channel was not recognised.',
+  'not-found': 'Account not found — refresh the page.',
+  unauthorized: 'Your session has expired — log in again.',
 };
 
 const BLANK = (channelId: string): PaymentAccountInput => ({
@@ -77,14 +77,14 @@ export default function PaymentAccountsControl({
         | { ok: false; reason: string };
 
       if (!data.ok) {
-        setError(ERROR_LABEL[data.reason] ?? `সমস্যা হয়েছে (${data.reason})`);
+        setError(ERROR_LABEL[data.reason] ?? `Something went wrong (${data.reason})`);
         return false;
       }
       setAccounts(data.accounts);
       setNotice(okMessage);
       return true;
     } catch {
-      setError('সার্ভারে পৌঁছানো গেল না — আবার চেষ্টা করুন।');
+      setError('Could not reach the server — try again.');
       return false;
     } finally {
       setBusy(false);
@@ -94,8 +94,8 @@ export default function PaymentAccountsControl({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const ok = editingId
-      ? await send({ action: 'update', id: editingId, ...form }, 'অ্যাকাউন্ট আপডেট হয়েছে।')
-      : await send({ action: 'add', ...form }, 'নতুন অ্যাকাউন্ট যোগ হয়েছে।');
+      ? await send({ action: 'update', id: editingId, ...form }, 'Account updated.')
+      : await send({ action: 'add', ...form }, 'New account added.');
 
     if (ok) {
       setForm(BLANK(form.channelId));
@@ -133,28 +133,28 @@ export default function PaymentAccountsControl({
   return (
     <>
       <div className="adm__tiles" style={{ marginBottom: 14 }}>
-        <div className="adm__tile"><b>{accounts.length}</b><small>মোট অ্যাকাউন্ট</small></div>
-        <div className="adm__tile"><b>{activeCount}</b><small>সক্রিয়</small></div>
-        <div className="adm__tile"><b>{channelsCovered}/{channels.length}</b><small>চ্যানেল কভার</small></div>
-        <div className="adm__tile"><b>{MAX_PER_CHANNEL}</b><small>প্রতি চ্যানেলে সর্বোচ্চ</small></div>
+        <div className="adm__tile"><b>{accounts.length}</b><small>Accounts</small></div>
+        <div className="adm__tile"><b>{activeCount}</b><small>Active</small></div>
+        <div className="adm__tile"><b>{channelsCovered}/{channels.length}</b><small>Channels covered</small></div>
+        <div className="adm__tile"><b>{MAX_PER_CHANNEL}</b><small>Max per channel</small></div>
       </div>
 
       {!canWrite && (
         <p className="adm__note" style={{ marginBottom: 14 }}>
-          নাম্বারগুলো শুধু দেখার জন্য — যোগ, এডিট বা মুছে ফেলা কেবল সুপার অ্যাডমিন
-          করতে পারেন।
+          These numbers are read-only — only the super admin can add, edit or delete
+          them.
         </p>
       )}
 
       {canWrite && (
       <form className="adm__card" onSubmit={submit}>
         <h2 className="adm__cardh">
-          {editingId ? 'অ্যাকাউন্ট এডিট' : 'নতুন অ্যাকাউন্ট যোগ করুন'}
+          {editingId ? 'Edit account' : 'Add a new account'}
         </h2>
 
         <div className="adm__formgrid">
           <label className="adm__f">
-            <span>চ্যানেল</span>
+            <span>Channel</span>
             <select
               value={form.channelId}
               onChange={(e) => set('channelId', e.target.value)}
@@ -169,7 +169,7 @@ export default function PaymentAccountsControl({
           </label>
 
           <label className="adm__f">
-            <span>নাম্বার / অ্যাকাউন্ট</span>
+            <span>Number / account</span>
             <input
               value={form.number}
               onChange={(e) => set('number', e.target.value)}
@@ -180,24 +180,24 @@ export default function PaymentAccountsControl({
           </label>
 
           <label className="adm__f">
-            <span>অ্যাকাউন্টের নাম</span>
+            <span>Account name</span>
             <input
               value={form.holder}
               onChange={(e) => set('holder', e.target.value)}
-              placeholder="যেমন: Sk88bd Agent 1"
+              placeholder="e.g. Sk88bd Agent 1"
               disabled={busy}
             />
           </label>
 
           <label className="adm__f">
-            <span>ধরন</span>
+            <span>Kind</span>
             <select value={form.kind} onChange={(e) => set('kind', e.target.value as PaymentAccountInput['kind'])} disabled={busy}>
               {Object.entries(KIND_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
           </label>
 
           <label className="adm__f">
-            <span>কোথায় ব্যবহার</span>
+            <span>Used for</span>
             <select value={form.use} onChange={(e) => set('use', e.target.value as PaymentAccountInput['use'])} disabled={busy}>
               {Object.entries(USE_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
@@ -205,7 +205,7 @@ export default function PaymentAccountsControl({
           </label>
 
           <label className="adm__f">
-            <span>ওজন (১-১০)</span>
+            <span>Weight (1-10)</span>
             <input
               type="number" min={1} max={10}
               value={form.weight}
@@ -215,19 +215,19 @@ export default function PaymentAccountsControl({
           </label>
 
           <label className="adm__f">
-            <span>অবস্থা</span>
+            <span>Status</span>
             <select value={form.status} onChange={(e) => set('status', e.target.value as PaymentAccountInput['status'])} disabled={busy}>
-              <option value="active">সক্রিয়</option>
-              <option value="disabled">বন্ধ</option>
+              <option value="active">Active</option>
+              <option value="disabled">Disabled</option>
             </select>
           </label>
 
           <label className="adm__f adm__f--wide">
-            <span>নোট (ঐচ্ছিক — প্লেয়ার দেখবে)</span>
+            <span>Note (optional — players see it)</span>
             <input
               value={form.note}
               onChange={(e) => set('note', e.target.value)}
-              placeholder="যেমন: Send Money করুন, Cash Out নয়"
+              placeholder="e.g. Use Send Money, not Cash Out"
               disabled={busy}
             />
           </label>
@@ -235,7 +235,7 @@ export default function PaymentAccountsControl({
 
         {full && (
           <p className="adm__warn" style={{ margin: '0 0 10px' }}>
-            এই চ্যানেলে {MAX_PER_CHANNEL} টি নাম্বার হয়ে গেছে। নতুন যোগ করতে আগে একটি মুছুন।
+            This channel already holds {MAX_PER_CHANNEL} numbers. Delete one before adding another.
           </p>
         )}
         {error && <p className="adm__err">{error}</p>}
@@ -243,18 +243,18 @@ export default function PaymentAccountsControl({
 
         <div className="adm__actions">
           <button type="submit" className="btn btn--gold" disabled={busy || full}>
-            {editingId ? 'আপডেট করুন' : 'যোগ করুন'}
+            {editingId ? 'Update' : 'Add'}
           </button>
           {editingId && (
             <button type="button" className="btn btn--ghost" onClick={cancelEdit} disabled={busy}>
-              বাতিল
+              Cancel
             </button>
           )}
         </div>
 
         <p className="adm__hint">
-          ওজন বেশি মানে ঐ নাম্বারে বেশি প্লেয়ার যাবে। সব নাম্বারের ওজন সমান রাখলে
-          ট্রাফিক সমানভাবে ভাগ হবে।
+          A higher weight sends more players to that number. Give every number the same
+          weight and the traffic splits evenly.
         </p>
       </form>
       )}
@@ -263,15 +263,15 @@ export default function PaymentAccountsControl({
         <table className="adm__table">
           <thead>
             <tr>
-              <th>চ্যানেল</th><th>নাম্বার</th><th>নাম</th><th>ধরন</th>
-              <th>ব্যবহার</th><th>ওজন</th><th>হিট</th><th>অবস্থা</th>{canWrite && <th></th>}
+              <th>Channel</th><th>Number</th><th>Name</th><th>Kind</th>
+              <th>Used for</th><th>Weight</th><th>Hits</th><th>Status</th>{canWrite && <th></th>}
             </tr>
           </thead>
           <tbody>
             {accounts.length === 0 ? (
               <tr>
                 <td colSpan={canWrite ? 9 : 8} className="adm__empty">
-                  কোনো অ্যাকাউন্ট যোগ করা হয়নি — উপরের ফর্ম থেকে যোগ করুন।
+                  No accounts yet — add one with the form above.
                 </td>
               </tr>
             ) : (
@@ -288,13 +288,13 @@ export default function PaymentAccountsControl({
                     <td>{a.usageCount}</td>
                     <td>
                       {a.status === 'active'
-                        ? <span className="adm__ok">সক্রিয়</span>
-                        : <span className="adm__miss">বন্ধ</span>}
+                        ? <span className="adm__ok">Active</span>
+                        : <span className="adm__miss">Disabled</span>}
                     </td>
                     {canWrite && (
                     <td className="adm__rowacts">
                       <button type="button" className="btn btn--ghost" onClick={() => edit(a)} disabled={busy}>
-                        এডিট
+                        Edit
                       </button>
                       <button
                         type="button"
@@ -302,18 +302,18 @@ export default function PaymentAccountsControl({
                         disabled={busy}
                         onClick={() => send(
                           { action: 'update', ...a, status: a.status === 'active' ? 'disabled' : 'active' },
-                          a.status === 'active' ? 'অ্যাকাউন্ট বন্ধ করা হয়েছে।' : 'অ্যাকাউন্ট সক্রিয় করা হয়েছে।',
+                          a.status === 'active' ? 'Account disabled.' : 'Account enabled.',
                         )}
                       >
-                        {a.status === 'active' ? 'বন্ধ' : 'চালু'}
+                        {a.status === 'active' ? 'Disable' : 'Enable'}
                       </button>
                       <button
                         type="button"
                         className="btn btn--ghost adm__danger"
                         disabled={busy}
-                        onClick={() => send({ action: 'remove', id: a.id }, 'অ্যাকাউন্ট মুছে ফেলা হয়েছে।')}
+                        onClick={() => send({ action: 'remove', id: a.id }, 'Account deleted.')}
                       >
-                        মুছুন
+                        Delete
                       </button>
                     </td>
                     )}

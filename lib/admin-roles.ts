@@ -75,15 +75,15 @@ export const ROLE_PERMISSIONS: Record<AdminRole, readonly AdminPermission[]> = {
 };
 
 export const ROLE_LABEL: Record<AdminRole, string> = {
-  super_admin: 'সুপার অ্যাডমিন',
-  admin: 'অ্যাডমিন',
-  agent: 'এজেন্ট',
+  super_admin: 'Super Admin',
+  admin: 'Admin',
+  agent: 'Agent',
 };
 
 export const ROLE_HELP: Record<AdminRole, string> = {
-  super_admin: 'সব কিছু — পেমেন্ট নাম্বার, সেটিংস আর স্টাফ অ্যাকাউন্ট সহ।',
-  admin: 'ক্যাশিয়ার, ইউজার, গেম আর সাইটের কনটেন্ট। পেমেন্ট নাম্বার বদলাতে পারবে না।',
-  agent: 'শুধু ডিপোজিট-উইথড্র অনুমোদন, ইউজার দেখা আর নিজের রেফারেল লিংক। পেমেন্ট নাম্বার বদলাতে পারবে না।',
+  super_admin: 'Everything — payment numbers, settings and staff accounts included.',
+  admin: 'Cashier, users, games and site content. Cannot change payment numbers.',
+  agent: 'Only deposit/withdraw approvals, viewing users and their own referral link. Cannot change payment numbers.',
 };
 
 /** What a super admin may hand out. The super admin login itself comes from
@@ -103,19 +103,19 @@ export function can(role: AdminRole, permission: AdminPermission): boolean {
     with this and every page behind a tab checks the same permission again —
     a hidden link is a courtesy, the check on the page is the lock. */
 export const ADMIN_TABS: { href: string; label: string; permission?: AdminPermission }[] = [
-  { href: '/admin', label: 'ড্যাশবোর্ড' },
-  { href: '/admin/deposits', label: 'ডিপোজিট', permission: 'cashier.review' },
-  { href: '/admin/withdrawals', label: 'উইথড্র', permission: 'cashier.review' },
-  { href: '/admin/users', label: 'ইউজার', permission: 'players.read' },
-  { href: '/admin/agents', label: 'এজেন্ট', permission: 'agents.self' },
-  { href: '/admin/payments', label: 'পেমেন্ট', permission: 'payments.read' },
-  { href: '/admin/cashier', label: 'ক্যাশিয়ার', permission: 'cashier.config' },
-  { href: '/admin/games', label: 'গেম', permission: 'games.write' },
-  { href: '/admin/aviator-signal', label: 'সিগন্যাল', permission: 'signal.write' },
-  { href: '/admin/app-keys', label: 'অ্যাপ কী', permission: 'app-keys.write' },
-  { href: '/admin/banners', label: 'ব্যানার', permission: 'content.write' },
-  { href: '/admin/staff', label: 'স্টাফ', permission: 'staff.manage' },
-  { href: '/admin/settings', label: 'সেটিংস', permission: 'settings.write' },
+  { href: '/admin', label: 'Dashboard' },
+  { href: '/admin/deposits', label: 'Deposits', permission: 'cashier.review' },
+  { href: '/admin/withdrawals', label: 'Withdrawals', permission: 'cashier.review' },
+  { href: '/admin/users', label: 'Users', permission: 'players.read' },
+  { href: '/admin/agents', label: 'Agents', permission: 'agents.self' },
+  { href: '/admin/payments', label: 'Payments', permission: 'payments.read' },
+  { href: '/admin/cashier', label: 'Cashier', permission: 'cashier.config' },
+  { href: '/admin/games', label: 'Games', permission: 'games.write' },
+  { href: '/admin/aviator-signal', label: 'Signal', permission: 'signal.write' },
+  { href: '/admin/app-keys', label: 'App Keys', permission: 'app-keys.write' },
+  { href: '/admin/banners', label: 'Banners', permission: 'content.write' },
+  { href: '/admin/staff', label: 'Staff', permission: 'staff.manage' },
+  { href: '/admin/settings', label: 'Settings', permission: 'settings.write' },
 ];
 
 export function tabsFor(role: AdminRole) {
@@ -151,13 +151,13 @@ export type StaffMutationResult =
   | { ok: false; reason: StaffMutationReason };
 
 export const STAFF_ERROR_LABEL: Record<StaffMutationReason, string> = {
-  'invalid-username': 'ইউজারনেম ৩-৩২ অক্ষরের হতে হবে — ছোট হাতের অক্ষর, সংখ্যা, . _ -',
-  'username-taken': 'এই ইউজারনেম আগে থেকেই আছে।',
-  'reserved-username': 'এই ইউজারনেমটি সুপার অ্যাডমিনের — অন্য একটি দিন।',
-  'weak-password': 'পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের দিন।',
-  'invalid-role': 'রোলটি চেনা গেল না।',
-  'not-found': 'অ্যাকাউন্টটি পাওয়া যায়নি — পেজ রিফ্রেশ করুন।',
-  'staff-full': 'সর্বোচ্চ সংখ্যক স্টাফ অ্যাকাউন্ট হয়ে গেছে।',
+  'invalid-username': 'Username must be 3-32 characters — lowercase letters, digits, . _ -',
+  'username-taken': 'That username is already taken.',
+  'reserved-username': 'That username belongs to the super admin — pick another.',
+  'weak-password': 'Use a password of at least 8 characters.',
+  'invalid-role': 'That role was not recognised.',
+  'not-found': 'Account not found — refresh the page.',
+  'staff-full': 'The staff account limit has been reached.',
 };
 
 export const MAX_STAFF = 50;

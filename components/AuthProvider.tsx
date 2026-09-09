@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /** Returns an error message, or null on success. */
   const signUp = useCallback<AuthValue['signUp']>(async (phone, password, referral, agentCode) => {
-    if (!supabase) return 'ডেটাবেস যুক্ত হয়নি';
+    if (!supabase) return 'The database is not connected';
     // agent_code is read by the signup trigger (migration 008) and written
     // to profiles once. It is metadata rather than a follow-up update so a
     // client that dies right after signUp still leaves the agent credited.
@@ -122,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase, load]);
 
   const signIn = useCallback<AuthValue['signIn']>(async (phone, password) => {
-    if (!supabase) return 'ডেটাবেস যুক্ত হয়নি';
+    if (!supabase) return 'The database is not connected';
     const { error } = await supabase.auth.signInWithPassword({
       email: phoneToEmail(phone), password,
     });
@@ -150,13 +150,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 /** Supabase speaks English; players do not. */
 function translate(msg: string): string {
   const m = msg.toLowerCase();
-  if (m.includes('invalid login credentials')) return 'নাম্বার বা পাসওয়ার্ড ভুল';
-  if (m.includes('already registered')) return 'এই নাম্বারে আগেই অ্যাকাউন্ট আছে';
-  if (m.includes('password')) return 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে';
+  if (m.includes('invalid login credentials')) return 'Wrong number or password';
+  if (m.includes('already registered')) return 'An account already exists for this number';
+  if (m.includes('password')) return 'The password must be at least 6 characters';
   if (m.includes('email') && m.includes('confirm')) {
-    return 'ইমেইল কনফার্মেশন চালু আছে — Supabase ড্যাশবোর্ডে বন্ধ করতে হবে';
+    return 'Email confirmation is on — turn it off in the Supabase dashboard';
   }
-  if (m.includes('rate limit')) return 'অনেকবার চেষ্টা হয়েছে, একটু পরে আবার করুন';
+  if (m.includes('rate limit')) return 'Too many attempts, try again shortly';
   return msg;
 }
 

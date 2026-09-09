@@ -29,7 +29,7 @@ type Reason = 'no-aggregator' | 'no-demo' | 'upstream';
    connected yet, the screen shows the game — its own artwork, full bleed —
    rather than a wall of text about aggregators. */
 const MESSAGE: Partial<Record<Reason, string>> = {
-  upstream: 'গেম সার্ভার এখন সাড়া দিচ্ছে না। একটু পরে আবার চেষ্টা করুন।',
+  upstream: 'The game server is not responding right now. Please try again shortly.',
 };
 
 const isVideoFile = (url: string) => /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(url);
@@ -102,7 +102,7 @@ export default function GamePlayer({
             <div className="player__load" aria-hidden>
               <Wordmark />
               <span className="player__loadbar"><i /></span>
-              <p className="player__loadtxt">গেম লোড হচ্ছে…</p>
+              <p className="player__loadtxt">Loading the game…</p>
             </div>
             {isVideoFile(url) ? (
               /* a recorded game — a looping clip, no controls to give */

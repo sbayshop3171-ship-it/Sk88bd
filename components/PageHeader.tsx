@@ -15,7 +15,7 @@ export default function PageHeader({
 
   return (
     <header className="page-hd">
-      <button className="icon-btn" type="button" aria-label="পিছনে" onClick={() => router.back()}>
+      <button className="icon-btn" type="button" aria-label="Back" onClick={() => router.back()}>
         <LeftIcon />
       </button>
       <h1>{title}</h1>

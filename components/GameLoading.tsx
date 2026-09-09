@@ -54,7 +54,7 @@ export default function GameLoading({ children }: { children: React.ReactNode })
       <Wordmark />
       <span className="gload__ring" aria-hidden><i /></span>
       <span className="gload__bar" aria-hidden><i style={{ width: `${pct}%` }} /></span>
-      <p className="gload__txt">গেম লোড হচ্ছে… <b>{pct}%</b></p>
+      <p className="gload__txt">Loading the game… <b>{pct}%</b></p>
     </div>
   );
 

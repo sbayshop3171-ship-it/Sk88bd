@@ -61,8 +61,8 @@ export default function AppKeysControl({ initialState }: { initialState: SignalA
           <p className="adm-signal__eyebrow">DEVICE BOUND ACCESS</p>
           <h1 className="adm__h1">Signal App Keys</h1>
           <p className="adm__sub">
-            APK হাতে পেলেও key ছাড়া signal API খুলবে না। Key unlock হলে device bind
-            হবে, এরপর app token দিয়ে auto signal চালাবে।
+            Even with the APK in hand, the signal API stays shut without a key. Unlocking
+            a key binds the device, and the app then runs auto signal with its token.
           </p>
         </div>
         <div className="adm-signal__status">
@@ -126,12 +126,12 @@ export default function AppKeysControl({ initialState }: { initialState: SignalA
                 {copied ? 'Copied' : 'Copy key'}
               </button>
               <p>
-                এই full key শুধু এখন দেখা যাবে। Refresh করলে admin panel শুধু prefix
-                দেখাবে, full key আর server file-এ plain থাকবে না।
+                This full key is only visible now. After a refresh the panel shows the prefix
+                only — the full key is never stored in plain text on the server.
               </p>
             </>
           ) : (
-            <p>Generate করলে full key এখানে একবার দেখাবে।</p>
+            <p>Generate a key and the full value shows here once.</p>
           )}
         </div>
       </section>
@@ -140,7 +140,7 @@ export default function AppKeysControl({ initialState }: { initialState: SignalA
         <h2 className="adm__h2">Keys</h2>
         <div className="adm-keys__list">
           {state.keys.length === 0 ? (
-            <div className="adm-keys__empty">এখনো কোনো app key generate করা হয়নি।</div>
+            <div className="adm-keys__empty">No app key has been generated yet.</div>
           ) : (
             state.keys.map((key) => (
               <KeyRow key={key.id} item={key} busy={busy} onAction={send} />

@@ -16,6 +16,7 @@ import {
   type PayType,
   type WithdrawMethod,
 } from './cashier-config';
+import { englishCopy } from './copy-migration';
 
 type Store = { version: 1; config: Partial<CashierConfig> };
 
@@ -310,7 +311,12 @@ function mutateStore<T>(fn: (store: Store) => T): Promise<T> {
 async function readStore(): Promise<Store> {
   try {
     const parsed = JSON.parse(await readFile(STORE_FILE, 'utf8')) as Store;
-    if (parsed?.version === 1 && parsed.config && typeof parsed.config === 'object') return parsed;
+    // A config saved before the site went English still holds the Bangla
+    // defaults; englishCopy swaps those for their English replacements and
+    // leaves anything the operator wrote themselves alone.
+    if (parsed?.version === 1 && parsed.config && typeof parsed.config === 'object') {
+      return { ...parsed, config: englishCopy(parsed.config) };
+    }
   } catch {
     // nothing saved yet — the defaults apply
   }

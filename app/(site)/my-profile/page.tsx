@@ -29,19 +29,19 @@ export default function MyProfilePage() {
     : '—';
 
   const rows: [string, string][] = [
-    ['ইউজার আইডি', profile?.phone ?? '—'],
-    ['মোবাইল নাম্বার', profile?.phone ?? '—'],
-    ['নাম', profile?.display_name || '—'],
-    ['ভিআইপি লেভেল', `VIP ${profile?.vip_level ?? 0}`],
-    ['রেফারেল কোড', profile?.referral_code ?? '—'],
-    ['রেজিস্ট্রেশন তারিখ', joined],
+    ['User ID', profile?.phone ?? '—'],
+    ['Mobile number', profile?.phone ?? '—'],
+    ['Name', profile?.display_name || '—'],
+    ['VIP level', `VIP ${profile?.vip_level ?? 0}`],
+    ['Referral code', profile?.referral_code ?? '—'],
+    ['Registered on', joined],
   ];
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = name.trim().slice(0, 40);
-    if (clean.length < 2) { setErr('নাম কমপক্ষে ২ অক্ষরের হতে হবে'); return; }
-    if (!supabase || !session) { setErr('আগে লগইন করুন'); return; }
+    if (clean.length < 2) { setErr('The name must be at least 2 characters'); return; }
+    if (!supabase || !session) { setErr('Log in first'); return; }
 
     setBusy(true);
     setErr('');
@@ -52,24 +52,24 @@ export default function MyProfilePage() {
       .eq('id', session.user.id);
     setBusy(false);
 
-    if (error) { setErr('নাম বদলানো গেল না — আবার চেষ্টা করুন'); return; }
+    if (error) { setErr('Could not change the name — try again'); return; }
     await refresh();
     setEditing(false);
-    toast('নাম বদলানো হয়েছে');
+    toast('Name changed');
   };
 
   return (
     <>
-      <PageHeader title="আমার প্রোফাইল" />
+      <PageHeader title="My Profile" />
 
       <div className="profile">
         <i className="profile__av" aria-hidden>👤</i>
         <div style={{ minWidth: 0 }}>
           <div className="profile__n">
-            {signedIn ? (profile?.display_name || profile?.phone || 'প্লেয়ার') : 'গেস্ট'}
+            {signedIn ? (profile?.display_name || profile?.phone || 'Player') : 'Guest'}
           </div>
           <div className="profile__id">
-            {signedIn ? `VIP ${profile?.vip_level ?? 0}` : 'লগইন করলে তথ্য দেখা যাবে'}
+            {signedIn ? `VIP ${profile?.vip_level ?? 0}` : 'Log in to see your details'}
           </div>
         </div>
       </div>
@@ -94,11 +94,11 @@ export default function MyProfilePage() {
         <div style={{ margin: 12 }}>
           {editing ? (
             <form onSubmit={save} noValidate>
-              <Field label="নতুন নাম" error={err}>
+              <Field label="New name" error={err}>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="যে নামে ডাকতে চান"
+                  placeholder="What you would like to be called"
                   maxLength={40}
                   autoFocus
                 />
@@ -107,20 +107,20 @@ export default function MyProfilePage() {
                 <button type="button" className="btn btn--ghost" style={{ padding: 12 }}
                         onClick={() => { setEditing(false); setErr(''); setName(profile?.display_name ?? ''); }}
                         disabled={busy}>
-                  বাতিল
+                  Cancel
                 </button>
                 <button type="submit" className="btn btn--gold" style={{ padding: 12 }} disabled={busy}>
-                  {busy ? 'সেভ হচ্ছে…' : 'সেভ করুন'}
+                  {busy ? 'Saving…' : 'Save'}
                 </button>
               </div>
             </form>
           ) : (
             <button type="button" className="btn btn--gold btn--block" onClick={() => setEditing(true)}>
-              নাম বদলান
+              Change name
             </button>
           )}
           <div className="note" style={{ marginTop: 12 }}>
-            মোবাইল নাম্বার বদলাতে সাপোর্টে যোগাযোগ করুন — নাম্বারই আপনার লগইন আইডি।
+            To change your mobile number please contact support — the number is your login ID.
           </div>
         </div>
       )}

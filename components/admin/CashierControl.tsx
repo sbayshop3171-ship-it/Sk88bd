@@ -8,17 +8,17 @@ import type { CashierRow, RequestState } from '@/lib/cashier';
 type Table = 'deposits' | 'withdrawals';
 
 const STATE_TABS: { value: RequestState | 'all'; label: string }[] = [
-  { value: 'pending', label: 'পেন্ডিং' },
-  { value: 'approved', label: 'অনুমোদিত' },
-  { value: 'rejected', label: 'বাতিল' },
-  { value: 'all', label: 'সব' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'rejected', label: 'Rejected' },
+  { value: 'all', label: 'All' },
 ];
 
 const STATE_LABEL: Record<RequestState, string> = {
-  pending: 'পেন্ডিং',
-  approved: 'অনুমোদিত',
-  rejected: 'বাতিল',
-  cancelled: 'বাতিল হয়েছে',
+  pending: 'Pending',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  cancelled: 'Cancelled',
 };
 
 export default function CashierControl({
@@ -49,12 +49,12 @@ export default function CashierControl({
         | { ok: true; rows: CashierRow[] }
         | { ok: false; reason: string; message?: string };
       if (!data.ok) {
-        setError(data.message ?? `লোড হয়নি (${data.reason})`);
+        setError(data.message ?? `Could not load (${data.reason})`);
         return;
       }
       setRows(data.rows);
     } catch {
-      setError('সার্ভারে পৌঁছানো গেল না।');
+      setError('Could not reach the server.');
     }
   }
 
@@ -73,20 +73,20 @@ export default function CashierControl({
         | { ok: false; reason: string; message?: string };
 
       if (!data.ok) {
-        setError(data.message ?? `কাজ হয়নি (${data.reason})`);
+        setError(data.message ?? `That did not work (${data.reason})`);
         return;
       }
       setRows(data.rows);
       setNotes((n) => ({ ...n, [id]: '' }));
       setNotice(
         decision === 'approve'
-          ? isDeposit ? 'ডিপোজিট অনুমোদন হয়েছে — প্লেয়ারের ব্যালেন্সে টাকা যোগ হয়েছে।'
-                      : 'উইথড্র অনুমোদন হয়েছে।'
-          : isDeposit ? 'ডিপোজিট বাতিল করা হয়েছে।'
-                      : 'উইথড্র বাতিল — টাকা প্লেয়ারের ব্যালেন্সে ফেরত গেছে।',
+          ? isDeposit ? 'Deposit approved — the money is in the player’s balance.'
+                      : 'Withdrawal approved.'
+          : isDeposit ? 'Deposit rejected.'
+                      : 'Withdrawal rejected — the money is back in the player’s balance.',
       );
     } catch {
-      setError('সার্ভারে পৌঁছানো গেল না।');
+      setError('Could not reach the server.');
     } finally {
       setBusyId(0);
     }
@@ -95,8 +95,8 @@ export default function CashierControl({
   if (!backendReady) {
     return (
       <p className="adm__warn">
-        ডেটাবেস যুক্ত হয়নি। <code>.env.local</code> এ Supabase কী বসিয়ে সার্ভার
-        রিস্টার্ট করলেই এই স্ক্রিন কাজ শুরু করবে — কোড সম্পূর্ণ তৈরি আছে।
+        The database is not connected. Put the Supabase keys in <code>.env.local</code> and
+        restart the server and this screen starts working — the code is all here.
       </p>
     );
   }
@@ -107,9 +107,9 @@ export default function CashierControl({
   return (
     <>
       <div className="adm__tiles" style={{ marginBottom: 14 }}>
-        <div className="adm__tile"><b>{rows.length}</b><small>এই তালিকায়</small></div>
-        <div className="adm__tile"><b>{pending.length}</b><small>পেন্ডিং</small></div>
-        <div className="adm__tile"><b>{money(toTaka(total))}</b><small>মোট পরিমাণ</small></div>
+        <div className="adm__tile"><b>{rows.length}</b><small>In this list</small></div>
+        <div className="adm__tile"><b>{pending.length}</b><small>Pending</small></div>
+        <div className="adm__tile"><b>{money(toTaka(total))}</b><small>Total amount</small></div>
       </div>
 
       <div className="adm__seg">
@@ -132,17 +132,17 @@ export default function CashierControl({
         <table className="adm__table">
           <thead>
             <tr>
-              <th>#</th><th>প্লেয়ার</th><th>চ্যানেল</th><th>পরিমাণ</th>
-              <th>{isDeposit ? 'সেন্ডার / TxnID' : 'যে অ্যাকাউন্টে যাবে'}</th>
-              {!isDeposit && <th>চার্জ / TrxID</th>}
-              <th>সময়</th><th>অবস্থা</th><th></th>
+              <th>#</th><th>Player</th><th>Channel</th><th>Amount</th>
+              <th>{isDeposit ? 'Sender / TxnID' : 'Paid to account'}</th>
+              {!isDeposit && <th>Charge / TrxID</th>}
+              <th>Time</th><th>Status</th><th></th>
             </tr>
           </thead>
           <tbody>
             {rows.length === 0 ? (
               <tr>
                 <td colSpan={isDeposit ? 8 : 9} className="adm__empty">
-                  {isDeposit ? 'কোনো ডিপোজিট রিকোয়েস্ট নেই।' : 'কোনো উইথড্র রিকোয়েস্ট নেই।'}
+                  {isDeposit ? 'No deposit requests.' : 'No withdrawal requests.'}
                 </td>
               </tr>
             ) : (
@@ -180,7 +180,7 @@ export default function CashierControl({
                                 )}
                               </div>
                             ) : (
-                              <div className="adm__miss" style={{ fontSize: 11 }}>চার্জ আসেনি</div>
+                              <div className="adm__miss" style={{ fontSize: 11 }}>Charge not paid</div>
                             )}
                           </>
                         ) : (
@@ -204,7 +204,7 @@ export default function CashierControl({
                         <div className="adm__review">
                           <input
                             className="adm__mini"
-                            placeholder="নোট (ঐচ্ছিক)"
+                            placeholder="Note (optional)"
                             value={notes[r.id] ?? ''}
                             disabled={busy}
                             onChange={(e) => setNotes((n) => ({ ...n, [r.id]: e.target.value }))}
@@ -212,11 +212,11 @@ export default function CashierControl({
                           <div className="adm__rowacts">
                             <button type="button" className="btn btn--gold" disabled={busy}
                                     onClick={() => void review(r.id, 'approve')}>
-                              অনুমোদন
+                              Approve
                             </button>
                             <button type="button" className="btn btn--ghost adm__danger" disabled={busy}
                                     onClick={() => void review(r.id, 'reject')}>
-                              বাতিল
+                              Reject
                             </button>
                           </div>
                         </div>

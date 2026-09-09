@@ -55,27 +55,27 @@ export interface MiniGameDef {
 export const MINI_GAMES: Record<MiniGameId, MiniGameDef> = {
   crash: {
     id: 'crash', name: 'Crash', kind: 'flight', accent: '#ff5a5a', glyph: '📈',
-    tagline: 'লাইন যত উপরে ওঠে গুণ তত বাড়ে — ভেঙে পড়ার আগে ক্যাশ আউট করুন।',
+    tagline: 'The higher the line climbs the bigger the multiplier — cash out before it breaks.',
   },
   jetx: {
     id: 'jetx', name: 'JetX', kind: 'flight', accent: '#9b5cff', glyph: '🚀',
-    tagline: 'জেট ছুটতে থাকে, গুণ বাড়ে দ্রুত — বিস্ফোরণের আগে নেমে যান।',
+    tagline: 'The jet keeps climbing and the multiplier races up — get off before it blows.',
   },
   limbo: {
     id: 'limbo', name: 'Limbo', kind: 'instant', accent: '#a78bfa', glyph: '🎯',
-    tagline: 'নিজের টার্গেট গুণ ঠিক করুন — ড্র তার সমান বা বেশি হলেই জয়।',
+    tagline: 'Set your own target multiplier — win if the draw lands on it or above.',
   },
   dice: {
     id: 'dice', name: 'Dice', kind: 'instant', accent: '#3fe0bd', glyph: '🎲',
-    tagline: '০ থেকে ১০০ এর মধ্যে একটি সংখ্যা — উপরে না নিচে, আপনি বেছে নিন।',
+    tagline: 'A number between 0 and 100 — call it over or under, your choice.',
   },
   plinko: {
     id: 'plinko', name: 'Plinko', kind: 'instant', accent: '#ffc42e', glyph: '🔻',
-    tagline: 'বল পিন বেয়ে নামে — যে ঘরে পড়বে সেই গুণ আপনার।',
+    tagline: 'The ball drops through the pins — the slot it lands in is your multiplier.',
   },
   'coin-flip': {
     id: 'coin-flip', name: 'Coin Flip', kind: 'instant', accent: '#ffd95e', glyph: '🪙',
-    tagline: 'হেড না টেইল — এক টসে দ্বিগুণের কাছাকাছি।',
+    tagline: 'Heads or tails — close to double on a single toss.',
   },
 };
 
@@ -287,18 +287,18 @@ export type MiniReason =
   | 'round-open' | 'no-round' | 'already-crashed' | 'db-error';
 
 export const MINI_ERROR: Record<MiniReason, string> = {
-  'no-backend': 'গেম সার্ভার এখনো যুক্ত হয়নি',
-  unauthorized: 'খেলতে আগে লগইন করুন',
-  'unknown-game': 'এই গেমটি পাওয়া যায়নি',
-  'invalid-stake': 'বাজির অংক ঠিক নেই',
-  'below-minimum': `সর্বনিম্ন বাজি ৳${MIN_STAKE_PAISA / 100}`,
-  'above-maximum': `সর্বোচ্চ বাজি ৳${(MAX_STAKE_PAISA / 100).toLocaleString('en-IN')}`,
-  'invalid-bet': 'বাজির শর্ত ঠিক নেই',
-  'insufficient-balance': 'ব্যালেন্স যথেষ্ট নয়',
-  'round-open': 'আগের রাউন্ড এখনো চলছে',
-  'no-round': 'চলমান কোনো রাউন্ড নেই',
-  'already-crashed': 'রাউন্ড শেষ হয়ে গেছে',
-  'db-error': 'সমস্যা হয়েছে — আবার চেষ্টা করুন',
+  'no-backend': 'The game server is not connected yet',
+  unauthorized: 'Log in first to play',
+  'unknown-game': 'That game was not found',
+  'invalid-stake': 'That stake amount is not valid',
+  'below-minimum': `Minimum stake is ৳${MIN_STAKE_PAISA / 100}`,
+  'above-maximum': `Maximum stake is ৳${(MAX_STAKE_PAISA / 100).toLocaleString('en-IN')}`,
+  'invalid-bet': 'Those bet terms are not valid',
+  'insufficient-balance': 'Not enough balance',
+  'round-open': 'The previous round is still running',
+  'no-round': 'No round is running',
+  'already-crashed': 'The round has already ended',
+  'db-error': 'Something went wrong — try again',
 };
 
 export const fmtX = (m: number) => `${m.toFixed(2)}x`;

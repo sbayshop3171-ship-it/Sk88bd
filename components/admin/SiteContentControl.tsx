@@ -29,18 +29,18 @@ type Draft = {
 };
 
 const ERROR_LABEL: Record<string, string> = {
-  'invalid-title': 'শিরোনাম দিন (কমপক্ষে ২ অক্ষর)।',
-  'invalid-href': 'লিংক সাইটের ভেতরের পথ হতে হবে, যেমন /deposit।',
-  'list-full': `সর্বোচ্চ ${MAX_SLIDES} টি স্লাইড রাখা যায়।`,
-  'not-found': 'স্লাইডটি পাওয়া যায়নি — পেজ রিফ্রেশ করুন।',
-  'no-file': 'কোনো ছবি বাছা হয়নি।',
-  'bad-type': 'শুধু PNG, JPG, WEBP বা GIF ছবি দিন।',
-  'too-large': `ছবি ${Math.round(SLIDE_IMAGE_MAX_BYTES / 1024 / 1024)} MB এর ছোট হতে হবে।`,
-  unauthorized: 'সেশন শেষ হয়ে গেছে — আবার লগইন করুন।',
+  'invalid-title': 'Enter a title (at least 2 characters).',
+  'invalid-href': 'The link must be an in-site path, e.g. /deposit.',
+  'list-full': `You can keep up to ${MAX_SLIDES} slides.`,
+  'not-found': 'Slide not found — refresh the page.',
+  'no-file': 'No image was chosen.',
+  'bad-type': 'Only PNG, JPG, WEBP or GIF images are accepted.',
+  'too-large': `The image must be under ${Math.round(SLIDE_IMAGE_MAX_BYTES / 1024 / 1024)} MB.`,
+  unauthorized: 'Your session has expired — log in again.',
 };
 
 const BLANK: Draft = {
-  kicker: '', title: '', amount: '', emoji: '🎁', cta: 'বিস্তারিত',
+  kicker: '', title: '', amount: '', emoji: '🎁', cta: 'Details',
   href: '/promotions', note: '', art: 's1', status: 'active', sortOrder: 1,
 };
 
@@ -75,14 +75,14 @@ export default function SiteContentControl({ initial }: { initial: SiteContent }
         | { ok: false; reason: string };
 
       if (!data.ok) {
-        setError(ERROR_LABEL[data.reason] ?? `সমস্যা হয়েছে (${data.reason})`);
+        setError(ERROR_LABEL[data.reason] ?? `Something went wrong (${data.reason})`);
         return false;
       }
       setContent(data.content);
       setNotice(okMessage);
       return true;
     } catch {
-      setError('সার্ভারে পৌঁছানো গেল না — আবার চেষ্টা করুন।');
+      setError('Could not reach the server — try again.');
       return false;
     } finally {
       setBusy(false);
@@ -105,14 +105,14 @@ export default function SiteContentControl({ initial }: { initial: SiteContent }
         | { ok: true; content: SiteContent }
         | { ok: false; reason: string };
       if (!data.ok) {
-        setError(ERROR_LABEL[data.reason] ?? `আপলোড হয়নি (${data.reason})`);
+        setError(ERROR_LABEL[data.reason] ?? `Upload failed (${data.reason})`);
         return;
       }
       setContent(data.content);
       setImageVersion((v) => v + 1);
-      setNotice('ছবি বসানো হয়েছে — সাইটে এখন এই ছবিটাই দেখাবে।');
+      setNotice('Image set — the site now shows this picture.');
     } catch {
-      setError('আপলোড করা গেল না — আবার চেষ্টা করুন।');
+      setError('Could not upload — try again.');
     } finally {
       setBusy(false);
     }
@@ -131,14 +131,14 @@ export default function SiteContentControl({ initial }: { initial: SiteContent }
         | { ok: true; content: SiteContent }
         | { ok: false; reason: string };
       if (!data.ok) {
-        setError(ERROR_LABEL[data.reason] ?? `মোছা গেল না (${data.reason})`);
+        setError(ERROR_LABEL[data.reason] ?? `Could not delete (${data.reason})`);
         return;
       }
       setContent(data.content);
       setImageVersion((v) => v + 1);
-      setNotice('ছবি সরানো হয়েছে — আবার রঙের কার্ড দেখাবে।');
+      setNotice('Image removed — the colour card is back.');
     } catch {
-      setError('সার্ভারে পৌঁছানো গেল না — আবার চেষ্টা করুন।');
+      setError('Could not reach the server — try again.');
     } finally {
       setBusy(false);
     }
@@ -147,8 +147,8 @@ export default function SiteContentControl({ initial }: { initial: SiteContent }
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const ok = editingId
-      ? await send({ action: 'update', kind, id: editingId, ...form }, 'স্লাইড আপডেট হয়েছে।')
-      : await send({ action: 'add', kind, ...form }, 'নতুন স্লাইড যোগ হয়েছে।');
+      ? await send({ action: 'update', kind, id: editingId, ...form }, 'Slide updated.')
+      : await send({ action: 'add', kind, ...form }, 'New slide added.');
     if (ok) {
       setForm({ ...BLANK, sortOrder: list.length + 1 });
       setEditingId(null);
@@ -166,7 +166,7 @@ export default function SiteContentControl({ initial }: { initial: SiteContent }
       title: slide.title,
       amount: slide.amount,
       emoji: b.emoji ?? '🎁',
-      cta: b.cta ?? 'বিস্তারিত',
+      cta: b.cta ?? 'Details',
       href: b.href ?? '/promotions',
       note: a.note ?? '',
       art: slide.art,
@@ -193,99 +193,99 @@ export default function SiteContentControl({ initial }: { initial: SiteContent }
     <>
       <div className="adm__seg">
         <button type="button" className={isBanner ? 'on' : ''} onClick={() => switchKind('banner')}>
-          হোম ব্যানার ({content.banners.length})
+          Home banners ({content.banners.length})
         </button>
         <button type="button" className={!isBanner ? 'on' : ''} onClick={() => switchKind('announcement')}>
-          ঘোষণা পপআপ ({content.announcements.length})
+          Announcement popup ({content.announcements.length})
         </button>
       </div>
 
       <form className="adm__card" onSubmit={submit}>
         <h2 className="adm__cardh">
-          {editingId ? 'স্লাইড এডিট' : isBanner ? 'নতুন ব্যানার' : 'নতুন ঘোষণা'}
+          {editingId ? 'Edit slide' : isBanner ? 'New banner' : 'New announcement'}
         </h2>
 
         <div className="adm__formgrid">
           {isBanner && (
             <label className="adm__f">
-              <span>উপরের ছোট লেখা</span>
-              <input value={form.kicker} onChange={(e) => set('kicker', e.target.value)} placeholder="সাইন আপ বোনাস" disabled={busy} />
+              <span>Kicker line</span>
+              <input value={form.kicker} onChange={(e) => set('kicker', e.target.value)} placeholder="Sign Up Bonus" disabled={busy} />
             </label>
           )}
 
           <label className="adm__f">
-            <span>শিরোনাম</span>
-            <input value={form.title} onChange={(e) => set('title', e.target.value)} placeholder="১৮৳ ফ্রি বোনাস" disabled={busy} />
+            <span>Title</span>
+            <input value={form.title} onChange={(e) => set('title', e.target.value)} placeholder="৳18 Free Bonus" disabled={busy} />
           </label>
 
           <label className="adm__f">
-            <span>বড় অংক</span>
-            <input value={form.amount} onChange={(e) => set('amount', e.target.value)} placeholder="৳১৮" disabled={busy} />
+            <span>Big figure</span>
+            <input value={form.amount} onChange={(e) => set('amount', e.target.value)} placeholder="৳18" disabled={busy} />
           </label>
 
           {isBanner ? (
             <>
               <label className="adm__f">
-                <span>ইমোজি</span>
+                <span>Emoji</span>
                 <input value={form.emoji} onChange={(e) => set('emoji', e.target.value)} placeholder="🎁" disabled={busy} />
               </label>
               <label className="adm__f">
-                <span>বাটনের লেখা</span>
-                <input value={form.cta} onChange={(e) => set('cta', e.target.value)} placeholder="এখনই নিন" disabled={busy} />
+                <span>Button text</span>
+                <input value={form.cta} onChange={(e) => set('cta', e.target.value)} placeholder="Claim Now" disabled={busy} />
               </label>
               <label className="adm__f">
-                <span>লিংক (সাইটের ভেতরে)</span>
+                <span>Link (in-site)</span>
                 <input value={form.href} onChange={(e) => set('href', e.target.value)} placeholder="/register" disabled={busy} />
               </label>
             </>
           ) : (
             <label className="adm__f adm__f--wide">
-              <span>নিচের লেখা</span>
-              <input value={form.note} onChange={(e) => set('note', e.target.value)} placeholder="সাইন আপ করে নাম্বার ভেরিফাই করুন" disabled={busy} />
+              <span>Note line</span>
+              <input value={form.note} onChange={(e) => set('note', e.target.value)} placeholder="Sign up and verify your number" disabled={busy} />
             </label>
           )}
 
           <label className="adm__f">
-            <span>রঙ</span>
+            <span>Colour</span>
             <select value={form.art} onChange={(e) => set('art', e.target.value as ArtClass)} disabled={busy}>
               {ART_CLASSES.map((a) => <option key={a} value={a}>{ART_LABEL[a]}</option>)}
             </select>
           </label>
 
           <label className="adm__f">
-            <span>ক্রম</span>
+            <span>Order</span>
             <input type="number" min={1} max={99} value={form.sortOrder} onChange={(e) => set('sortOrder', Number(e.target.value))} disabled={busy} />
           </label>
 
           <label className="adm__f">
-            <span>অবস্থা</span>
+            <span>Status</span>
             <select value={form.status} onChange={(e) => set('status', e.target.value as SlideStatus)} disabled={busy}>
-              <option value="active">দেখানো হবে</option>
-              <option value="hidden">লুকানো</option>
+              <option value="active">Shown</option>
+              <option value="hidden">Hidden</option>
             </select>
           </label>
         </div>
 
-        {full && <p className="adm__warn" style={{ margin: '0 0 10px' }}>সর্বোচ্চ {MAX_SLIDES} টি স্লাইড হয়ে গেছে।</p>}
+        {full && <p className="adm__warn" style={{ margin: '0 0 10px' }}>You have reached {MAX_SLIDES} slides.</p>}
         {error && <p className="adm__err">{error}</p>}
         {notice && <p className="adm__note">{notice}</p>}
 
         <div className="adm__actions">
           <button type="submit" className="btn btn--gold" disabled={busy || full}>
-            {editingId ? 'আপডেট করুন' : 'যোগ করুন'}
+            {editingId ? 'Update' : 'Add'}
           </button>
           {editingId && (
             <button type="button" className="btn btn--ghost" onClick={() => { setEditingId(null); setForm(BLANK); }} disabled={busy}>
-              বাতিল
+              Cancel
             </button>
           )}
         </div>
 
         <p className="adm__hint">
-          সেভ করার সাথে সাথেই সাইটে বদলে যাবে — ক্রম ছোট থেকে বড় হিসেবে সাজানো হয়।
-          নিচের তালিকায় “ছবি” ঘরে ক্লিক করে যেকোনো স্লাইডে নিজের ছবি বসানো যায়
-          ({isBanner ? 'ব্যানারের জন্য ২:১ মাপ, যেমন ১২৮০×৬৪০' : 'পপআপের জন্য বর্গাকার, যেমন ৮০০×৮০০'});
-          ছবি থাকলে সাইটে শুধু ছবিটাই দেখাবে, লেখা নয়।
+          Changes go live the moment you save — slides are ordered low to high.
+          Click the “Image” cell in the table below to put your own picture on any slide
+          ({isBanner ? '2:1 for banners, e.g. 1280×640' : 'square for the popup, e.g. 800×800'});
+          when a slide has an image the site shows the picture only, not the text.
         </p>
       </form>
 
@@ -293,19 +293,19 @@ export default function SiteContentControl({ initial }: { initial: SiteContent }
         <table className="adm__table">
           <thead>
             <tr>
-              <th>ছবি</th><th>ক্রম</th><th>শিরোনাম</th>
-              <th>{isBanner ? 'লিংক' : 'নিচের লেখা'}</th>
-              <th>অংক</th><th>রঙ</th><th>অবস্থা</th><th></th>
+              <th>Image</th><th>Order</th><th>Title</th>
+              <th>{isBanner ? 'Link' : 'Note'}</th>
+              <th>Figure</th><th>Colour</th><th>Status</th><th></th>
             </tr>
           </thead>
           <tbody>
             {list.length === 0 ? (
-              <tr><td colSpan={8} className="adm__empty">কোনো স্লাইড নেই — উপরের ফর্ম থেকে যোগ করুন।</td></tr>
+              <tr><td colSpan={8} className="adm__empty">No slides yet — add one with the form above.</td></tr>
             ) : (
               list.map((s) => (
                 <tr key={s.id}>
                   <td>
-                    <label className={`adm__icon${isBanner ? ' adm__icon--wide' : ''}`} title="ছবি বদলান">
+                    <label className={`adm__icon${isBanner ? ' adm__icon--wide' : ''}`} title="Change image">
                       {s.imageUrl
                         // eslint-disable-next-line @next/next/no-img-element
                         ? <img src={`${s.imageUrl}?v=${imageVersion}`} alt="" />
@@ -313,7 +313,7 @@ export default function SiteContentControl({ initial }: { initial: SiteContent }
                       <input
                         type="file"
                         accept="image/png,image/jpeg,image/webp,image/gif"
-                        aria-label={`${s.title} — ছবি আপলোড`}
+                        aria-label={`${s.title} — upload image`}
                         disabled={busy}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
@@ -328,28 +328,28 @@ export default function SiteContentControl({ initial }: { initial: SiteContent }
                   <td>{isBanner ? <code>{(s as Banner).href}</code> : <span className="adm__muted">{(s as Announcement).note || '—'}</span>}</td>
                   <td>{s.amount || '—'}</td>
                   <td>{ART_LABEL[s.art]}</td>
-                  <td>{s.status === 'active' ? <span className="adm__ok">দেখানো হচ্ছে</span> : <span className="adm__miss">লুকানো</span>}</td>
+                  <td>{s.status === 'active' ? <span className="adm__ok">Showing</span> : <span className="adm__miss">Hidden</span>}</td>
                   <td className="adm__rowacts">
-                    <button type="button" className="btn btn--ghost" onClick={() => edit(s)} disabled={busy}>এডিট</button>
+                    <button type="button" className="btn btn--ghost" onClick={() => edit(s)} disabled={busy}>Edit</button>
                     {s.imageUrl && (
                       <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => removeImage(s.id)}>
-                        ছবি মুছুন
+                        Remove image
                       </button>
                     )}
                     <button
                       type="button" className="btn btn--ghost" disabled={busy}
                       onClick={() => send(
                         { action: 'update', kind, ...s, status: s.status === 'active' ? 'hidden' : 'active' },
-                        s.status === 'active' ? 'স্লাইড লুকানো হয়েছে।' : 'স্লাইড দেখানো হচ্ছে।',
+                        s.status === 'active' ? 'Slide hidden.' : 'Slide is showing.',
                       )}
                     >
-                      {s.status === 'active' ? 'লুকান' : 'দেখান'}
+                      {s.status === 'active' ? 'Hide' : 'Show'}
                     </button>
                     <button
                       type="button" className="btn btn--ghost adm__danger" disabled={busy}
-                      onClick={() => send({ action: 'remove', kind, id: s.id }, 'স্লাইড মুছে ফেলা হয়েছে।')}
+                      onClick={() => send({ action: 'remove', kind, id: s.id }, 'Slide deleted.')}
                     >
-                      মুছুন
+                      Delete
                     </button>
                   </td>
                 </tr>

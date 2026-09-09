@@ -6,7 +6,7 @@ import type { RecentWin, Seat } from '@/components/mini/useLiveBoard';
 import { money } from '@/lib/brand';
 import { fmtX, type FairnessInfo } from '@/lib/mini-games';
 
-const TABS = ['লাইভ বেট', 'টপ বেট', 'ফেয়ারনেস'] as const;
+const TABS = ['Live Bets', 'Top Bets', 'Fairness'] as const;
 
 /** the player's own seat, when they have one in the air or just settled */
 export interface MyRow {
@@ -51,7 +51,7 @@ export default function LiveBoard({
     <section className="jx-live">
       {recent.length > 0 && (
         <div className="jx-wins">
-          <span className="jx-wins__tag">সাম্প্রতিক জয়</span>
+          <span className="jx-wins__tag">Recent wins</span>
           <div className="jx-wins__rail scroll-x">
             {recent.map((w) => (
               <span className="jx-wins__chip" key={w.id}>
@@ -86,23 +86,23 @@ export default function LiveBoard({
           <div className="jx-live__meta">
             <div className="jx-live__count">
               <i className="jx-live__dot" aria-hidden />
-              <b>{players.toLocaleString('en-IN')}</b> জন এখন খেলছে
+              <b>{players.toLocaleString('en-IN')}</b> playing now
             </div>
             <div className="jx-live__total">
               <b>{money(totalWin)}</b>
-              <small>বোর্ডে জেতা</small>
+              <small>Won on the board</small>
             </div>
           </div>
           <div className="jx-live__fill"><i style={{ width: `${Math.round(share * 100)}%` }} /></div>
 
           <div className="jx-bets">
             <div className="jx-bets__head">
-              <span>প্লেয়ার</span><span>বাজি</span><span>x</span><span>জিত</span>
+              <span>Player</span><span>Bet</span><span>x</span><span>Won</span>
             </div>
             <div className="jx-bets__scroll">
               {mine && (
                 <div className={`jx-bets__row is-mine${mine.out ? ' is-out' : ''}`}>
-                  <span className="jx-bets__u">আপনি</span>
+                  <span className="jx-bets__u">You</span>
                   <span className="jx-bets__s">{money(mine.stake)}</span>
                   <span className="jx-bets__x">{mine.out ? fmtX(mine.multiplier) : '—'}</span>
                   <span className="jx-bets__w">
@@ -118,7 +118,7 @@ export default function LiveBoard({
                   <span className="jx-bets__w">{s.out ? money(Math.round(s.stake * s.target)) : '—'}</span>
                 </div>
               ))}
-              {seats.length === 0 && <div className="jx-bets__empty">বোর্ড লোড হচ্ছে…</div>}
+              {seats.length === 0 && <div className="jx-bets__empty">Loading the board…</div>}
             </div>
           </div>
         </>

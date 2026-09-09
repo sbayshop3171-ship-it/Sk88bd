@@ -10,14 +10,14 @@ export const dynamic = 'force-dynamic';
 export default async function AdminBanners() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'content.write')) return <NoAccess role={session.role} what="ব্যানার ও ঘোষণা" />;
+  if (!can(session.role, 'content.write')) return <NoAccess role={session.role} what="Banners and announcements" />;
 
   return (
     <>
-      <h1 className="adm__h1">ব্যানার ও ঘোষণা</h1>
+      <h1 className="adm__h1">Banners &amp; Announcements</h1>
       <p className="adm__sub">
-        হোম পেজের স্লাইডার আর প্রথমবার ঢুকলে দেখানো ঘোষণা পপআপ — দুটোই এখান থেকে
-        বদলানো যায়। সেভ করার সাথে সাথে সাইটে দেখা যাবে।
+        The home page slider and the announcement popup shown on a first visit are both
+        edited here. Changes appear on the site the moment you save.
       </p>
       <SiteContentControl initial={await getSiteContent()} />
     </>

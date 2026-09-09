@@ -143,7 +143,7 @@ export async function getSignalTerminalSnapshot(game: SignalGame = 'aviator') {
       crashAt: item.target_x,
       happenedAt: item.crash_at,
     })),
-    notice: signalVisible ? 'নেক্সট সিগন্যাল রেডি' : 'সিগন্যাল অফ',
+    notice: signalVisible ? 'Next signal ready' : 'Signal off',
     signalLeadMode: 'app-next-round-preview',
     demoControlled: true,
   };

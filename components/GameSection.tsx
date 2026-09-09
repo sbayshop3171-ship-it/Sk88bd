@@ -89,7 +89,7 @@ export default function GameSection({
   category?: CategoryKey;
   games?: Game[];
   title?: string;
-  /** Where "সব" goes for a rail built from a hand-passed list. */
+  /** Where "See all" goes for a rail built from a hand-passed list. */
   href?: string;
 }) {
   /* Every rail leads with the games that actually open — its own engine, a

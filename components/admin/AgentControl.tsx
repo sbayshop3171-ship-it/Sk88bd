@@ -51,7 +51,7 @@ export default function AgentControl({
       if (!res.ok || !body.ok) throw new Error(body.reason ?? 'failed');
       setPlayers((cur) => ({ ...cur, [code]: body.players as PlayerRow[] }));
     } catch {
-      setErr('ইউজার তালিকা আনা গেল না — আবার চেষ্টা করুন।');
+      setErr('Could not load the player list — try again.');
     } finally {
       setBusy(null);
     }
@@ -75,7 +75,7 @@ export default function AgentControl({
       setCopied(code);
       setTimeout(() => setCopied((c) => (c === code ? '' : c)), 2000);
     } catch {
-      setErr('কপি করা গেল না — লিংকটি হাতে সিলেক্ট করে কপি করুন।');
+      setErr('Could not copy — select the link and copy it by hand.');
     }
   };
 
@@ -92,8 +92,8 @@ export default function AgentControl({
     return (
       <p className="adm__sub">
         {seesEveryone
-          ? 'এখনো কোনো এজেন্ট অ্যাকাউন্ট নেই। স্টাফ পেজ থেকে এজেন্ট বানালে তার লিংক এখানে চলে আসবে।'
-          : 'আপনার অ্যাকাউন্টের লিংক পাওয়া গেল না — সুপার অ্যাডমিনকে জানান।'}
+          ? 'No agent accounts yet. Create an agent on the Staff page and their link shows up here.'
+          : 'No link was found for your account — tell the super admin.'}
       </p>
     );
   }
@@ -102,17 +102,17 @@ export default function AgentControl({
     <>
       {!migrated && (
         <p className="adm__note">
-          ডেটাবেসে <code>008_agent_referrals.sql</code> এখনো চালানো হয়নি, তাই ইউজার গোনা
-          যাচ্ছে না। লিংক শেয়ার করা যাবে, কিন্তু হিসাব দেখাতে মাইগ্রেশনটি লাগবে।
+          <code>008_agent_referrals.sql</code> has not been run on the database yet, so players
+          cannot be counted. The links still work, but the numbers need that migration.
         </p>
       )}
 
       {seesEveryone && agents.length > 1 && (
         <div className="adm__tiles">
-          <div className="adm__tile"><b>{agents.length}</b><small>এজেন্ট</small></div>
-          <div className="adm__tile"><b>{totals.players}</b><small>এজেন্টের আনা ইউজার</small></div>
-          <div className="adm__tile"><b>{totals.active}</b><small>ডিপোজিট করেছে</small></div>
-          <div className="adm__tile"><b>{money(toTaka(totals.deposited))}</b><small>মোট ডিপোজিট</small></div>
+          <div className="adm__tile"><b>{agents.length}</b><small>Agents</small></div>
+          <div className="adm__tile"><b>{totals.players}</b><small>Players brought in</small></div>
+          <div className="adm__tile"><b>{totals.active}</b><small>Have deposited</small></div>
+          <div className="adm__tile"><b>{money(toTaka(totals.deposited))}</b><small>Total deposits</small></div>
         </div>
       )}
 
@@ -130,44 +130,44 @@ export default function AgentControl({
                 <div className="adm__agent-who">
                   <b>{agent.username}</b>
                   <span className="adm__agent-role">{ROLE_LABEL[agent.role]}</span>
-                  {!agent.active && <span className="adm__agent-off">বন্ধ</span>}
+                  {!agent.active && <span className="adm__agent-off">Disabled</span>}
                 </div>
                 <div className="adm__agent-nums">
-                  <span><b>{migrated ? agent.players : '—'}</b> ইউজার</span>
-                  <span><b>{migrated ? agent.activePlayers : '—'}</b> ডিপোজিট করেছে</span>
-                  <span><b>{migrated ? money(toTaka(agent.deposited)) : '—'}</b> মোট</span>
+                  <span><b>{migrated ? agent.players : '—'}</b> players</span>
+                  <span><b>{migrated ? agent.activePlayers : '—'}</b> deposited</span>
+                  <span><b>{migrated ? money(toTaka(agent.deposited)) : '—'}</b> total</span>
                 </div>
               </div>
 
               <div className="adm__agent-link">
                 <code>{link}</code>
                 <button type="button" className="btn btn--ghost" onClick={() => copy(agent.refCode)} disabled={!origin}>
-                  {copied === agent.refCode ? 'কপি হয়েছে' : 'লিংক কপি'}
+                  {copied === agent.refCode ? 'Copied' : 'Copy link'}
                 </button>
               </div>
               <p className="adm__hint">
-                কোড <b>{agent.refCode}</b> — এই লিংকে ঢুকে কেউ রেজিস্টার করলে সে এই
-                অ্যাকাউন্টের নিচে যোগ হবে।
+                Code <b>{agent.refCode}</b> — anyone who registers through this link is added
+                under this account.
               </p>
 
               <button type="button" className="btn btn--ghost adm__agent-more" onClick={() => toggle(agent.refCode)}>
-                {isOpen ? 'ইউজার লুকান' : 'ইউজার দেখুন'}
+                {isOpen ? 'Hide players' : 'Show players'}
               </button>
 
               {isOpen && (
                 busy === agent.refCode ? (
-                  <p className="adm__sub">আনা হচ্ছে…</p>
+                  <p className="adm__sub">Loading…</p>
                 ) : (
                   <DataTable
-                    columns={['নাম্বার', 'ব্যালেন্স', 'VIP', 'অবস্থা', 'যোগ দিয়েছে']}
+                    columns={['Number', 'Balance', 'VIP', 'Status', 'Joined']}
                     rows={rows.map((p) => [
                       <span key="p">{p.phone}{p.displayName ? ` · ${p.displayName}` : ''}</span>,
                       money(toTaka(p.balance)),
                       p.vipLevel,
-                      p.isBlocked ? <span key="b" className="adm__miss">ব্লক</span> : <span key="b" className="adm__ok">সক্রিয়</span>,
-                      new Date(p.createdAt).toLocaleDateString('bn-BD'),
+                      p.isBlocked ? <span key="b" className="adm__miss">Blocked</span> : <span key="b" className="adm__ok">Active</span>,
+                      new Date(p.createdAt).toLocaleDateString('en-GB'),
                     ])}
-                    empty={migrated ? 'এই লিংকে এখনো কেউ রেজিস্টার করেনি।' : 'মাইগ্রেশন চালানোর পর দেখা যাবে।'}
+                    empty={migrated ? 'Nobody has registered through this link yet.' : 'Visible once the migration has been run.'}
                   />
                 )
               )}

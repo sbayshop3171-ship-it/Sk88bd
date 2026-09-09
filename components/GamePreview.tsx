@@ -98,7 +98,7 @@ export default function GamePreview({ url, name }: { url: string; name: string }
       >
         {/* sits behind the frame: providers take tens of seconds to pull their
             assets, and an empty black box reads as broken until then */}
-        <p className="gpv__loading">গেম লোড হচ্ছে…</p>
+        <p className="gpv__loading">Loading the game…</p>
 
         {video ? (
           <video

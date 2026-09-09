@@ -101,15 +101,15 @@ function GateSheet({
   const sheet = (
     <div className="gsheet" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="gsheet__card" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="gsheet__x" aria-label="বন্ধ করুন" onClick={onClose}>×</button>
+        <button type="button" className="gsheet__x" aria-label="Close" onClick={onClose}>×</button>
 
         {kind === 'login' ? (
           <>
             <span className="gsheet__icon" aria-hidden>🔒</span>
-            <h2 className="gsheet__title">বাজি ধরতে লগইন করুন</h2>
+            <h2 className="gsheet__title">Log in to place a bet</h2>
             <p className="gsheet__note">
-              গেম দেখতে কিছু লাগে না, কিন্তু টাকা দিয়ে খেলতে অ্যাকাউন্ট লাগবে।
-              লগইন করলে আপনার ব্যালেন্স নিয়ে সরাসরি খেলতে পারবেন।
+              Watching costs nothing, but playing for money needs an account.
+              Log in and you can play straight away with your own balance.
             </p>
             <div className="gsheet__acts">
               <Link href="/login" className="btn btn--gold btn--block">{t.login}</Link>
@@ -119,16 +119,16 @@ function GateSheet({
         ) : (
           <>
             <span className="gsheet__icon" aria-hidden>💰</span>
-            <h2 className="gsheet__title">ব্যালেন্স শূন্য</h2>
+            <h2 className="gsheet__title">Balance is empty</h2>
             <p className="gsheet__note">
-              বাজি ধরতে ব্যালেন্সে টাকা থাকতে হবে। ডিপোজিট করলে সাথে সাথেই এই
-              গেমেই খেলতে পারবেন।
+              You need money in your balance to bet. Deposit and you can carry on
+              playing this very game.
             </p>
-            <p className="gsheet__bal">এখন আছে {money(balance)}</p>
+            <p className="gsheet__bal">You have {money(balance)}</p>
             <div className="gsheet__acts">
-              <Link href="/deposit" className="btn btn--gold btn--block">{t.deposit} করুন</Link>
+              <Link href="/deposit" className="btn btn--gold btn--block">{t.deposit}</Link>
               <button type="button" className="btn btn--ghost btn--block" onClick={onClose}>
-                দেখতে থাকি
+                Keep watching
               </button>
             </div>
           </>

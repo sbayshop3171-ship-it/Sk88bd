@@ -24,25 +24,25 @@ export default function VipPage() {
 
   return (
     <>
-      <PageHeader title="ভিআইপি ক্লাব" />
+      <PageHeader title="VIP Club" />
       <div className="vip-hero">
         <Image src="/games/exclusive-vip.webp" alt="" width={112} height={112} priority />
         <div>
-          <h1>ভিআইপি ক্লাব</h1>
-          <p>যত বেশি খেলবেন, তত বেশি রিবেট ও রিওয়ার্ড</p>
+          <h1>VIP Club</h1>
+          <p>The more you play, the more rebate and rewards you get</p>
         </div>
       </div>
 
       {signedIn && (
         <div className="vip-prog">
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span>আপনার লেভেল: <b>VIP {level}</b></span>
-            {next ? <span>পরবর্তী: <b>{next.level}</b></span> : <span><b>সর্বোচ্চ লেভেল</b></span>}
+            <span>Your level: <b>VIP {level}</b></span>
+            {next ? <span>Next: <b>{next.level}</b></span> : <span><b>Top level</b></span>}
           </div>
           <div className="tov__bar"><i style={{ width: `${pct}%` }} /></div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, color: 'var(--muted)' }}>
-            <span>বেট ভলিউম {money(toTaka(volume))}</span>
-            {next && <span>প্রয়োজন {money(next.need)}</span>}
+            <span>Bet volume {money(toTaka(volume))}</span>
+            {next && <span>Needs {money(next.need)}</span>}
           </div>
         </div>
       )}
@@ -62,11 +62,11 @@ export default function VipPage() {
                  style={{ padding: '13px 14px', borderBottom: '1px solid rgba(255,255,255,.05)' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <b style={{ color: 'var(--gold)', fontSize: 14 }}>{v.level}</b>
-                {mine && <span className="vip-tag">আপনি</span>}
+                {mine && <span className="vip-tag">You</span>}
                 <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700 }}>{v.gift}</span>
               </div>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>
-                প্রয়োজনীয় টার্নওভার {money(v.need)} · রিবেট {v.rebate}
+                Turnover required {money(v.need)} · rebate {v.rebate}
               </div>
             </div>
           );

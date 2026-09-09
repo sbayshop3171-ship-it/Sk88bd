@@ -109,8 +109,8 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
           <p className="adm-signal__eyebrow">DEMO CONTROLLED BACKEND</p>
           <h1 className="adm__h1">Aviator Signal Brain</h1>
           <p className="adm__sub">
-            App আগে next signal দেখায়। Website current round শেষ করে ওই
-            next signal-টা পরের quick round-এ চালাবে।
+            The app shows the next signal first. The website finishes the current round
+            and then runs that next signal on the following quick round.
           </p>
         </div>
         <div className={`adm-signal__status is-${state.round.status}`}>
@@ -154,8 +154,8 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
             {busy === 'set-manual' ? 'Saving...' : 'Set signal'}
           </button>
           <div className="adm-signal__hint">
-            Manual set করলে app gauge সাথে সাথে update হবে। Website current
-            round শেষ হলে এই next signal value crash target হিসেবে follow করবে।
+            Setting it manually updates the app gauge straight away. Once the website's
+            current round ends it follows this next signal value as the crash target.
           </div>
         </form>
 
@@ -188,8 +188,8 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
             </button>
           </div>
           <div className="adm-signal__hint">
-            6s test current website round দ্রুত চালায়। App next value আগেই
-            দেখাবে, তারপর website পরের round-এ একই target follow করবে।
+            The 6s test runs the current website round quickly. The app shows the next
+            value first, then the website follows the same target on the round after.
           </div>
         </div>
       </section>

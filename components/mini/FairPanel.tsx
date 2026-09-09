@@ -27,35 +27,35 @@ export default function FairPanel({
   return (
     <div className="mg__fair">
       <p>
-        বাজি ধরার <b>আগেই</b> সার্ভার একটি গোপন সিড বেছে নেয় আর তার SHA-256
-        হ্যাশ আপনাকে দেখায়। ফলাফল বের হয় SHA-256(সার্ভার সিড : আপনার সিড :
-        নন্স) থেকে। রাউন্ড শেষ হলে সার্ভার সিডটি খুলে দেওয়া হয় — আপনি নিজে
-        হ্যাশ মিলিয়ে দেখতে পারেন ফলাফল আগে থেকেই ঠিক করা ছিল। ঘরের প্রান্ত
-        {' '}{Math.round(HOUSE_EDGE * 100)}%, অর্থাৎ RTP {Math.round((1 - HOUSE_EDGE) * 100)}%।
+        <b>Before</b> you bet, the server picks a secret seed and shows you its
+        SHA-256 hash. The result comes from SHA-256(server seed : your seed :
+        nonce). When the round ends the server seed is revealed — check the hash
+        yourself and you can see the result was fixed before you played. The house
+        edge is{' '}{Math.round(HOUSE_EDGE * 100)}%, so the RTP is {Math.round((1 - HOUSE_EDGE) * 100)}%.
       </p>
 
       <label className="mg__seed">
-        <span>আপনার সিড</span>
+        <span>Your seed</span>
         <input value={clientSeed} readOnly />
-        <button type="button" onClick={onNewSeed}>নতুন</button>
+        <button type="button" onClick={onNewSeed}>New</button>
       </label>
 
       {fairness ? (
         <dl className="mg__proof">
-          <div><dt>সার্ভার সিড হ্যাশ</dt><dd><code>{fairness.serverSeedHash}</code></dd></div>
+          <div><dt>Server seed hash</dt><dd><code>{fairness.serverSeedHash}</code></dd></div>
           {fairness.serverSeed && (
-            <div><dt>সার্ভার সিড (প্রকাশিত)</dt><dd><code>{fairness.serverSeed}</code></dd></div>
+            <div><dt>Server seed (revealed)</dt><dd><code>{fairness.serverSeed}</code></dd></div>
           )}
-          <div><dt>আপনার সিড</dt><dd><code>{fairness.clientSeed}</code></dd></div>
-          <div><dt>নন্স</dt><dd><code>{fairness.nonce}</code></dd></div>
+          <div><dt>Your seed</dt><dd><code>{fairness.clientSeed}</code></dd></div>
+          <div><dt>Nonce</dt><dd><code>{fairness.nonce}</code></dd></div>
         </dl>
       ) : (
-        <p className="mg__hint">একটি রাউন্ড খেললে এখানে তার প্রমাণ দেখা যাবে।</p>
+        <p className="mg__hint">Play a round and the proof for it shows up here.</p>
       )}
 
       <p className="mg__hint">
-        বাজি {money(MIN_STAKE_PAISA / 100)} — {money(MAX_STAKE_PAISA / 100)} ·
-        এক রাউন্ডে সর্বোচ্চ জয় {money(MAX_PAYOUT_PAISA / 100)}
+        Stake {money(MIN_STAKE_PAISA / 100)} — {money(MAX_STAKE_PAISA / 100)} ·
+        max win per round {money(MAX_PAYOUT_PAISA / 100)}
       </p>
     </div>
   );

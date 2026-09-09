@@ -47,7 +47,7 @@ export default function BetPanel({
     if (live && phase === 'flying' && slot.cashedAt === null) {
       return (
         <button className="av-act av-act--out" type="button" onClick={onCashOut}>
-          ক্যাশ আউট
+          Cash Out
           <small>{money(Math.floor(slot.staked! * multiplier))}</small>
         </button>
       );
@@ -55,27 +55,27 @@ export default function BetPanel({
     if (slot.cashedAt !== null) {
       return (
         <button className="av-act av-act--done" type="button" disabled>
-          ক্যাশ আউট<small>{fmtX(slot.cashedAt)}</small>
+          Cash Out<small>{fmtX(slot.cashedAt)}</small>
         </button>
       );
     }
     if (live) {
       return (
         <button className="av-act av-act--live" type="button" disabled>
-          বেট চলছে<small>{money(slot.staked!)}</small>
+          Bet running<small>{money(slot.staked!)}</small>
         </button>
       );
     }
     if (slot.queued) {
       return (
         <button className="av-act av-act--queued" type="button" onClick={onCancel}>
-          বাতিল<small>পরের রাউন্ডে</small>
+          Cancel<small>next round</small>
         </button>
       );
     }
     return (
       <button className="av-act av-act--bet" type="button" onClick={onPlace} disabled={invalid}>
-        বেট<small>{money(slot.stake)}</small>
+        Bet<small>{money(slot.stake)}</small>
       </button>
     );
   })();
@@ -90,26 +90,26 @@ export default function BetPanel({
           className={!slot.auto ? 'on' : ''}
           onClick={() => onPatch({ auto: false })}
         >
-          বেট
+          Bet
         </button>
         <button
           type="button" role="tab" aria-selected={slot.auto}
           className={slot.auto ? 'on' : ''}
           onClick={() => onPatch({ auto: true })}
         >
-          অটো
+          Auto
         </button>
       </div>
 
       <div className="av-slot__ctl">
         <div className="av-stepper">
-          <button type="button" aria-label="কমান" disabled={locked}
+          <button type="button" aria-label="Decrease" disabled={locked}
                   onClick={() => onPatch({ stake: Math.max(MIN_STAKE, slot.stake - 100) })}>−</button>
           <input
             type="number" inputMode="numeric" value={slot.stake} disabled={locked}
             onChange={(e) => onPatch({ stake: Math.max(0, Number(e.target.value) || 0) })}
           />
-          <button type="button" aria-label="বাড়ান" disabled={locked}
+          <button type="button" aria-label="Increase" disabled={locked}
                   onClick={() => onPatch({ stake: slot.stake + 100 })}>+</button>
         </div>
 
@@ -123,7 +123,7 @@ export default function BetPanel({
 
         {slot.auto && (
           <label className="av-auto">
-            <span>অটো ক্যাশ আউট</span>
+            <span>Auto cash out</span>
             <input
               type="number" step="0.1" min="1.01" placeholder="—"
               value={slot.autoAt} disabled={locked}
@@ -135,7 +135,7 @@ export default function BetPanel({
 
       {action}
 
-      {tooPoor && <div className="field__err av-slot__err">ব্যালেন্স কম</div>}
+      {tooPoor && <div className="field__err av-slot__err">Low balance</div>}
     </div>
   );
 }

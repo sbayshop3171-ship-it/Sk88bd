@@ -49,7 +49,7 @@ export default function SideFabs() {
     <div className={`fabs${open ? ' open' : ''}`}>
       <Link href="/refer" className="refer-bubble">
         <span className="e" aria-hidden>👥</span>
-        রেফার
+        Refer
       </Link>
 
       {support.whatsapp && (
@@ -64,12 +64,12 @@ export default function SideFabs() {
         <a className="fab fab--social fab--tg" href={support.telegram} target="_blank"
            rel="noopener noreferrer" aria-label="Telegram"><TelegramIcon /></a>
       )}
-      <Link className="fab fab--social fab--chat" href="/support" aria-label="লাইভ চ্যাট"><ChatIcon /></Link>
+      <Link className="fab fab--social fab--chat" href="/support" aria-label="Live chat"><ChatIcon /></Link>
 
       <button
         className="fab fab--toggle"
         type="button"
-        aria-label={open ? 'সাপোর্ট বন্ধ করুন' : 'সাপোর্ট'}
+        aria-label={open ? 'Close support' : 'Support'}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
@@ -79,7 +79,7 @@ export default function SideFabs() {
       <button
         className={`fab fab--top${showTop ? ' show' : ''}`}
         type="button"
-        aria-label="উপরে যান"
+        aria-label="Back to top"
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
         <UpIcon />

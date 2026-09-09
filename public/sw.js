@@ -50,7 +50,7 @@ self.addEventListener('fetch', (event) => {
         const cached = await caches.match(OFFLINE_URL);
         return (
           cached ??
-          new Response('<h1>অফলাইন</h1><p>ইন্টারনেট সংযোগ পাওয়া যাচ্ছে না।</p>', {
+          new Response('<h1>Offline</h1><p>No internet connection.</p>', {
             status: 503,
             headers: { 'content-type': 'text/html; charset=utf-8' },
           })

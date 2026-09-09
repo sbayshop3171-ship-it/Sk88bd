@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata(): Promise<Metadata> {
   const base = await panelBase();
   return {
-    title: `${BRAND.name} — ${base === '/agent' ? 'এজেন্ট' : 'Admin'}`,
+    title: `${BRAND.name} — ${base === '/agent' ? 'Agent' : 'Admin'}`,
     robots: { index: false, follow: false },
   };
 }
@@ -36,7 +36,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="adm">
       <header className="adm__hd">
         <Link href={base} className="adm__brand">
-          {BRAND.name} <span>{base === '/agent' ? 'এজেন্ট' : 'Admin'}</span>
+          {BRAND.name} <span>{base === '/agent' ? 'Agent' : 'Admin'}</span>
         </Link>
         <div className="adm__hd-actions">
           <span className="adm__user">

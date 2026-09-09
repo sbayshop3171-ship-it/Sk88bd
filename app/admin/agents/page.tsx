@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminAgents() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'agents.self')) return <NoAccess role={session.role} what="এজেন্ট তালিকা" />;
+  if (!can(session.role, 'agents.self')) return <NoAccess role={session.role} what="The agent list" />;
 
   const staff = await listStaff();
   const seesEveryone = can(session.role, 'agents.read');
@@ -27,16 +27,16 @@ export default async function AdminAgents() {
 
   return (
     <>
-      <h1 className="adm__h1">{seesEveryone ? 'এজেন্ট' : 'আমার লিংক'}</h1>
+      <h1 className="adm__h1">{seesEveryone ? 'Agents' : 'My link'}</h1>
       <p className="adm__sub">
         {seesEveryone
-          ? 'প্রতিটি এজেন্টের নিজের রেজিস্ট্রেশন লিংক আছে। কেউ সেই লিংক দিয়ে অ্যাকাউন্ট খুললে সে ওই এজেন্টের নিচে যোগ হয় — নিচে কোন এজেন্টের কত ইউজার আর তারা কত ডিপোজিট করেছে সব দেখা যাচ্ছে।'
-          : 'আপনার নিজের রেজিস্ট্রেশন লিংক। এই লিংক দিয়ে কেউ অ্যাকাউন্ট খুললে সে আপনার নিচে যোগ হবে, আর নিচের তালিকায় দেখা যাবে।'}
+          ? 'Every agent has their own registration link. Anyone who opens an account through it is added under that agent — below you can see how many players each agent brought in and how much they have deposited.'
+          : 'Your own registration link. Anyone who opens an account through it is added under you, and shows up in the list below.'}
       </p>
 
       {!isBackendReady() ? (
         <p className="adm__sub">
-          ডেটাবেস যুক্ত হয়নি, তাই ইউজারের হিসাব দেখানো যাচ্ছে না। লিংকগুলো তবু কাজ করবে।
+          The database is not connected, so player counts cannot be shown. The links still work.
         </p>
       ) : null}
 

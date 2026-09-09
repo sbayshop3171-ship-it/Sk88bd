@@ -13,16 +13,16 @@ export const dynamic = 'force-dynamic';
 export default async function AdminCashier() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'cashier.config')) return <NoAccess role={session.role} what="ক্যাশিয়ার সেটআপ" />;
+  if (!can(session.role, 'cashier.config')) return <NoAccess role={session.role} what="Cashier setup" />;
 
   return (
     <>
-      <h1 className="adm__h1">ক্যাশিয়ার</h1>
+      <h1 className="adm__h1">Cashier</h1>
       <p className="adm__sub">
-        ডিপোজিট ও উইথড্র পেজে প্লেয়ার যা দেখে — মেথড, বোনাস লেবেল, অংকের চিপ,
-        নির্দেশনা, সতর্কতা, সফল বার্তা — সব এখান থেকে। সেভ করলেই সাইটে বদলে যায়।
-        রিসিভিং নাম্বারগুলো “পেমেন্ট” ট্যাবে; প্রতিটি মেথড সেখানকার একটি চ্যানেলের
-        নাম্বার ব্যবহার করে।
+        Everything the player sees on the deposit and withdraw pages — methods, bonus
+        labels, amount chips, instructions, warnings, success messages — is set here, and
+        goes live on save. The receiving numbers live in the “Payments” tab; each method
+        uses a number from one of those channels.
       </p>
       <CashierConfigControl
         initial={await getCashierConfig()}

@@ -9,32 +9,32 @@ import { useUI } from './UIProvider';
 type Item = [emoji: string, label: string, href: string];
 
 const GAME_LINKS: Item[] = [
-  ['🎁', 'ফ্রি ট্রায়াল', '/free-trial'],
-  ['🔥', 'হট গেমস', '/#sec-hot'],
-  ['🏏', 'স্পোর্টস', '/sports'],
-  ['🎲', 'লাইভ ক্যাসিনো', '/#sec-live'],
-  ['🎰', 'স্লট', '/#sec-slot'],
-  ['🃏', 'পোকার', '/#sec-poker'],
-  ['🐟', 'ফিশিং', '/#sec-fish'],
-  ['🏆', 'জ্যাকপট', '/#sec-jackpot'],
-  ['🎟️', 'লটারি', '/#sec-lottery'],
+  ['🎁', 'Free Trial', '/free-trial'],
+  ['🔥', 'Hot Games', '/#sec-hot'],
+  ['🏏', 'Sports', '/sports'],
+  ['🎲', 'Live Casino', '/#sec-live'],
+  ['🎰', 'Slots', '/#sec-slot'],
+  ['🃏', 'Poker', '/#sec-poker'],
+  ['🐟', 'Fishing', '/#sec-fish'],
+  ['🏆', 'Jackpot', '/#sec-jackpot'],
+  ['🎟️', 'Lottery', '/#sec-lottery'],
 ];
 
 const ACCOUNT_LINKS: Item[] = [
-  ['💰', 'ডিপোজিট', '/deposit'],
-  ['💸', 'উইথড্র', '/withdraw'],
-  ['📋', 'বেটিং রেকর্ড', '/bets-history'],
-  ['📊', 'অ্যাকাউন্ট স্টেটমেন্ট', '/account-statement'],
-  ['🎁', 'রিওয়ার্ড সেন্টার', '/reward'],
-  ['👑', 'ভিআইপি ক্লাব', '/vip'],
-  ['👥', 'বন্ধুদের রেফার করুন', '/refer'],
+  ['💰', 'Deposit', '/deposit'],
+  ['💸', 'Withdraw', '/withdraw'],
+  ['📋', 'Betting Record', '/bets-history'],
+  ['📊', 'Account Statement', '/account-statement'],
+  ['🎁', 'Reward Center', '/reward'],
+  ['👑', 'VIP Club', '/vip'],
+  ['👥', 'Refer Friends', '/refer'],
 ];
 
 const SUPPORT_LINKS: Item[] = [
-  ['🎧', 'কাস্টমার সাপোর্ট', '/support'],
-  ['📱', 'অ্যাপ ডাউনলোড', '/download'],
-  ['🛡️', 'সিকিউরিটি সেন্টার', '/security'],
-  ['❓', 'হেল্প সেন্টার', '/support'],
+  ['🎧', 'Customer Support', '/support'],
+  ['📱', 'App Download', '/download'],
+  ['🛡️', 'Security Center', '/security'],
+  ['❓', 'Help Center', '/support'],
 ];
 
 function Group({ title, items, onNavigate }: { title: string; items: Item[]; onNavigate: () => void }) {

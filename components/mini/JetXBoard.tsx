@@ -164,23 +164,23 @@ export default function JetXBoard() {
           </svg>
 
           <div className="jx-hud">
-            {busted && <b className="jx-hud__flew">উড়ে গেছে!</b>}
+            {busted && <b className="jx-hud__flew">Flew away!</b>}
             <div className={`jx-hud__x${busted ? ' is-busted' : phase === 'settled' ? ' is-won' : ''}`}>
               {label}
             </div>
             {flying ? (
-              <div className="jx-hud__take">এখন নিলে {money(cashNow)}</div>
+              <div className="jx-hud__take">Take now {money(cashNow)}</div>
             ) : phase === 'settled' && settled?.won ? (
-              <div className="jx-hud__take is-won">পেয়েছেন {money(settled.payout / 100)}</div>
+              <div className="jx-hud__take is-won">You got {money(settled.payout / 100)}</div>
             ) : (
-              <div className="jx-hud__idle">বাজি দিন — জেট ছাড়ুন</div>
+              <div className="jx-hud__idle">Place a bet — launch the jet</div>
             )}
           </div>
 
           <span className="jx-stage__tag" aria-hidden>JETX</span>
 
           {board.players > 0 && (
-            <span className="jx-stage__crowd" aria-label={`${board.players} জন খেলছে`}>
+            <span className="jx-stage__crowd" aria-label={`${board.players} playing`}>
               <i aria-hidden /><b>{board.players.toLocaleString('en-IN')}</b>
             </span>
           )}
@@ -195,7 +195,7 @@ export default function JetXBoard() {
             disabled={flying}
             onChange={(e) => r.setAutoOn(e.target.checked)}
           />
-          <span>অটো ক্যাশ আউট</span>
+          <span>Auto cash out</span>
           <input
             className="mg-auto__at"
             type="number"
@@ -215,7 +215,7 @@ export default function JetXBoard() {
 
         {flying ? (
           <button type="button" className="btn btn--block jx-go jx-go--cash" onClick={() => void r.cashOut()}>
-            <b>ক্যাশ আউট</b>
+            <b>Cash Out</b>
             <span>{fmtX(multiplier)} — {money(cashNow)}</span>
           </button>
         ) : (
@@ -225,7 +225,7 @@ export default function JetXBoard() {
             disabled={g.busy}
             onClick={() => void r.takeOff()}
           >
-            <b>{g.busy ? 'ছাড়া হচ্ছে…' : 'বাজি'}</b>
+            <b>{g.busy ? 'Launching…' : 'Bet'}</b>
             <span>{money(g.stake)}</span>
           </button>
         )}

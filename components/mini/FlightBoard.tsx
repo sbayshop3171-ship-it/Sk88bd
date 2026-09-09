@@ -85,12 +85,12 @@ export default function FlightBoard({ game }: { game: 'crash' | 'jetx' }) {
 
         <p className="mg-board__line">
           {phase === 'flying'
-            ? `${money(g.stake)} উড়ছে — এখন ক্যাশ আউট করলে ${money(Math.floor(g.stake * multiplier))}`
+            ? `${money(g.stake)} in the air — cash out now for ${money(Math.floor(g.stake * multiplier))}`
             : phase === 'settled' && settled
               ? settled.won
-                ? `${fmtX(settled.multiplier)} এ নেমেছেন — পেয়েছেন ${money(settled.payout / 100)}`
-                : `${fmtX(settled.crashAt)} এ শেষ — ${money(settled.stake / 100)} হেরেছেন`
-              : 'বাজি দিয়ে উড়ান শুরু করুন'}
+                ? `Cashed out at ${fmtX(settled.multiplier)} — you got ${money(settled.payout / 100)}`
+                : `Ended at ${fmtX(settled.crashAt)} — you lost ${money(settled.stake / 100)}`
+              : 'Place a bet to start the flight'}
         </p>
       </div>
 
@@ -102,7 +102,7 @@ export default function FlightBoard({ game }: { game: 'crash' | 'jetx' }) {
             disabled={phase === 'flying'}
             onChange={(e) => r.setAutoOn(e.target.checked)}
           />
-          <span>অটো ক্যাশ আউট</span>
+          <span>Auto cash out</span>
           <input
             className="mg-auto__at"
             type="number"
@@ -122,7 +122,7 @@ export default function FlightBoard({ game }: { game: 'crash' | 'jetx' }) {
 
         {phase === 'flying' ? (
           <button type="button" className="btn btn--block mg-go mg-go--cash" onClick={() => void r.cashOut()}>
-            ক্যাশ আউট {fmtX(multiplier)} — {money(Math.floor(g.stake * multiplier))}
+            Cash Out {fmtX(multiplier)} — {money(Math.floor(g.stake * multiplier))}
           </button>
         ) : (
           <button
@@ -131,7 +131,7 @@ export default function FlightBoard({ game }: { game: 'crash' | 'jetx' }) {
             disabled={g.busy}
             onClick={() => void r.takeOff()}
           >
-            {g.busy ? 'শুরু হচ্ছে…' : `${money(g.stake)} বাজি — উড়ান শুরু`}
+            {g.busy ? 'Starting…' : `Stake ${money(g.stake)} — take off`}
           </button>
         )}
       </div>

@@ -10,9 +10,9 @@ import { BRAND, money } from '@/lib/brand';
 import { t } from '@/lib/strings';
 
 const STEPS: [string, string][] = [
-  ['১', 'আপনার রেফারেল লিংক বন্ধুদের শেয়ার করুন'],
-  ['২', 'বন্ধু রেজিস্টার করে ডিপোজিট করুক'],
-  ['৩', 'সে যত খেলবে, আপনি তত কমিশন পাবেন — আজীবন'],
+  ['1', 'Share your referral link with friends'],
+  ['2', 'Your friend registers and makes a deposit'],
+  ['3', 'The more they play, the more commission you earn — for life'],
 ];
 
 type Stats = { total: number; active: number; commission: number };
@@ -45,39 +45,39 @@ export default function ReferPage() {
   const copy = async (text: string, what: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast(`${what} কপি হয়েছে`);
+      toast(`${what} copied`);
     } catch {
-      toast('কপি করা যায়নি — ম্যানুয়ালি কপি করুন');
+      toast('Could not copy — copy it manually');
     }
   };
 
   return (
     <>
-      <PageHeader title="রেফার ও কমিশন" />
+      <PageHeader title="Refer & Commission" />
 
       <div className="hero">
-        <h1>৪০% পর্যন্ত কমিশন</h1>
-        <p>বন্ধু আনুন, আজীবন কমিশন নিন</p>
+        <h1>Up to 40% commission</h1>
+        <p>Bring a friend, earn commission for life</p>
       </div>
 
       <div className="stat">
-        <div><b>{stats?.total ?? 0}</b><small>মোট রেফার</small></div>
-        <div><b>{stats?.active ?? 0}</b><small>সক্রিয় রেফার</small></div>
-        <div><b>{money(toTaka(stats?.commission ?? 0))}</b><small>মোট কমিশন</small></div>
+        <div><b>{stats?.total ?? 0}</b><small>Total referrals</small></div>
+        <div><b>{stats?.active ?? 0}</b><small>Active referrals</small></div>
+        <div><b>{money(toTaka(stats?.commission ?? 0))}</b><small>Total commission</small></div>
       </div>
 
       {signedIn ? (
         <div className="field" style={{ margin: 12 }}>
-          <label>আপনার রেফারেল কোড</label>
+          <label>Your referral code</label>
           <div style={{ display: 'flex', gap: 8 }}>
             <input readOnly value={code} onFocus={(e) => e.currentTarget.select()} />
-            <button className="btn btn--ghost" type="button" onClick={() => copy(code, 'কোড')}>কপি</button>
+            <button className="btn btn--ghost" type="button" onClick={() => copy(code, 'Code')}>Copy</button>
           </div>
-          <label style={{ marginTop: 12 }}>আপনার রেফারেল লিংক</label>
+          <label style={{ marginTop: 12 }}>Your referral link</label>
           <input readOnly value={link} onFocus={(e) => e.currentTarget.select()} />
           <button className="btn btn--gold btn--block" style={{ marginTop: 10 }} type="button"
-                  onClick={() => copy(link, 'লিংক')}>
-            লিংক কপি করুন
+                  onClick={() => copy(link, 'Link')}>
+            Copy link
           </button>
         </div>
       ) : ready && (
@@ -98,8 +98,8 @@ export default function ReferPage() {
 
       <div className="note" style={{ margin: 12 }}>
         {signedIn
-          ? 'বন্ধু আপনার লিংক দিয়ে রেজিস্টার করলে কোডটি নিজে থেকেই বসে যাবে।'
-          : 'লগইন করলে আপনার নিজস্ব কোড ও লিংক এখানে দেখা যাবে।'}
+          ? 'When a friend registers through your link the code fills itself in.'
+          : 'Log in and your own code and link show up here.'}
       </div>
     </>
   );

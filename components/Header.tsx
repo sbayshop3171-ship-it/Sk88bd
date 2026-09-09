@@ -23,7 +23,7 @@ export default function Header() {
 
   return (
     <header className="hdr">
-      <button className="icon-btn" type="button" aria-label="মেনু" onClick={openDrawer}>
+      <button className="icon-btn" type="button" aria-label="Menu" onClick={openDrawer}>
         <MenuIcon />
       </button>
 

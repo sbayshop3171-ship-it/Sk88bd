@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminPayments() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'payments.read')) return <NoAccess role={session.role} what="পেমেন্ট অ্যাকাউন্ট" />;
+  if (!can(session.role, 'payments.read')) return <NoAccess role={session.role} what="Payment accounts" />;
 
   const seen = new Set<string>();
   const channels = [...DEPOSIT_CHANNELS, ...WITHDRAW_CHANNELS]
@@ -23,11 +23,11 @@ export default async function AdminPayments() {
 
   return (
     <>
-      <h1 className="adm__h1">পেমেন্ট অ্যাকাউন্ট</h1>
+      <h1 className="adm__h1">Payment Accounts</h1>
       <p className="adm__sub">
-        bKash, Nagad সহ প্রতিটি চ্যানেলে সর্বোচ্চ {MAX_PER_CHANNEL} টি নাম্বার রাখা
-        যায়। প্লেয়ার ডিপোজিট পেজে গেলে সক্রিয় নাম্বারগুলো থেকে একটি র‍্যান্ডম নাম্বার
-        দেখানো হয় — প্রতিবার আলাদা।
+        Every channel — bKash, Nagad and the rest — can hold up to {MAX_PER_CHANNEL}
+        numbers. When a player opens the deposit page one of the active numbers is picked
+        at random — a different one each time.
       </p>
       <PaymentAccountsControl
         channels={channels}

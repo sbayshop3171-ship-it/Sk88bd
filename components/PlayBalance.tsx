@@ -17,7 +17,7 @@ export default function PlayBalance() {
   if (!ready || !session) return null;
 
   return (
-    <Link href="/deposit" className="bal-pill" title="ডিপোজিট করুন">
+    <Link href="/deposit" className="bal-pill" title="Deposit">
       <b>{money(toTaka(wallet?.balance ?? 0))}</b>
       <i className="av" aria-hidden>＋</i>
     </Link>

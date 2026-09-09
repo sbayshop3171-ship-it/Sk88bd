@@ -10,8 +10,8 @@ import { money } from '@/lib/brand';
 import { COIN_MULTIPLIER, fmtX, type CoinSide, type FairnessInfo } from '@/lib/mini-games';
 
 const SIDES: { id: CoinSide; label: string; face: string }[] = [
-  { id: 'heads', label: 'হেড', face: '৳' },
-  { id: 'tails', label: 'টেইল', face: '★' },
+  { id: 'heads', label: 'Heads', face: '৳' },
+  { id: 'tails', label: 'Tails', face: '★' },
 ];
 
 export default function CoinFlipPage() {
@@ -63,12 +63,12 @@ function Board() {
 
         <p className="mg-board__line">
           {spinning
-            ? 'কয়েন ঘুরছে…'
+            ? 'The coin is spinning…'
             : won === null
-              ? `জিতলে ${fmtX(COIN_MULTIPLIER)} — ${money(Math.round(g.stake * COIN_MULTIPLIER))}`
+              ? `Win ${fmtX(COIN_MULTIPLIER)} — ${money(Math.round(g.stake * COIN_MULTIPLIER))}`
               : won
-                ? `${SIDES.find((s) => s.id === face)?.label} — জিতেছেন ${money(payout)}`
-                : `${SIDES.find((s) => s.id === face)?.label} — এবার হয়নি`}
+                ? `${SIDES.find((s) => s.id === face)?.label} — you won ${money(payout)}`
+                : `${SIDES.find((s) => s.id === face)?.label} — not this time`}
         </p>
       </div>
 
@@ -98,7 +98,7 @@ function Board() {
           disabled={g.busy || spinning}
           onClick={() => void flip()}
         >
-          {g.busy || spinning ? 'টস হচ্ছে…' : `${money(g.stake)} বাজি — টস করুন`}
+          {g.busy || spinning ? 'Tossing…' : `Stake ${money(g.stake)} — Toss`}
         </button>
       </div>
     </GameShell>

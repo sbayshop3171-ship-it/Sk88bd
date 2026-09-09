@@ -36,6 +36,6 @@ export function emailToPhone(email: string | null | undefined): string | null {
   return domain === IDENTITY_DOMAIN && isValidPhone(local) ? local : null;
 }
 
-/** ৳ amounts live in the database as paisa so nothing is ever a float. */
+/** Taka amounts live in the database as paisa so nothing is ever a float. */
 export const toPaisa = (taka: number) => Math.round(taka * 100);
 export const toTaka = (paisa: number) => paisa / 100;

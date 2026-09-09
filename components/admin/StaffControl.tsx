@@ -14,9 +14,9 @@ import {
 
 const ERROR_LABEL: Record<string, string> = {
   ...STAFF_ERROR_LABEL,
-  unauthorized: 'সেশন শেষ হয়ে গেছে — আবার লগইন করুন।',
-  forbidden: 'স্টাফ অ্যাকাউন্ট শুধু সুপার অ্যাডমিন সামলাতে পারেন।',
-  'invalid-action': 'অনুরোধটি বোঝা গেল না।',
+  unauthorized: 'Your session has expired — log in again.',
+  forbidden: 'Only the super admin can manage staff accounts.',
+  'invalid-action': 'That request was not understood.',
 };
 
 export default function StaffControl({ initialStaff }: { initialStaff: AdminStaff[] }) {
@@ -46,14 +46,14 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
         | { ok: false; reason: StaffMutationReason | string };
 
       if (!data.ok) {
-        setError(ERROR_LABEL[data.reason] ?? `সমস্যা হয়েছে (${data.reason})`);
+        setError(ERROR_LABEL[data.reason] ?? `Something went wrong (${data.reason})`);
         return false;
       }
       setStaff(data.staff);
       setNotice(okMessage);
       return true;
     } catch {
-      setError('সার্ভারে পৌঁছানো গেল না — আবার চেষ্টা করুন।');
+      setError('Could not reach the server — try again.');
       return false;
     } finally {
       setBusy(false);
@@ -64,7 +64,7 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
     e.preventDefault();
     const made = await send(
       { action: 'create', username, password, role },
-      `${username} — ${ROLE_LABEL[role]} অ্যাকাউন্ট তৈরি হয়েছে।`,
+      `${username} — ${ROLE_LABEL[role]} account created.`,
     );
     if (made) {
       setUsername('');
@@ -76,7 +76,7 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
     e.preventDefault();
     const done = await send(
       { action: 'set-password', id: resetId, password: resetPassword },
-      'পাসওয়ার্ড বদলে দেওয়া হয়েছে — নতুনটা তাকে জানিয়ে দিন।',
+      'Password changed — pass the new one on to them.',
     );
     if (done) {
       setResetId('');
@@ -90,41 +90,41 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
   return (
     <>
       <div className="adm__tiles" style={{ marginBottom: 14 }}>
-        <div className="adm__tile"><b>{staff.length}</b><small>স্টাফ অ্যাকাউন্ট</small></div>
-        <div className="adm__tile"><b>{admins}</b><small>অ্যাডমিন</small></div>
-        <div className="adm__tile"><b>{agents}</b><small>এজেন্ট</small></div>
-        <div className="adm__tile"><b>{staff.filter((s) => s.active).length}</b><small>সক্রিয়</small></div>
+        <div className="adm__tile"><b>{staff.length}</b><small>Staff accounts</small></div>
+        <div className="adm__tile"><b>{admins}</b><small>Admins</small></div>
+        <div className="adm__tile"><b>{agents}</b><small>Agents</small></div>
+        <div className="adm__tile"><b>{staff.filter((s) => s.active).length}</b><small>Active</small></div>
       </div>
 
       <form className="adm__card" onSubmit={create}>
-        <h2 className="adm__cardh">নতুন স্টাফ যোগ করুন</h2>
+        <h2 className="adm__cardh">Add a staff account</h2>
 
         <div className="adm__formgrid">
           <label className="adm__f">
-            <span>ইউজারনেম</span>
+            <span>Username</span>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value.toLowerCase())}
-              placeholder="যেমন: agent1"
+              placeholder="e.g. agent1"
               autoComplete="off"
               disabled={busy}
             />
           </label>
 
           <label className="adm__f">
-            <span>পাসওয়ার্ড (কমপক্ষে {MIN_PASSWORD_LENGTH} অক্ষর)</span>
+            <span>Password (at least {MIN_PASSWORD_LENGTH} characters)</span>
             <input
               type="text"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="তাকে জানিয়ে দেওয়ার মতো একটা"
+              placeholder="Something you can pass on to them"
               autoComplete="new-password"
               disabled={busy}
             />
           </label>
 
           <label className="adm__f">
-            <span>রোল</span>
+            <span>Role</span>
             <select value={role} onChange={(e) => setRole(e.target.value as AdminRole)} disabled={busy}>
               {ASSIGNABLE_ROLES.map((r) => (
                 <option key={r} value={r}>{ROLE_LABEL[r]}</option>
@@ -138,23 +138,23 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
         {notice && <p className="adm__note">{notice}</p>}
 
         <div className="adm__actions">
-          <button type="submit" className="btn btn--gold" disabled={busy}>যোগ করুন</button>
+          <button type="submit" className="btn btn--gold" disabled={busy}>Add</button>
         </div>
 
         <p className="adm__hint">
-          পাসওয়ার্ড সার্ভারে হ্যাশ করে রাখা হয় — পরে আর দেখা যাবে না, ভুলে গেলে
-          এখান থেকে নতুন একটা বসাতে হবে।
+          Passwords are hashed on the server — they can never be read back, so a
+          forgotten one has to be replaced from here.
         </p>
       </form>
 
       {resetId && (
         <form className="adm__card" onSubmit={resetSubmit}>
           <h2 className="adm__cardh">
-            নতুন পাসওয়ার্ড — {staff.find((s) => s.id === resetId)?.username}
+            New password — {staff.find((s) => s.id === resetId)?.username}
           </h2>
           <div className="adm__formgrid">
             <label className="adm__f adm__f--wide">
-              <span>পাসওয়ার্ড (কমপক্ষে {MIN_PASSWORD_LENGTH} অক্ষর)</span>
+              <span>Password (at least {MIN_PASSWORD_LENGTH} characters)</span>
               <input
                 type="text"
                 value={resetPassword}
@@ -165,16 +165,16 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
             </label>
           </div>
           <div className="adm__actions">
-            <button type="submit" className="btn btn--gold" disabled={busy}>সেভ করুন</button>
+            <button type="submit" className="btn btn--gold" disabled={busy}>Save</button>
             <button
               type="button" className="btn btn--ghost" disabled={busy}
               onClick={() => { setResetId(''); setResetPassword(''); }}
             >
-              বাতিল
+              Cancel
             </button>
           </div>
           <p className="adm__hint">
-            সেভ করলে ঐ অ্যাকাউন্টের চালু সেশনগুলো সাথে সাথে লগআউট হয়ে যাবে।
+            Saving logs that account out of every open session straight away.
           </p>
         </form>
       )}
@@ -183,15 +183,15 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
         <table className="adm__table">
           <thead>
             <tr>
-              <th>ইউজারনেম</th><th>রোল</th><th>লিংক কোড</th><th>অবস্থা</th>
-              <th>শেষ লগইন</th><th>যোগ করেছেন</th><th></th>
+              <th>Username</th><th>Role</th><th>Link code</th><th>Status</th>
+              <th>Last login</th><th>Added by</th><th></th>
             </tr>
           </thead>
           <tbody>
             {staff.length === 0 ? (
               <tr>
                 <td colSpan={7} className="adm__empty">
-                  কোনো স্টাফ অ্যাকাউন্ট নেই — উপরের ফর্ম থেকে যোগ করুন।
+                  No staff accounts yet — add one with the form above.
                 </td>
               </tr>
             ) : (
@@ -204,7 +204,7 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
                       disabled={busy}
                       onChange={(e) => void send(
                         { action: 'set-role', id: s.id, role: e.target.value },
-                        `${s.username} এখন ${ROLE_LABEL[e.target.value as AdminRole]}।`,
+                        `${s.username} is now ${ROLE_LABEL[e.target.value as AdminRole]}.`,
                       )}
                     >
                       {ASSIGNABLE_ROLES.map((r) => (
@@ -215,8 +215,8 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
                   <td><code>{s.refCode}</code></td>
                   <td>
                     {s.active
-                      ? <span className="adm__ok">সক্রিয়</span>
-                      : <span className="adm__miss">বন্ধ</span>}
+                      ? <span className="adm__ok">Active</span>
+                      : <span className="adm__miss">Disabled</span>}
                   </td>
                   <td className="adm__muted">
                     {s.lastLoginAt ? new Date(s.lastLoginAt).toLocaleString('en-GB') : '—'}
@@ -227,25 +227,25 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
                       type="button" className="btn btn--ghost" disabled={busy}
                       onClick={() => { setResetId(s.id); setResetPassword(''); }}
                     >
-                      পাসওয়ার্ড
+                      Password
                     </button>
                     <button
                       type="button" className="btn btn--ghost" disabled={busy}
                       onClick={() => void send(
                         { action: 'set-active', id: s.id, active: !s.active },
-                        s.active ? `${s.username} বন্ধ করা হয়েছে।` : `${s.username} চালু করা হয়েছে।`,
+                        s.active ? `${s.username} disabled.` : `${s.username} enabled.`,
                       )}
                     >
-                      {s.active ? 'বন্ধ' : 'চালু'}
+                      {s.active ? 'Disable' : 'Enable'}
                     </button>
                     <button
                       type="button" className="btn btn--ghost adm__danger" disabled={busy}
                       onClick={() => void send(
                         { action: 'remove', id: s.id },
-                        `${s.username} মুছে ফেলা হয়েছে।`,
+                        `${s.username} deleted.`,
                       )}
                     >
-                      মুছুন
+                      Delete
                     </button>
                   </td>
                 </tr>
@@ -256,8 +256,8 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
       </div>
 
       <p className="adm__hint">
-        বন্ধ করা বা মুছে ফেলা অ্যাকাউন্ট সাথে সাথেই প্যানেল থেকে বেরিয়ে যায় —
-        কুকির মেয়াদ শেষ হওয়ার অপেক্ষা করতে হয় না।
+        A disabled or deleted account is thrown out of the panel immediately — there is
+        no waiting for a cookie to expire.
       </p>
     </>
   );

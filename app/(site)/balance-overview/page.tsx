@@ -30,17 +30,17 @@ export default function BalanceOverviewPage() {
   const signed = (paisa: number) => (paisa < 0 ? '−' : '') + money(toTaka(Math.abs(paisa)));
 
   const cards: [string, string, string?][] = [
-    ['মূল ব্যালেন্স', fmt(wallet?.balance ?? 0)],
-    ['বোনাস ব্যালেন্স', fmt(wallet?.bonus_balance ?? 0)],
-    ['মোট ডিপোজিট', fmt(deposits)],
-    ['মোট উইথড্র', fmt(withdrawn)],
-    ['মোট বেট', fmt(bets)],
-    ['লাভ / ক্ষতি', signed(profit), profit >= 0 ? 'is-up' : 'is-down'],
+    ['Main balance', fmt(wallet?.balance ?? 0)],
+    ['Bonus balance', fmt(wallet?.bonus_balance ?? 0)],
+    ['Total deposits', fmt(deposits)],
+    ['Total withdrawals', fmt(withdrawn)],
+    ['Total bets', fmt(bets)],
+    ['Profit / loss', signed(profit), profit >= 0 ? 'is-up' : 'is-down'],
   ];
 
   return (
     <>
-      <PageHeader title="ব্যালেন্স ওভারভিউ" />
+      <PageHeader title="Balance Overview" />
 
       {ready && !signedIn && (
         <div className="wallet-bar">
@@ -61,7 +61,7 @@ export default function BalanceOverviewPage() {
       {signedIn && (
         <div className="wallet-bar">
           <Link href="/account-statement" className="btn btn--ghost" style={{ padding: 12 }}>
-            পুরো স্টেটমেন্ট
+            Full statement
           </Link>
           <Link href="/deposit" className="btn btn--gold" style={{ padding: 12 }}>{t.deposit}</Link>
         </div>

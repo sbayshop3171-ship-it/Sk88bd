@@ -11,45 +11,45 @@ export default function DownloadPage() {
 
   return (
     <>
-      <PageHeader title="অ্যাপ ডাউনলোড" />
+      <PageHeader title="App Download" />
       <div className="hero">
-        <h1>{BRAND.name} অ্যাপ</h1>
-        <p>ইনস্টল করলে হোম স্ক্রিন থেকে সরাসরি খুলবে</p>
+        <h1>{BRAND.name} App</h1>
+        <p>Install it and it opens straight from your home screen</p>
       </div>
 
       <div className="dl-card">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="dl-card__icon" src="/icons/icon-192.png" alt="" width={64} height={64} />
         <div className="dl-card__b">
-          <b>{BRAND.name} ওয়েব অ্যাপ</b>
-          <small>ফুল স্ক্রিন · সবসময় আপডেটেড · ইনস্টল করলেই ৳১৮ বোনাস</small>
+          <b>{BRAND.name} Web App</b>
+          <small>Full screen · always up to date · ৳18 bonus on install</small>
         </div>
       </div>
 
       <div style={{ margin: 12 }}>
         {installed ? (
           <div className="note" style={{ margin: 0 }}>
-            ✓ অ্যাপটি ইতিমধ্যে ইনস্টল করা আছে — আপনি এখন অ্যাপেই আছেন।
+            ✓ The app is already installed — you are in it right now.
           </div>
         ) : canInstall ? (
           <button className="btn btn--gold btn--block" type="button" onClick={() => void install()}>
-            অ্যাপ ইনস্টল করুন
+            Install the app
           </button>
         ) : needsIosSteps ? (
           <ol className="pwa__ios" style={{ margin: 0 }}>
-            <li>নিচের <b>শেয়ার</b> বাটনে ট্যাপ করুন <span aria-hidden>⬆️</span></li>
-            <li><b>Add to Home Screen</b> বেছে নিন</li>
-            <li><b>Add</b> চাপুন — হয়ে গেল</li>
+            <li>Tap the <b>Share</b> button below <span aria-hidden>⬆️</span></li>
+            <li>Choose <b>Add to Home Screen</b></li>
+            <li>Tap <b>Add</b> — done</li>
           </ol>
         ) : (
           <div className="note" style={{ margin: 0 }}>
-            ব্রাউজারের মেনু (⋮) খুলে <b>Install app</b> অথবা <b>Add to Home screen</b> বেছে
-            নিন। Chrome দিয়ে খুললে বাটনটি এখানেই চলে আসবে।
+            Open the browser menu (⋮) and choose <b>Install app</b> or <b>Add to Home screen</b>.
+            Opening the site in Chrome puts the button right here.
           </div>
         )}
       </div>
 
-      <h2 className="sec__title" style={{ margin: '22px 12px 10px' }}>সিগন্যাল অ্যাপ</h2>
+      <h2 className="sec__title" style={{ margin: '22px 12px 10px' }}>Signal App</h2>
       <div className="wallet-bar">
         <a className="btn btn--gold" href="/downloads/prime-signal-app.apk" download style={{ padding: 12 }}>
           Android APK
@@ -57,8 +57,8 @@ export default function DownloadPage() {
         <span className="btn btn--ghost" style={{ padding: 12, opacity: .55 }}>iOS</span>
       </div>
       <div className="note" style={{ margin: 12 }}>
-        APK ইনস্টল করার পর অ্যাডমিন প্যানেলের <b>App Keys</b> থেকে access key
-        generate করে app unlock করুন। App live server থেকে signal data নেবে।
+        After installing the APK, generate an access key in the admin panel under <b>App Keys</b>
+        and unlock the app with it. The app then reads signal data from the live server.
       </div>
     </>
   );

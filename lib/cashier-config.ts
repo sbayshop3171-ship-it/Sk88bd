@@ -6,7 +6,7 @@
     the admin form all share these types and defaults. Persistence is in
     cashier-config-store.ts. Method `channelId` always points at one of the
     channels in lib/payments.ts: that is where the operator numbers live
-    (admin → পেমেন্ট) and what the deposits/withdrawals tables reference. */
+    (admin → Payments) and what the deposits/withdrawals tables reference. */
 
 import { DEPOSIT_CHANNELS, QUICK_AMOUNTS, WITHDRAW_CHANNELS } from './payments';
 
@@ -15,10 +15,10 @@ import { DEPOSIT_CHANNELS, QUICK_AMOUNTS, WITHDRAW_CHANNELS } from './payments';
 export type PayType = 'payment' | 'cashout' | 'sendmoney' | 'transfer';
 
 export const PAY_TYPE_LABEL: Record<PayType, string> = {
-  payment: 'পেমেন্ট',
-  cashout: 'ক্যাশ আউট',
-  sendmoney: 'সেন্ড মানি',
-  transfer: 'ট্রান্সফার',
+  payment: 'Payment',
+  cashout: 'Cash Out',
+  sendmoney: 'Send Money',
+  transfer: 'Transfer',
 };
 
 /** the operator account kinds (lib/payment-accounts) each pay type draws on */
@@ -36,7 +36,7 @@ export type DepositMethod = {
   /** operator numbers + ledger channel, one of lib/payments ids */
   channelId: string;
   payType: PayType;
-  /** short line under the name, e.g. "+10% বোনাস"; blank hides it */
+  /** short line under the name, e.g. "+10% Bonus"; blank hides it */
   bonusLabel: string;
   /** percent credited on approval, 0-100; informational for the admin queue */
   bonusPercent: number;
@@ -67,8 +67,8 @@ export type AmountPreset = {
 export type ChargeBasis = 'balance' | 'amount';
 
 export const CHARGE_BASIS_LABEL: Record<ChargeBasis, string> = {
-  balance: 'মোট ওয়ালেট ব্যালেন্সের উপর',
-  amount: 'শুধু উত্তোলনের পরিমাণের উপর',
+  balance: 'On the total wallet balance',
+  amount: 'On the withdrawal amount only',
 };
 
 export type WithdrawMethod = {
@@ -124,7 +124,7 @@ export type CashierConfig = {
   };
   withdraw: {
     methods: WithdrawMethod[];
-    /** "24 ঘন্টা" */
+    /** "24 hours" */
     processingTime: string;
     reminder: string;
     /** requests per player per day; 0 = unlimited */
@@ -151,7 +151,7 @@ export type CashierConfig = {
     summaryTitle: string;
     /** red line across the top of the summary */
     summaryWarning: string;
-    /** heading over the charge figure, e.g. "এজেন্ট ক্যাশআউট চার্জ" */
+    /** heading over the charge figure, e.g. "Agent cash-out charge" */
     chargeLabel: string;
     rulesTitle: string;
     /** one rule per line; a line starting with ! is shown in red */
@@ -211,34 +211,34 @@ export const CASHIER_DEFAULTS: CashierConfig = {
       min: c.min,
       max: c.max,
       trxRequired: true,
-      note: `এই ${c.name} নাম্বারে টাকা পাঠিয়ে ট্রানজেকশন আইডি দিন। অ্যাডমিন যাচাই করলে ব্যালেন্সে যোগ হবে।`,
+      note: `Send the money to this ${c.name} number and enter the transaction ID. It is credited to your balance once an admin verifies it.`,
       active: true,
     })),
     amounts: QUICK_AMOUNTS.map((amount) => ({ amount, bonusLabel: '' })),
-    methodTitle: 'ডিপোজিট মেথড',
-    channelTitle: 'পেমেন্ট চ্যানেল',
-    amountTitle: 'ডিপোজিট পরিমাণ',
-    channelNote: 'এই নাম্বারে শুধুমাত্র নির্ধারিত মেথডে পেমেন্ট গ্রহণ করা হয়',
-    stepHeaderNote: 'কম বা বেশি পাঠাবেন না',
-    stepWarning: 'আপনি যদি টাকার পরিমাণ পরিবর্তন করেন, আপনি ক্রেডিট পেতে সক্ষম হবেন না।',
-    walletLabel: 'ওয়ালেট নাম্বার',
-    howToTitle: 'কিভাবে পাঠাবেন',
-    howToSteps: 'অ্যাপ খুলুন\nউপরের মেনু বেছে নিন\nনাম্বার দিন\nAmount দিন\nReference দিন\nPIN দিয়ে নিশ্চিত করুন\nTrxID কপি করুন',
-    trxLabel: 'পেমেন্টের TrxID নাম্বারটি লিখুন',
-    trxHelpText: 'কিভাবে TrxID পেতে হয় তা দেখতে ক্লিক করুন',
+    methodTitle: 'Deposit Method',
+    channelTitle: 'Payment Channel',
+    amountTitle: 'Deposit Amount',
+    channelNote: 'This number accepts payments through the selected method only',
+    stepHeaderNote: 'Do not send more or less',
+    stepWarning: 'If you change the amount you will not be able to receive the credit.',
+    walletLabel: 'Wallet Number',
+    howToTitle: 'How to send',
+    howToSteps: 'Open the app\nPick the menu above\nEnter the number\nEnter the amount\nEnter the reference\nConfirm with your PIN\nCopy the TrxID',
+    trxLabel: 'Enter the TrxID of your payment',
+    trxHelpText: 'Click to see how to find your TrxID',
     trxHelpUrl: '',
-    trxPlaceholder: 'যেমন: 9F2K4L8M',
+    trxPlaceholder: 'e.g. 9F2K4L8M',
     trxPattern: '^[A-Za-z0-9]{6,20}$',
-    confirmTitle: 'নিশ্চিত করুন',
-    confirmText: 'এই অর্ডার একবারই জমা দেওয়া যাবে। আপনার ট্রানজেকশন আইডি সঠিক কিনা নিশ্চিত করুন:',
-    cautionTitle: 'সতর্কতা:',
-    cautionText: 'লেনদেন আইডি সঠিকভাবে পূরণ করতে হবে, অন্যথায় অর্ডার ব্যর্থ হবে! অনুগ্রহ করে নিশ্চিত হয়ে নিন যে আপনি দেখানো নাম্বারেই টাকা পাঠিয়েছেন। অন্য কোনো নাম্বারে পাঠালে সেই টাকা পাওয়ার কোনো সম্ভাবনা নেই।',
-    successTitle: 'সফলভাবে জমা হয়েছে!',
-    successText: 'আপনার ডিপোজিট অর্ডার সফলভাবে জমা দেওয়া হয়েছে। সিস্টেম ৫ মিনিটের মধ্যে যাচাই করা শুরু করবে।',
-    promoTitle: 'প্রমোশন',
+    confirmTitle: 'Confirm',
+    confirmText: 'This order can only be submitted once. Make sure your transaction ID is correct:',
+    cautionTitle: 'Caution:',
+    cautionText: 'The transaction ID must be filled in correctly or the order will fail. Please make sure you sent the money to the number shown here — money sent to any other number cannot be recovered.',
+    successTitle: 'Submitted successfully!',
+    successText: 'Your deposit order has been submitted. The system starts verifying it within 5 minutes.',
+    promoTitle: 'Promotion',
     promoText: '',
-    noticeTitle: 'সর্বনিম্ন ডিপোজিট {min}',
-    noticeText: 'একবারে {min} টাকার কম পাঠাবেন না। এর চেয়ে কম পাঠালে সেই টাকা অ্যাকাউন্টে যোগ করা হবে না এবং ফেরতও দেওয়া হবে না। একবারে সর্বোচ্চ {max} পাঠানো যাবে।',
+    noticeTitle: 'Minimum deposit {min}',
+    noticeText: 'Do not send less than {min} in one transaction. Anything below that is not credited to your account and cannot be refunded. The most you can send at once is {max}.',
   },
   withdraw: {
     methods: WITHDRAW_CHANNELS.map((c) => ({
@@ -249,48 +249,48 @@ export const CASHIER_DEFAULTS: CashierConfig = {
       color: CHANNEL_COLOR[c.id] ?? '#0f766e',
       min: 500,
       max: 50_000,
-      accountHint: c.id === 'bank' ? 'অ্যাকাউন্ট নাম্বার' : c.id === 'usdt' ? 'TRC20 অ্যাড্রেস' : '01XXXXXXXXX',
+      accountHint: c.id === 'bank' ? 'Account number' : c.id === 'usdt' ? 'TRC20 address' : '01XXXXXXXXX',
       active: true,
     })),
-    processingTime: '২৪ ঘন্টা',
-    reminder: 'উত্তোলনের আগে অনুগ্রহ করে নিশ্চিত করুন যে আপনার ই-ওয়ালেট (bKash, Nagad) সঠিকভাবে যুক্ত আছে। তথ্য ভুল হলে লেনদেন বিলম্বিত হতে পারে বা ব্যর্থ হতে পারে।',
+    processingTime: '24 hours',
+    reminder: 'Before withdrawing, please make sure your e-wallet (bKash, Nagad) is added correctly. Wrong details can delay or fail the transaction.',
     dailyLimit: 5,
     maxWallets: 5,
-    walletsTitle: 'নিবন্ধিত ই-ওয়ালেট',
-    emptyWalletsText: 'খালি ই-ওয়ালেট',
-    amountLabel: 'উত্তোলন পরিমাণ',
-    passwordLabel: 'লেনদেন পাসওয়ার্ড',
-    passwordHint: 'আপনার লগইন পাসওয়ার্ডটি দিন',
-    note: 'রিকোয়েস্ট করার সাথে সাথে টাকা ব্যালেন্স থেকে সরিয়ে রাখা হবে। অ্যাডমিন অনুমোদন করলে পাঠানো হবে, বাতিল করলে ব্যালেন্সে ফেরত আসবে।',
+    walletsTitle: 'Registered E-Wallets',
+    emptyWalletsText: 'No e-wallet yet',
+    amountLabel: 'Withdrawal Amount',
+    passwordLabel: 'Transaction Password',
+    passwordHint: 'Enter your login password',
+    note: 'The amount is held aside the moment you request it. It is sent once an admin approves, and returned to your balance if the request is rejected.',
     chargePerThousand: 44,
     chargeBasis: 'balance',
-    chargeTitle: 'উত্তোলন চার্জ',
-    chargeText: 'প্রতি ১,০০০ টাকায় {rate} হারে এজেন্ট ক্যাশআউট চার্জ দিতে হবে।',
-    chargeWarning: 'চার্জ পরিশোধ না করলে উত্তোলনের টাকা ছাড় করা হবে না।',
-    summaryTitle: 'উত্তোলন সারাংশ',
-    summaryWarning: 'শুধুমাত্র আমাদের দেওয়া এজেন্ট নাম্বারে চার্জ পাঠাবেন, অন্যথায় উত্তোলন সফল হবে না।',
-    chargeLabel: 'এজেন্ট ক্যাশআউট চার্জ',
-    rulesTitle: 'উত্তোলন নিয়মাবলী',
+    chargeTitle: 'Withdrawal Charge',
+    chargeText: 'An agent cash-out charge of {rate} per ৳1,000 applies.',
+    chargeWarning: 'The withdrawal is not released until the charge is paid.',
+    summaryTitle: 'Withdrawal Summary',
+    summaryWarning: 'Send the charge only to the agent number we give you, otherwise the withdrawal will not go through.',
+    chargeLabel: 'Agent Cash-Out Charge',
+    rulesTitle: 'Withdrawal Rules',
     rules: [
-      'নিজের নামে থাকা সঠিক অ্যাকাউন্ট নাম্বার দিন',
-      'এক রিকোয়েস্টে সর্বোচ্চ {max} তোলা যাবে',
-      '!এজেন্ট ক্যাশআউট চার্জ মোট ওয়ালেট ব্যালেন্সের উপর হিসাব করা হয়',
-      '!প্রতি ১,০০০ টাকায় {rate} চার্জ',
-      '!সম্পূর্ণ চার্জ একবারেই পরিশোধ করতে হবে',
+      'Give a correct account number held in your own name',
+      'You can withdraw up to {max} in a single request',
+      '!The agent cash-out charge is calculated on your total wallet balance',
+      '!{rate} charge per ৳1,000',
+      '!The full charge must be paid in one go',
     ].join('\n'),
-    applyLabel: 'উত্তোলনের জন্য আবেদন করুন',
-    payTitle: 'চার্জ পরিশোধ',
-    payWarning: 'নিচের এজেন্ট নাম্বারে চার্জ পাঠিয়ে TrxID দিন — তবেই উত্তোলন প্রক্রিয়া শুরু হবে।',
-    agentNote: 'এই নাম্বারে শুধুমাত্র ক্যাশ আউট গ্রহণ করা হয়',
-    chargeExactNote: 'ঠিক এই পরিমাণ পাঠাতে হবে — কম বা বেশি নয়',
-    guideTitle: 'গুরুত্বপূর্ণ নির্দেশনা',
+    applyLabel: 'Apply for withdrawal',
+    payTitle: 'Pay the charge',
+    payWarning: 'Send the charge to the agent number below and enter the TrxID — only then does the withdrawal start processing.',
+    agentNote: 'This number accepts cash out only',
+    chargeExactNote: 'Send exactly this amount — no more, no less',
+    guideTitle: 'Important instructions',
     guideLines: [
-      'পুরো চার্জ {charge} এক ট্রানজেকশনেই ক্যাশ আউট করুন',
-      'উপরে দেখানো এজেন্ট নাম্বার ছাড়া অন্য কোথাও পাঠাবেন না',
+      'Cash out the whole {charge} charge in a single transaction',
+      'Do not send it anywhere but the agent number shown above',
     ].join('\n'),
-    chargeTrxLabel: 'চার্জ পেমেন্টের TrxID লিখুন',
-    chargeTrxPlaceholder: 'যেমন: 9F2K4L8M',
-    chargeCaution: 'লেনদেন আইডি সঠিকভাবে দিতে হবে, না হলে উত্তোলন বাতিল হয়ে যাবে।',
+    chargeTrxLabel: 'Enter the TrxID of the charge payment',
+    chargeTrxPlaceholder: 'e.g. 9F2K4L8M',
+    chargeCaution: 'The transaction ID must be correct, or the withdrawal is cancelled.',
   },
   updatedAt: null,
 };
@@ -314,10 +314,10 @@ export type CashierMutationResult =
     like the app's home screen. A 'transfer' method (bank, crypto) has no
     such menu, so the strip is skipped for it. */
 export const HOWTO_TILES: { key: PayType | 'recharge'; label: string; glyph: string }[] = [
-  { key: 'sendmoney', label: 'সেন্ড মানি', glyph: '📤' },
-  { key: 'recharge', label: 'মোবাইল রিচার্জ', glyph: '📱' },
-  { key: 'cashout', label: 'ক্যাশ আউট', glyph: '🏧' },
-  { key: 'payment', label: 'পেমেন্ট', glyph: '🛍️' },
+  { key: 'sendmoney', label: 'Send Money', glyph: '📤' },
+  { key: 'recharge', label: 'Mobile Recharge', glyph: '📱' },
+  { key: 'cashout', label: 'Cash Out', glyph: '🏧' },
+  { key: 'payment', label: 'Payment', glyph: '🛍️' },
 ];
 
 /** The figure the charge is a percentage of. */
@@ -343,15 +343,12 @@ export function fillTokens(template: string, tokens: Record<string, string>) {
     actually credit.
 
     It used to be a free-text field the admin typed next to the percent, and
-    nothing tied the two together — bKash sat on "+১০% বোনাস" while paying 5
+    nothing tied the two together — bKash sat on "+10% Bonus" while paying 5
     for as long as nobody noticed. There is now one number: whatever percent
     the admin sets is what the tile says. */
-const BN_DIGITS = '০১২৩৪৫৬৭৮৯';
-
 export function bonusBadge(percent: number): string {
   if (!Number.isFinite(percent) || percent <= 0) return '';
-  const bengali = String(percent).replace(/\d/g, (d) => BN_DIGITS[Number(d)]);
-  return `+${bengali}% বোনাস`;
+  return `+${percent}% Bonus`;
 }
 
 export function isImageIcon(icon: string) {

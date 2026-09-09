@@ -17,77 +17,77 @@ type Channel = { id: string; name: string };
 type Side = 'deposit' | 'withdraw';
 
 const ERROR_LABEL: Record<string, string> = {
-  'invalid-method': 'মেথডের নাম কমপক্ষে ২ অক্ষর হতে হবে।',
-  'invalid-amounts': 'অংকের চিপে শুধু ০ এর বেশি সংখ্যা দিন।',
-  'invalid-limit': 'লিমিট ঠিক নেই — সর্বনিম্ন সর্বোচ্চের চেয়ে ছোট হতে হবে।',
-  'unknown-channel': 'অজানা পেমেন্ট চ্যানেল।',
-  'invalid-pattern': 'TrxID ফরম্যাট (regex) টি ঠিক নয়।',
-  'invalid-url': 'লিংক https:// দিয়ে শুরু হতে হবে।',
-  unauthorized: 'সেশন শেষ হয়ে গেছে — আবার লগইন করুন।',
+  'invalid-method': 'A method name needs at least 2 characters.',
+  'invalid-amounts': 'Amount chips take numbers greater than 0 only.',
+  'invalid-limit': 'Those limits are wrong — the minimum must be below the maximum.',
+  'unknown-channel': 'Unknown payment channel.',
+  'invalid-pattern': 'That TrxID format (regex) is not valid.',
+  'invalid-url': 'The link must start with https://.',
+  unauthorized: 'Your session has expired — log in again.',
 };
 
 const PAY_TYPES = Object.keys(PAY_TYPE_LABEL) as PayType[];
 
 const DEPOSIT_TEXTS: [keyof CashierConfig['deposit'], string, boolean][] = [
-  ['noticeTitle', 'সর্বনিম্ন ডিপোজিট নোটিশের শিরোনাম (খালি রাখলে নোটিশ দেখাবে না)', false],
-  ['noticeText', 'সর্বনিম্ন ডিপোজিট নোটিশের লেখা — {min} ও {max} লিখলে বাছাই করা মেথডের লিমিট বসে যাবে', true],
-  ['methodTitle', 'মেথড সেকশনের শিরোনাম', false],
-  ['channelTitle', 'চ্যানেল সেকশনের শিরোনাম', false],
-  ['amountTitle', 'পরিমাণ সেকশনের শিরোনাম', false],
-  ['channelNote', 'চ্যানেল কার্ডের নিচের গোলাপি নোট', true],
-  ['stepHeaderNote', 'পেমেন্ট স্ক্রিনের হেডারের ছোট লেখা', false],
-  ['stepWarning', 'পেমেন্ট স্ক্রিনের লাল সতর্কবার্তা', true],
-  ['walletLabel', 'ওয়ালেট নাম্বার লেবেল', false],
-  ['howToTitle', 'কিভাবে পাঠাবেন — শিরোনাম', false],
-  ['howToSteps', 'কিভাবে পাঠাবেন — ধাপ (প্রতি লাইনে একটি; “উপরের মেনু বেছে নিন” লাইনটি মেথডের মেনু নামে বদলে যায়)', true],
-  ['trxLabel', 'TrxID ইনপুটের লেবেল', false],
-  ['trxHelpText', 'TrxID সাহায্য লিংকের লেখা', false],
-  ['trxHelpUrl', 'TrxID সাহায্য লিংক (URL, খালি রাখলে নির্দেশনা টগল করে)', false],
-  ['trxPlaceholder', 'TrxID ইনপুটের placeholder', false],
-  ['trxPattern', 'TrxID ফরম্যাট (regex, খালি রাখলে যেকোনো লেখা চলবে)', false],
-  ['confirmTitle', 'নিশ্চিতকরণ ডায়ালগের শিরোনাম', false],
-  ['confirmText', 'নিশ্চিতকরণ ডায়ালগের লেখা', true],
-  ['cautionTitle', 'সতর্কতা ব্লকের শিরোনাম', false],
-  ['cautionText', 'সতর্কতা ব্লকের লেখা', true],
-  ['successTitle', 'সফল স্ক্রিনের শিরোনাম', false],
-  ['successText', 'সফল স্ক্রিনের লেখা', true],
-  ['promoTitle', 'প্রমোশন সেকশনের শিরোনাম (খালি রাখলে সেকশন থাকবে না)', false],
-  ['promoText', 'প্রমোশন সেকশনের লেখা', true],
+  ['noticeTitle', 'Minimum-deposit notice heading (leave blank to hide the notice)', false],
+  ['noticeText', 'Minimum-deposit notice text — {min} and {max} are filled in from the selected method’s limits', true],
+  ['methodTitle', 'Method section heading', false],
+  ['channelTitle', 'Channel section heading', false],
+  ['amountTitle', 'Amount section heading', false],
+  ['channelNote', 'Pink note under the channel card', true],
+  ['stepHeaderNote', 'Small line in the payment screen header', false],
+  ['stepWarning', 'Red warning on the payment screen', true],
+  ['walletLabel', 'Wallet number label', false],
+  ['howToTitle', 'How to send — heading', false],
+  ['howToSteps', 'How to send — steps (one per line; the “Pick the menu above” line is replaced by the method’s menu name)', true],
+  ['trxLabel', 'TrxID input label', false],
+  ['trxHelpText', 'TrxID help link text', false],
+  ['trxHelpUrl', 'TrxID help link (URL; blank makes it toggle the instructions)', false],
+  ['trxPlaceholder', 'TrxID input placeholder', false],
+  ['trxPattern', 'TrxID format (regex; blank accepts any text)', false],
+  ['confirmTitle', 'Confirmation dialog heading', false],
+  ['confirmText', 'Confirmation dialog text', true],
+  ['cautionTitle', 'Caution block heading', false],
+  ['cautionText', 'Caution block text', true],
+  ['successTitle', 'Success screen heading', false],
+  ['successText', 'Success screen text', true],
+  ['promoTitle', 'Promotion section heading (leave blank to drop the section)', false],
+  ['promoText', 'Promotion section text', true],
 ];
 
 const WITHDRAW_TEXTS: [keyof CashierConfig['withdraw'], string, boolean][] = [
-  ['chargeTitle', 'উত্তোলন চার্জ কার্ডের শিরোনাম (খালি রাখলে কার্ড দেখাবে না)', false],
-  ['chargeText', 'চার্জের ব্যাখ্যা — {rate} লিখলে প্রতি ১,০০০ টাকার চার্জ বসে যাবে', true],
-  ['chargeWarning', 'চার্জ না দিলে কী হবে — লাল সতর্কবার্তা', true],
-  ['processingTime', 'উত্তোলন সময় (যেমন: ২৪ ঘন্টা)', false],
-  ['walletsTitle', 'সংরক্ষিত ওয়ালেট সেকশনের শিরোনাম', false],
-  ['reminder', 'সৌজন্যমূলক স্মরণিকা', true],
-  ['emptyWalletsText', 'ওয়ালেট না থাকলে যে লেখা', false],
-  ['amountLabel', 'পরিমাণ সেকশনের শিরোনাম', false],
-  ['passwordLabel', 'পাসওয়ার্ড ফিল্ডের লেবেল', false],
-  ['passwordHint', 'পাসওয়ার্ড ফিল্ডের নিচের ইঙ্গিত', false],
-  ['note', 'বাটনের নিচের নোট', true],
+  ['chargeTitle', 'Withdrawal charge card heading (leave blank to hide the card)', false],
+  ['chargeText', 'Charge explanation — {rate} is filled in with the charge per ৳1,000', true],
+  ['chargeWarning', 'What happens if the charge is unpaid — red warning', true],
+  ['processingTime', 'Withdrawal time (e.g. 24 hours)', false],
+  ['walletsTitle', 'Saved wallets section heading', false],
+  ['reminder', 'Friendly reminder', true],
+  ['emptyWalletsText', 'Text shown when there is no wallet', false],
+  ['amountLabel', 'Amount section heading', false],
+  ['passwordLabel', 'Password field label', false],
+  ['passwordHint', 'Hint under the password field', false],
+  ['note', 'Note under the button', true],
 ];
 
 /** Step 2 (the summary the player confirms) and step 3 (paying the charge to
     an agent number) — kept apart from the plain withdraw copy so the admin
     form does not read as one long wall of inputs. */
 const CHARGE_TEXTS: [keyof CashierConfig['withdraw'], string, boolean][] = [
-  ['summaryTitle', 'সারাংশ স্ক্রিনের শিরোনাম', false],
-  ['summaryWarning', 'সারাংশের উপরের লাল সতর্কবার্তা', true],
-  ['chargeLabel', 'চার্জের অংকের উপরের লেবেল', false],
-  ['rulesTitle', 'নিয়মাবলী বক্সের শিরোনাম', false],
-  ['rules', 'নিয়মাবলী — প্রতি লাইনে একটি নিয়ম। লাইনের শুরুতে ! দিলে লাল রঙে দেখাবে। {rate} {max} {min} {time} {charge} {balance} {amount} বসানো যাবে', true],
-  ['applyLabel', 'সারাংশের বাটনের লেখা', false],
-  ['payTitle', 'চার্জ পরিশোধ স্ক্রিনের শিরোনাম', false],
-  ['payWarning', 'চার্জ পরিশোধ স্ক্রিনের উপরের লাল লেখা', true],
-  ['agentNote', 'এজেন্ট নাম্বারের নিচের ছোট লেখা', false],
-  ['chargeExactNote', 'চার্জের অংকের নিচের ছোট লেখা', false],
-  ['guideTitle', 'নির্দেশনা বক্সের শিরোনাম', false],
-  ['guideLines', 'নির্দেশনা — প্রতি লাইনে একটি পয়েন্ট ({charge} বসানো যাবে)', true],
-  ['chargeTrxLabel', 'চার্জের TrxID ইনপুটের লেবেল', false],
-  ['chargeTrxPlaceholder', 'চার্জের TrxID ইনপুটের placeholder', false],
-  ['chargeCaution', 'চার্জ স্ক্রিনের নিচের সতর্কতা', true],
+  ['summaryTitle', 'Summary screen heading', false],
+  ['summaryWarning', 'Red warning above the summary', true],
+  ['chargeLabel', 'Label above the charge figure', false],
+  ['rulesTitle', 'Rules box heading', false],
+  ['rules', 'Rules — one per line. Start a line with ! to show it in red. {rate} {max} {min} {time} {charge} {balance} {amount} are filled in', true],
+  ['applyLabel', 'Summary button text', false],
+  ['payTitle', 'Pay-the-charge screen heading', false],
+  ['payWarning', 'Red line at the top of the pay-the-charge screen', true],
+  ['agentNote', 'Small line under the agent number', false],
+  ['chargeExactNote', 'Small line under the charge figure', false],
+  ['guideTitle', 'Instructions box heading', false],
+  ['guideLines', 'Instructions — one point per line ({charge} is filled in)', true],
+  ['chargeTrxLabel', 'Charge TrxID input label', false],
+  ['chargeTrxPlaceholder', 'Charge TrxID input placeholder', false],
+  ['chargeCaution', 'Caution at the bottom of the charge screen', true],
 ];
 
 const blankDeposit = (channelId: string): DepositMethod => ({
@@ -142,14 +142,14 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
         | { ok: true; config: CashierConfig }
         | { ok: false; reason: string; field?: string };
       if (!data.ok) {
-        setError((ERROR_LABEL[data.reason] ?? `সমস্যা হয়েছে (${data.reason})`) + (data.field ? ` (${data.field})` : ''));
+        setError((ERROR_LABEL[data.reason] ?? `Something went wrong (${data.reason})`) + (data.field ? ` (${data.field})` : ''));
         return;
       }
       setSaved(data.config);
       setForm(data.config);
-      setNotice('ক্যাশিয়ার সেভ হয়েছে — সাইটে এখনই কার্যকর।');
+      setNotice('Cashier saved — live on the site now.');
     } catch {
-      setError('সার্ভারে পৌঁছানো গেল না — আবার চেষ্টা করুন।');
+      setError('Could not reach the server — try again.');
     } finally {
       setBusy(false);
     }
@@ -160,28 +160,28 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
   return (
     <form onSubmit={submit}>
       <div className="adm__seg">
-        <button type="button" className={side === 'deposit' ? 'on' : ''} onClick={() => setSide('deposit')}>ডিপোজিট</button>
-        <button type="button" className={side === 'withdraw' ? 'on' : ''} onClick={() => setSide('withdraw')}>উইথড্র</button>
+        <button type="button" className={side === 'deposit' ? 'on' : ''} onClick={() => setSide('deposit')}>Deposit</button>
+        <button type="button" className={side === 'withdraw' ? 'on' : ''} onClick={() => setSide('withdraw')}>Withdraw</button>
       </div>
 
       {side === 'deposit' && (
         <>
           <div className="adm__card">
-            <h2 className="adm__cardh">ডিপোজিট মেথড</h2>
+            <h2 className="adm__cardh">Deposit Methods</h2>
             <div className="adm__tablewrap" style={{ marginBottom: 6 }}>
               <table className="adm__table adm__table--edit">
                 <thead>
                   <tr>
-                    <th>ক্রম</th><th>নাম</th><th>চ্যানেল (নাম্বার)</th><th>মেনু</th><th>বোনাস %</th><th>টাইলে দেখাবে</th>
-                    <th>আইকন</th><th>রং</th><th>ট্যাগ</th><th>সর্বনিম্ন</th><th>সর্বোচ্চ</th><th>TrxID</th><th>চালু</th><th></th>
+                    <th>Order</th><th>Name</th><th>Channel (number)</th><th>Menu</th><th>Bonus %</th><th>Shown on tile</th>
+                    <th>Icon</th><th>Colour</th><th>Tag</th><th>Min</th><th>Max</th><th>TrxID</th><th>Active</th><th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {form.deposit.methods.map((m, i) => (
                     <tr key={i}>
                       <td>
-                        <button type="button" className="adm__mini adm__iconbtn" onClick={() => setDep({ methods: move(form.deposit.methods, i, -1) })} aria-label="উপরে">↑</button>
-                        <button type="button" className="adm__mini adm__iconbtn" onClick={() => setDep({ methods: move(form.deposit.methods, i, 1) })} aria-label="নিচে">↓</button>
+                        <button type="button" className="adm__mini adm__iconbtn" onClick={() => setDep({ methods: move(form.deposit.methods, i, -1) })} aria-label="Move up">↑</button>
+                        <button type="button" className="adm__mini adm__iconbtn" onClick={() => setDep({ methods: move(form.deposit.methods, i, 1) })} aria-label="Move down">↓</button>
                       </td>
                       <td><input className="adm__mini" style={{ width: 150 }} value={m.name} disabled={busy} onChange={(e) => patchDepMethod(i, { name: e.target.value })} /></td>
                       <td>
@@ -205,25 +205,25 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
                       {/* not an input: the tile says whatever the percent is */}
                       <td>
                         <span className="adm__preview">
-                          {bonusBadge(m.bonusPercent) || 'বোনাস নেই'}
+                          {bonusBadge(m.bonusPercent) || 'No bonus'}
                         </span>
                       </td>
-                      <td><input className="adm__mini" style={{ width: 70 }} value={m.icon} placeholder="🅱️ বা /path.png" disabled={busy} onChange={(e) => patchDepMethod(i, { icon: e.target.value })} /></td>
+                      <td><input className="adm__mini" style={{ width: 70 }} value={m.icon} placeholder="🅱️ or /path.png" disabled={busy} onChange={(e) => patchDepMethod(i, { icon: e.target.value })} /></td>
                       <td><input className="adm__mini" type="color" style={{ width: 44, padding: 2 }} value={/^#[0-9a-f]{6}$/i.test(m.color) ? m.color : '#0f766e'} disabled={busy} onChange={(e) => patchDepMethod(i, { color: e.target.value })} /></td>
                       <td><input className="adm__mini" style={{ width: 84 }} value={m.tag} placeholder="GATEWAY" disabled={busy} onChange={(e) => patchDepMethod(i, { tag: e.target.value })} /></td>
                       <td><input className="adm__mini" type="number" min={0} style={{ width: 80 }} value={num(m.min)} disabled={busy} onChange={(e) => patchDepMethod(i, { min: Number(e.target.value) })} /></td>
                       <td><input className="adm__mini" type="number" min={0} style={{ width: 96 }} value={num(m.max)} disabled={busy} onChange={(e) => patchDepMethod(i, { max: Number(e.target.value) })} /></td>
                       <td>
                         <select className="adm__mini" value={m.trxRequired ? '1' : '0'} disabled={busy} onChange={(e) => patchDepMethod(i, { trxRequired: e.target.value === '1' })}>
-                          <option value="1">লাগবে</option><option value="0">ঐচ্ছিক</option>
+                          <option value="1">Required</option><option value="0">Optional</option>
                         </select>
                       </td>
                       <td>
                         <select className="adm__mini" value={m.active ? '1' : '0'} disabled={busy} onChange={(e) => patchDepMethod(i, { active: e.target.value === '1' })}>
-                          <option value="1">হ্যাঁ</option><option value="0">বন্ধ</option>
+                          <option value="1">Yes</option><option value="0">Off</option>
                         </select>
                       </td>
-                      <td><button type="button" className="adm__mini adm__iconbtn adm__iconbtn--danger" disabled={busy} onClick={() => setDep({ methods: form.deposit.methods.filter((_, j) => j !== i) })} aria-label="মুছুন">✕</button></td>
+                      <td><button type="button" className="adm__mini adm__iconbtn adm__iconbtn--danger" disabled={busy} onClick={() => setDep({ methods: form.deposit.methods.filter((_, j) => j !== i) })} aria-label="Delete">✕</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -231,33 +231,33 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
             </div>
             {form.deposit.methods.map((m, i) => (
               <label className="adm__f adm__f--wide" key={`note-${i}`} style={{ marginBottom: 8 }}>
-                <span>{m.name || `মেথড ${i + 1}`} — মেথড বাছলে নিচে যে লেখা দেখাবে</span>
+                <span>{m.name || `Method ${i + 1}`} — the line shown below once this method is picked</span>
                 <input value={m.note} disabled={busy} maxLength={300} onChange={(e) => patchDepMethod(i, { note: e.target.value })} />
               </label>
             ))}
             <button type="button" className="btn btn--ghost" disabled={busy || form.deposit.methods.length >= 20}
                     onClick={() => setDep({ methods: [...form.deposit.methods, blankDeposit(channels[0].id)] })}>
-              + মেথড যোগ করুন
+              + Add method
             </button>
             <p className="adm__hint">
-              “মেনু” বলে দেয় প্লেয়ার bKash/Nagad অ্যাপে কোন অপশন ব্যবহার করবে — পেমেন্ট হলে
-              মার্চেন্ট নাম্বার, ক্যাশ আউট হলে এজেন্ট নাম্বার, সেন্ড মানি হলে পার্সোনাল নাম্বার
-              দেখানো হয় (পেমেন্ট ট্যাবে ঐ ধরনের নাম্বার না থাকলে চ্যানেলের যেকোনো চালু নাম্বার)।
-              আইকনে ইমোজি অথবা ছবির লিংক দিন।
+              “Menu” tells the player which option to use in the bKash/Nagad app — Payment
+              shows a merchant number, Cash Out an agent number, Send Money a personal
+              number (if the Payments tab has no number of that kind, any active number
+              on the channel is used). The icon takes an emoji or an image link.
             </p>
           </div>
 
           <div className="adm__card">
-            <h2 className="adm__cardh">অংকের চিপ</h2>
+            <h2 className="adm__cardh">Amount Chips</h2>
             <div className="adm__tablewrap" style={{ marginBottom: 6 }}>
               <table className="adm__table" style={{ minWidth: 0 }}>
-                <thead><tr><th>পরিমাণ (৳)</th><th>বোনাস ব্যাজ</th><th></th></tr></thead>
+                <thead><tr><th>Amount (৳)</th><th>Bonus badge</th><th></th></tr></thead>
                 <tbody>
                   {form.deposit.amounts.map((a, i) => (
                     <tr key={i}>
                       <td><input className="adm__mini" type="number" min={1} style={{ width: 110 }} value={num(a.amount)} disabled={busy} onChange={(e) => patchAmount(i, { amount: Number(e.target.value) })} /></td>
                       <td><input className="adm__mini" style={{ width: 110 }} value={a.bonusLabel} placeholder="+50" disabled={busy} onChange={(e) => patchAmount(i, { bonusLabel: e.target.value })} /></td>
-                      <td><button type="button" className="adm__mini adm__iconbtn adm__iconbtn--danger" disabled={busy} onClick={() => setDep({ amounts: form.deposit.amounts.filter((_, j) => j !== i) })} aria-label="মুছুন">✕</button></td>
+                      <td><button type="button" className="adm__mini adm__iconbtn adm__iconbtn--danger" disabled={busy} onClick={() => setDep({ amounts: form.deposit.amounts.filter((_, j) => j !== i) })} aria-label="Delete">✕</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -265,13 +265,13 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
             </div>
             <button type="button" className="btn btn--ghost" disabled={busy || form.deposit.amounts.length >= 12}
                     onClick={() => setDep({ amounts: [...form.deposit.amounts, { amount: 0, bonusLabel: '' }] })}>
-              + চিপ যোগ করুন
+              + Add chip
             </button>
-            <p className="adm__hint">সেভ করলে ছোট থেকে বড় ক্রমে সাজিয়ে রাখা হয়। ব্যাজ খালি রাখলে দেখাবে না।</p>
+            <p className="adm__hint">They are sorted low to high on save. A blank badge is not shown.</p>
           </div>
 
           <div className="adm__card">
-            <h2 className="adm__cardh">লেখা ও নির্দেশনা</h2>
+            <h2 className="adm__cardh">Copy &amp; Instructions</h2>
             <div className="adm__formgrid">
               {DEPOSIT_TEXTS.map(([key, label, long]) => (
                 <label className={`adm__f${long ? ' adm__f--wide' : ''}`} key={key}>
@@ -289,18 +289,18 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
       {side === 'withdraw' && (
         <>
           <div className="adm__card">
-            <h2 className="adm__cardh">উইথড্র মেথড</h2>
+            <h2 className="adm__cardh">Withdraw Methods</h2>
             <div className="adm__tablewrap" style={{ marginBottom: 6 }}>
               <table className="adm__table adm__table--edit">
                 <thead>
-                  <tr><th>ক্রম</th><th>নাম</th><th>চ্যানেল</th><th>আইকন</th><th>রং</th><th>সর্বনিম্ন</th><th>সর্বোচ্চ</th><th>নাম্বারের ইঙ্গিত</th><th>চালু</th><th></th></tr>
+                  <tr><th>Order</th><th>Name</th><th>Channel</th><th>Icon</th><th>Colour</th><th>Min</th><th>Max</th><th>Number hint</th><th>Active</th><th></th></tr>
                 </thead>
                 <tbody>
                   {form.withdraw.methods.map((m, i) => (
                     <tr key={i}>
                       <td>
-                        <button type="button" className="adm__mini adm__iconbtn" onClick={() => setWd({ methods: move(form.withdraw.methods, i, -1) })} aria-label="উপরে">↑</button>
-                        <button type="button" className="adm__mini adm__iconbtn" onClick={() => setWd({ methods: move(form.withdraw.methods, i, 1) })} aria-label="নিচে">↓</button>
+                        <button type="button" className="adm__mini adm__iconbtn" onClick={() => setWd({ methods: move(form.withdraw.methods, i, -1) })} aria-label="Move up">↑</button>
+                        <button type="button" className="adm__mini adm__iconbtn" onClick={() => setWd({ methods: move(form.withdraw.methods, i, 1) })} aria-label="Move down">↓</button>
                       </td>
                       <td><input className="adm__mini" style={{ width: 130 }} value={m.name} disabled={busy} onChange={(e) => patchWdMethod(i, { name: e.target.value })} /></td>
                       <td>
@@ -315,10 +315,10 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
                       <td><input className="adm__mini" style={{ width: 120 }} value={m.accountHint} disabled={busy} onChange={(e) => patchWdMethod(i, { accountHint: e.target.value })} /></td>
                       <td>
                         <select className="adm__mini" value={m.active ? '1' : '0'} disabled={busy} onChange={(e) => patchWdMethod(i, { active: e.target.value === '1' })}>
-                          <option value="1">হ্যাঁ</option><option value="0">বন্ধ</option>
+                          <option value="1">Yes</option><option value="0">Off</option>
                         </select>
                       </td>
-                      <td><button type="button" className="adm__mini adm__iconbtn adm__iconbtn--danger" disabled={busy} onClick={() => setWd({ methods: form.withdraw.methods.filter((_, j) => j !== i) })} aria-label="মুছুন">✕</button></td>
+                      <td><button type="button" className="adm__mini adm__iconbtn adm__iconbtn--danger" disabled={busy} onClick={() => setWd({ methods: form.withdraw.methods.filter((_, j) => j !== i) })} aria-label="Delete">✕</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -326,27 +326,27 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
             </div>
             <button type="button" className="btn btn--ghost" disabled={busy || form.withdraw.methods.length >= 20}
                     onClick={() => setWd({ methods: [...form.withdraw.methods, blankWithdraw(channels[0].id)] })}>
-              + মেথড যোগ করুন
+              + Add method
             </button>
           </div>
 
           <div className="adm__card">
-            <h2 className="adm__cardh">নিয়ম</h2>
+            <h2 className="adm__cardh">Rules</h2>
             <div className="adm__formgrid">
               <label className="adm__f">
-                <span>দৈনিক উত্তোলন (বার, ০ = সীমা নেই)</span>
+                <span>Withdrawals per day (0 = no limit)</span>
                 <input type="number" min={0} max={999} value={num(form.withdraw.dailyLimit)} disabled={busy} onChange={(e) => setWd({ dailyLimit: Number(e.target.value) })} />
               </label>
               <label className="adm__f">
-                <span>প্রতি মেথডে সর্বোচ্চ সংরক্ষিত ওয়ালেট</span>
+                <span>Max saved wallets per method</span>
                 <input type="number" min={1} max={20} value={num(form.withdraw.maxWallets)} disabled={busy} onChange={(e) => setWd({ maxWallets: Number(e.target.value) })} />
               </label>
               <label className="adm__f">
-                <span>উত্তোলন চার্জ — প্রতি ১,০০০ টাকায় (৳, ০ = চার্জ নেই)</span>
+                <span>Withdrawal charge — per ৳1,000 (৳, 0 = no charge)</span>
                 <input type="number" min={0} max={1000} value={num(form.withdraw.chargePerThousand)} disabled={busy} onChange={(e) => setWd({ chargePerThousand: Number(e.target.value) })} />
               </label>
               <label className="adm__f">
-                <span>চার্জ কিসের উপর হিসাব হবে</span>
+                <span>What the charge is calculated on</span>
                 <select value={form.withdraw.chargeBasis} disabled={busy} onChange={(e) => setWd({ chargeBasis: e.target.value as ChargeBasis })}>
                   {(Object.keys(CHARGE_BASIS_LABEL) as ChargeBasis[]).map((b) => (
                     <option key={b} value={b}>{CHARGE_BASIS_LABEL[b]}</option>
@@ -355,18 +355,18 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
               </label>
             </div>
             <p className="adm__hint">
-              চার্জ প্লেয়ারের উত্তোলনের পরিমাণ অনুযায়ী হিসাব হয় — {form.withdraw.chargePerThousand} ৳ প্রতি ১,০০০ টাকায়,
-              অর্থাৎ ৳১,০০০ এ ৳{form.withdraw.chargePerThousand} আর ৳৫,০০০ এ
-              ৳{form.withdraw.chargePerThousand * 5}। “{CHARGE_BASIS_LABEL[form.withdraw.chargeBasis]}”
-              বেছে নিলে হিসাবটা {form.withdraw.chargeBasis === 'balance'
-                ? 'প্লেয়ারের পুরো ওয়ালেট ব্যালেন্স ধরে হয় — সে যত টাকাই তুলুক'
-                : 'শুধু সে যত টাকা তুলতে চাইছে তার উপর হয়'}। ০ দিলে চার্জের ধাপটি একেবারে উঠে যাবে
-              এবং রিকোয়েস্ট সরাসরি জমা হবে।
+              The charge scales with the amount — ৳{form.withdraw.chargePerThousand} per ৳1,000,
+              so ৳{form.withdraw.chargePerThousand} on ৳1,000 and
+              ৳{form.withdraw.chargePerThousand * 5} on ৳5,000. Picking “{CHARGE_BASIS_LABEL[form.withdraw.chargeBasis]}”
+              means it is worked out {form.withdraw.chargeBasis === 'balance'
+                ? 'on the player’s whole wallet balance, whatever they withdraw'
+                : 'on the amount they are withdrawing only'}. Set it to 0 and the charge step
+              disappears entirely — the request is submitted straight away.
             </p>
           </div>
 
           <div className="adm__card">
-            <h2 className="adm__cardh">লেখা</h2>
+            <h2 className="adm__cardh">Copy</h2>
             <div className="adm__formgrid">
               {WITHDRAW_TEXTS.map(([key, label, long]) => (
                 <label className={`adm__f${long ? ' adm__f--wide' : ''}`} key={key}>
@@ -380,12 +380,12 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
           </div>
 
           <div className="adm__card">
-            <h2 className="adm__cardh">সারাংশ ও চার্জ পরিশোধ স্ক্রিন</h2>
+            <h2 className="adm__cardh">Summary &amp; pay-the-charge screens</h2>
             <p className="adm__hint" style={{ marginTop: 0 }}>
-              রিকোয়েস্ট দেওয়ার পর প্লেয়ার দুইটি স্ক্রিন দেখে — কত চার্জ লাগবে তার সারাংশ,
-              তারপর কোন এজেন্ট নাম্বারে চার্জ পাঠাতে হবে সেই পাতা। এজেন্ট নাম্বার আসে
-              <b> অ্যাডমিন → পেমেন্ট</b> এর “এজেন্ট” ধরনের নাম্বার থেকে, তাই ওখানে অন্তত
-              একটি এজেন্ট নাম্বার চালু রাখতে হবে।
+              After the request the player sees two screens — a summary of the charge, then the
+              page telling them which agent number to send it to. Agent numbers come from
+              the “Agent” kind under <b> Admin → Payments</b>, so at least one agent number
+              has to be active there.
             </p>
             <div className="adm__formgrid">
               {CHARGE_TEXTS.map(([key, label, long]) => (
@@ -405,10 +405,10 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
       {notice && <p className="adm__note">{notice}</p>}
 
       <div className="adm__actions">
-        <button type="submit" className="btn btn--gold" disabled={busy}>{busy ? 'সেভ হচ্ছে…' : 'সেভ করুন'}</button>
-        <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => { setForm(saved); setError(''); setNotice(''); }}>বাতিল</button>
+        <button type="submit" className="btn btn--gold" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
+        <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => { setForm(saved); setError(''); setNotice(''); }}>Cancel</button>
       </div>
-      {saved.updatedAt && <p className="adm__hint">শেষ সেভ: {new Date(saved.updatedAt).toLocaleString('bn-BD')}</p>}
+      {saved.updatedAt && <p className="adm__hint">Last saved: {new Date(saved.updatedAt).toLocaleString('en-GB')}</p>}
     </form>
   );
 }

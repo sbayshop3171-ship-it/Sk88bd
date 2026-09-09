@@ -37,7 +37,7 @@ export default function HomePage() {
       {/* Everything a visitor can actually open — provider demos and the
           gameplay previews — floated to the top; the rest sit in their
           categories below with a "coming soon" placeholder. */}
-      <GameSection games={demoGames()} title="জনপ্রিয় গেম" />
+      <GameSection games={demoGames()} title="Popular Games" />
 
       {/* only rendered once the visitor has starred a tile */}
       <FavouriteGames />

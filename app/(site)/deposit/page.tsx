@@ -91,11 +91,11 @@ export default function DepositPage() {
   const next = () => {
     if (!method) return;
     if (!amountOk) {
-      setErr(`${method.name} এর জন্য ${money(method.min)} — ${money(method.max)} এর মধ্যে দিন`);
+      setErr(`Enter between ${money(method.min)} and ${money(method.max)} for ${method.name}`);
       return;
     }
     if (ready && !session) {
-      toast('ডিপোজিট করতে আগে লগইন করুন');
+      toast('Log in first to deposit');
       router.push('/login');
       return;
     }
@@ -109,16 +109,16 @@ export default function DepositPage() {
     if (!account) return;
     try {
       await navigator.clipboard.writeText(account.number);
-      toast('নাম্বার কপি হয়েছে');
+      toast('Number copied');
     } catch {
-      toast('কপি করা গেল না — হাতে লিখে নিন');
+      toast('Could not copy — write it down');
     }
   };
 
   const askConfirm = () => {
     if (!method || !account) return;
     if (method.trxRequired && !trxOk) {
-      setErr(trxClean ? 'TrxID এর ফরম্যাট ঠিক নেই' : 'TrxID দিন');
+      setErr(trxClean ? 'That TrxID format is not right' : 'Enter the TrxID');
       return;
     }
     setErr('');
@@ -129,7 +129,7 @@ export default function DepositPage() {
     if (!method) return;
     setConfirming(false);
     if (!backendReady || !session || !supabase) {
-      toast('পেমেন্ট গেটওয়ে যুক্ত হলে এখান থেকে ডিপোজিট হবে');
+      toast('Deposits run from here once a payment gateway is connected');
       return;
     }
 
@@ -153,7 +153,7 @@ export default function DepositPage() {
     setBusy(false);
 
     if (error) {
-      setErr('রিকোয়েস্ট পাঠানো গেল না — আবার চেষ্টা করুন');
+      setErr('Could not send the request — try again');
       return;
     }
     await refresh();
@@ -173,7 +173,7 @@ export default function DepositPage() {
       <>
         <CashierHeader title={t.deposit} historyHref="/deposit-history" direction="in" />
         <div className="note" style={{ margin: 12 }}>
-          {configReady ? 'এই মুহূর্তে কোনো ডিপোজিট মেথড চালু নেই। সাপোর্টে যোগাযোগ করুন।' : 'লোড হচ্ছে…'}
+          {configReady ? 'No deposit method is active right now. Please contact support.' : 'Loading…'}
         </div>
       </>
     );
@@ -188,7 +188,7 @@ export default function DepositPage() {
     return (
       <>
         <div className="cz-top">
-          <button type="button" className="cz-top__back" aria-label="পিছনে" onClick={() => setStep('pick')}>‹</button>
+          <button type="button" className="cz-top__back" aria-label="Back" onClick={() => setStep('pick')}>‹</button>
           <div>
             <b>BDT {n.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</b>
             <small>{cfg.stepHeaderNote}</small>
@@ -200,8 +200,8 @@ export default function DepositPage() {
           <p>{cfg.successText}</p>
           <button type="button" className="btn btn--gold" onClick={resubmit}>Resubmit TrxID</button>
           <div className="cz-done__links">
-            <Link href="/deposit-history">হিস্টোরি দেখুন</Link>
-            <Link href="/">হোমে ফিরুন</Link>
+            <Link href="/deposit-history">View history</Link>
+            <Link href="/">Back to home</Link>
           </div>
         </div>
       </>
@@ -215,7 +215,7 @@ export default function DepositPage() {
     return (
       <>
         <div className="cz-top">
-          <button type="button" className="cz-top__back" aria-label="পিছনে" onClick={() => { setStep('pick'); setErr(''); }}>‹</button>
+          <button type="button" className="cz-top__back" aria-label="Back" onClick={() => { setStep('pick'); setErr(''); }}>‹</button>
           <div>
             <b>BDT {n.toLocaleString('en-IN')}</b>
             <small>{cfg.stepHeaderNote}</small>
@@ -233,12 +233,12 @@ export default function DepositPage() {
           <div className="cz-label">{cfg.walletLabel}<span>*</span></div>
           {cfg.channelNote && <p className="cz-pink">{cfg.channelNote}</p>}
           {loadingAccount ? (
-            <div className="paybox paybox--wait">নাম্বার আনা হচ্ছে…</div>
+            <div className="paybox paybox--wait">Fetching the number…</div>
           ) : account ? (
             <div className="cz-wallet">
               <div className="cz-wallet__row">
                 <b>{account.number}</b>
-                <button type="button" className="cz-wallet__copy" onClick={copyNumber} aria-label="কপি">⧉</button>
+                <button type="button" className="cz-wallet__copy" onClick={copyNumber} aria-label="Copy">⧉</button>
               </div>
               <div className="cz-wallet__meta">
                 <span className="paybox__kind">{KIND_LABEL[account.kind]}</span>
@@ -248,8 +248,8 @@ export default function DepositPage() {
             </div>
           ) : (
             <div className="paybox paybox--empty">
-              এই মুহূর্তে {method.name} এর নাম্বার দেওয়া নেই। সাপোর্টে যোগাযোগ করুন অথবা
-              অন্য একটি মেথড বেছে নিন।
+              No {method.name} number is set right now. Please contact support or pick
+              another method.
             </div>
           )}
 
@@ -274,7 +274,7 @@ export default function DepositPage() {
                   {steps.map((s, i) => (
                     <span key={i}>
                       {i > 0 && <em> → </em>}
-                      {s === 'উপরের মেনু বেছে নিন' ? <b>{payLabel}</b> : s}
+                      {s === 'Pick the menu above' ? <b>{payLabel}</b> : s}
                     </span>
                   ))}
                 </p>
@@ -284,7 +284,7 @@ export default function DepositPage() {
 
           <div className="cz-label">
             {cfg.trxLabel}
-            {method.trxRequired && <span>(প্রয়োজন)</span>}
+            {method.trxRequired && <span>(required)</span>}
           </div>
           {cfg.trxHelpText && (
             cfg.trxHelpUrl
@@ -302,7 +302,7 @@ export default function DepositPage() {
           />
           {trxClean && (
             <p className={`cz-trx__state${trxOk ? ' ok' : ' bad'}`}>
-              {trxOk ? '✓ TrxID সঠিক ফরম্যাটে আছে' : 'TrxID এর ফরম্যাট ঠিক নেই'}
+              {trxOk ? '✓ TrxID format looks right' : 'That TrxID format is not right'}
             </p>
           )}
           {err && <p className="cz-err">{err}</p>}
@@ -313,7 +313,7 @@ export default function DepositPage() {
             disabled={busy || loadingAccount || !account || (method.trxRequired && !trxOk)}
             onClick={askConfirm}
           >
-            {busy ? 'পাঠানো হচ্ছে…' : 'নিশ্চিত'}
+            {busy ? 'Sending…' : 'Confirm'}
           </button>
 
           {(cfg.cautionTitle || cfg.cautionText) && (
@@ -334,8 +334,8 @@ export default function DepositPage() {
                 {trxClean && <> <b className="cz-modal__trx">{trxClean}</b></>}
               </p>
               <div className="cz-modal__acts">
-                <button type="button" className="btn btn--ghost" onClick={() => setConfirming(false)}>বাতিল</button>
-                <button type="button" className="btn btn--gold" onClick={submit}>নিশ্চিত</button>
+                <button type="button" className="btn btn--ghost" onClick={() => setConfirming(false)}>Cancel</button>
+                <button type="button" className="btn btn--gold" onClick={submit}>Confirm</button>
               </div>
             </div>
           </>
@@ -425,7 +425,7 @@ export default function DepositPage() {
               onChange={(e) => { setAmount(e.target.value); setErr(''); }}
             />
           </label>
-          <p className="cz-limit">লিমিট: {money(method.min)} — {money(method.max)}</p>
+          <p className="cz-limit">Limit: {money(method.min)} — {money(method.max)}</p>
           {err && <p className="cz-err">{err}</p>}
         </section>
 
@@ -451,7 +451,7 @@ export default function DepositPage() {
 
       <div className="cz-next">
         <button type="button" className="btn btn--gold btn--block" disabled={!amountOk} onClick={next}>
-          পরবর্তী
+          Next
         </button>
       </div>
     </>

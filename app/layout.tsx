@@ -5,9 +5,9 @@ import { BRAND } from '@/lib/brand';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: `${BRAND.name} — অনলাইন ক্যাসিনো ও ক্রিকেট এক্সচেঞ্জ`,
+  title: `${BRAND.name} — Online Casino & Cricket Exchange`,
   description:
-    'বাংলাদেশের অনলাইন গেমিং প্ল্যাটফর্ম — লাইভ ক্যাসিনো, স্লট, ক্রিকেট এক্সচেঞ্জ, ফিশিং ও লটারি।',
+    'Bangladesh’s online gaming platform — live casino, slots, cricket exchange, fishing and lottery.',
   applicationName: BRAND.name,
   manifest: '/manifest.webmanifest',
   icons: {

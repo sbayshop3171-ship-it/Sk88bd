@@ -61,15 +61,15 @@ export default function AdminLogin({ base }: { base: PanelBase }) {
   return (
     <main className="adm-auth">
       <form className="adm-auth__card" onSubmit={submit}>
-        <h1>{agentDoor ? 'এজেন্ট লগইন' : 'Admin Login'}</h1>
+        <h1>{agentDoor ? 'Agent Login' : 'Admin Login'}</h1>
         <p>
           {agentDoor
-            ? 'আপনার এজেন্ট আইডি আর পাসওয়ার্ড দিন।'
+            ? 'Enter your agent ID and password.'
             : 'Enter your credentials to open the admin panel.'}
         </p>
 
         <label className="adm-auth__field">
-          <span>{agentDoor ? 'এজেন্ট আইডি' : 'Username'}</span>
+          <span>{agentDoor ? 'Agent ID' : 'Username'}</span>
           <input
             autoComplete="username"
             value={username}
@@ -79,7 +79,7 @@ export default function AdminLogin({ base }: { base: PanelBase }) {
         </label>
 
         <label className="adm-auth__field">
-          <span>{agentDoor ? 'পাসওয়ার্ড' : 'Password'}</span>
+          <span>{agentDoor ? 'Password' : 'Password'}</span>
           <input
             autoComplete="current-password"
             type="password"

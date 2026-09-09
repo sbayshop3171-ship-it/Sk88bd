@@ -3,7 +3,7 @@
 export default function DataTable({
   columns,
   rows,
-  empty = 'কোনো রেকর্ড নেই।',
+  empty = 'No records.',
 }: {
   columns: string[];
   rows: React.ReactNode[][];

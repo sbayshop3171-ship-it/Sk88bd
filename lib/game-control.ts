@@ -60,8 +60,8 @@ export const TAG_LABEL: Record<Tag, string> = {
 };
 
 export const STATUS_LABEL: Record<GameStatus, string> = {
-  active: 'দেখানো হচ্ছে',
-  hidden: 'লুকানো',
+  active: 'Showing',
+  hidden: 'Hidden',
 };
 
 export const byId = (overrides: GameOverride[]): OverrideMap =>

@@ -73,25 +73,25 @@ export type ContentMutationResult =
   | { ok: false; reason: ContentMutationReason };
 
 export const ART_LABEL: Record<ArtClass, string> = {
-  s1: 'সবুজ',
-  s2: 'বেগুনি',
-  s3: 'নীল',
-  s4: 'কমলা',
+  s1: 'Green',
+  s2: 'Purple',
+  s3: 'Blue',
+  s4: 'Orange',
 };
 
 /** What ships before an admin edits anything — the slides the site had
     hard-coded, so the panel opens showing exactly what players see. */
 export const DEFAULT_BANNERS: BannerInput[] = [
-  { kicker: 'সাইন আপ বোনাস', title: '১৮৳ ফ্রি বোনাস', amount: '৳১৮', emoji: '🎁', cta: 'এখনই নিন', href: '/register', art: 's1', status: 'active', sortOrder: 1 },
-  { kicker: 'প্রতিবার ডিপোজিট', title: '৫% ডিপোজিট বোনাস', amount: '৫%', emoji: '💰', cta: 'ডিপোজিট করুন', href: '/deposit', art: 's2', status: 'active', sortOrder: 2 },
-  { kicker: 'মাসিক ক্যাশব্যাক', title: '১% রিবেট ক্যাশব্যাক', amount: '১%', emoji: '🏏', cta: 'বিস্তারিত', href: '/promotions', art: 's3', status: 'active', sortOrder: 3 },
-  { kicker: 'রেফার প্রোগ্রাম', title: 'বন্ধু আনুন, কমিশন নিন', amount: '৪০%', emoji: '👥', cta: 'রেফার করুন', href: '/refer', art: 's4', status: 'active', sortOrder: 4 },
+  { kicker: 'Sign Up Bonus', title: '৳18 Free Bonus', amount: '৳18', emoji: '🎁', cta: 'Claim Now', href: '/register', art: 's1', status: 'active', sortOrder: 1 },
+  { kicker: 'Every Deposit', title: '5% Deposit Bonus', amount: '5%', emoji: '💰', cta: 'Deposit Now', href: '/deposit', art: 's2', status: 'active', sortOrder: 2 },
+  { kicker: 'Monthly Cashback', title: '1% Rebate Cashback', amount: '1%', emoji: '🏏', cta: 'Details', href: '/promotions', art: 's3', status: 'active', sortOrder: 3 },
+  { kicker: 'Refer Programme', title: 'Bring a friend, earn commission', amount: '40%', emoji: '👥', cta: 'Refer Now', href: '/refer', art: 's4', status: 'active', sortOrder: 4 },
 ];
 
 export const DEFAULT_ANNOUNCEMENTS: AnnouncementInput[] = [
-  { title: 'অ্যাপ ডাউনলোড করলেই বোনাস', amount: '৳১৮', note: 'সাইন আপ করে নাম্বার ভেরিফাই করুন', art: 's2', status: 'active', sortOrder: 1 },
-  { title: 'প্রতিবার ডিপোজিট বোনাস', amount: '৫%', note: 'আজীবন, প্রতিটি ডিপোজিটে', art: 's1', status: 'active', sortOrder: 2 },
-  { title: 'মাসিক রিবেট ক্যাশব্যাক', amount: '১%', note: 'প্রতি মাসে অটোমেটিক জমা', art: 's3', status: 'active', sortOrder: 3 },
+  { title: 'Download the app for a bonus', amount: '৳18', note: 'Sign up and verify your number', art: 's2', status: 'active', sortOrder: 1 },
+  { title: 'Bonus on every deposit', amount: '5%', note: 'For life, on every single deposit', art: 's1', status: 'active', sortOrder: 2 },
+  { title: 'Monthly rebate cashback', amount: '1%', note: 'Credited automatically each month', art: 's3', status: 'active', sortOrder: 3 },
 ];
 
 export const activeSorted = <T extends { status: SlideStatus; sortOrder: number }>(list: T[]) =>

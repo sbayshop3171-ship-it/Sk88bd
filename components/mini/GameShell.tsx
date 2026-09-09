@@ -53,13 +53,13 @@ export default function GameShell({
   return (
     <div className="mg" style={{ ['--mg-accent' as string]: def.accent }}>
       <header className="mg__top">
-        <Link href="/" className="mg__back" aria-label="পিছনে">‹</Link>
+        <Link href="/" className="mg__back" aria-label="Back">‹</Link>
         <div className="mg__id">
           <b>{def.name}</b>
           <small>{def.tagline}</small>
         </div>
         <div className="mg__bal">
-          <small>ব্যালেন্স</small>
+          <small>Balance</small>
           <b>{money(balance, 2)}</b>
         </div>
       </header>
@@ -79,7 +79,7 @@ export default function GameShell({
       {!hideFair && (
       <div className="mg__foot">
         <button type="button" className="mg__fairbtn" onClick={() => setFairOpen((v) => !v)} aria-expanded={fairOpen}>
-          🔒 প্রভাবলি ফেয়ার — RTP {Math.round((1 - HOUSE_EDGE) * 100)}%
+          🔒 Provably fair — RTP {Math.round((1 - HOUSE_EDGE) * 100)}%
           <span className={`cz-chev${fairOpen ? ' up' : ''}`} aria-hidden>⌃</span>
         </button>
 

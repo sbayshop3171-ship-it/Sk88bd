@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminAviatorSignalPage() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'signal.write')) return <NoAccess role={session.role} what="সিগন্যাল কন্ট্রোল" />;
+  if (!can(session.role, 'signal.write')) return <NoAccess role={session.role} what="Signal control" />;
 
   const state = await getAviatorSignalState();
   return <AviatorSignalControl initialState={publicAviatorState(state)} />;

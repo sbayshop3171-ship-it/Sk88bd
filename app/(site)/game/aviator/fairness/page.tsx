@@ -16,7 +16,7 @@ export default function FairnessPage() {
   const run = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!serverSeed.trim() || !clientSeed.trim()) {
-      setErr('সার্ভার সিড ও ক্লায়েন্ট সিড দুটোই দিন');
+      setErr('Enter both the server seed and the client seed');
       return;
     }
     setErr('');
@@ -28,44 +28,44 @@ export default function FairnessPage() {
 
   return (
     <>
-      <PageHeader title="ফেয়ারনেস যাচাই" />
+      <PageHeader title="Verify Fairness" />
 
       <div className="hero">
-        <h1>নিজে যাচাই করুন</h1>
-        <p>শেষ হওয়া রাউন্ডের সিড দিয়ে ফলাফল আবার হিসাব করুন</p>
+        <h1>Check it yourself</h1>
+        <p>Recompute the result from a finished round’s seeds</p>
       </div>
 
       <form style={{ margin: 12 }} onSubmit={run} noValidate>
-        <Field label="সার্ভার সিড (রাউন্ড শেষে প্রকাশিত)" error={err}>
+        <Field label="Server seed (revealed when the round ends)" error={err}>
           <input value={serverSeed} onChange={(e) => setServerSeed(e.target.value)}
                  placeholder="a1b2c3…" autoComplete="off" spellCheck={false} />
         </Field>
-        <Field label="ক্লায়েন্ট সিড">
+        <Field label="Client seed">
           <input value={clientSeed} onChange={(e) => setClientSeed(e.target.value)}
-                 placeholder="আপনার সিড" autoComplete="off" spellCheck={false} />
+                 placeholder="Your seed" autoComplete="off" spellCheck={false} />
         </Field>
-        <Field label="নন্স (রাউন্ড নম্বর)">
+        <Field label="Nonce (round number)">
           <input type="number" value={nonce} onChange={(e) => setNonce(e.target.value)} placeholder="1" />
         </Field>
-        <button type="submit" className="btn btn--gold btn--block">যাচাই করুন</button>
+        <button type="submit" className="btn btn--gold btn--block">Verify</button>
       </form>
 
       {result && (
         <div className="av-fair" style={{ margin: 12 }}>
           <div className="av-fair__row">
-            <span>সার্ভার সিড হ্যাশ</span>
+            <span>Server seed hash</span>
             <b className="mono">{result.hash.slice(0, 32)}…</b>
           </div>
           <div className="av-fair__row">
-            <span>হিসাব করা ক্র‍্যাশ পয়েন্ট</span>
+            <span>Computed crash point</span>
             <b style={{ color: 'var(--gold)', fontSize: 16 }}>{fmtX(result.crashAt)}</b>
           </div>
         </div>
       )}
 
       <div className="note" style={{ margin: 12 }}>
-        রাউন্ড চলাকালে যে হ্যাশটি দেখানো হয়েছিল, উপরের হ্যাশ তার সাথে মিললে বোঝা
-        যায় ফলাফল আগেই নির্ধারিত ছিল এবং কেউ তা বদলাতে পারেনি।
+        If this hash matches the one you were shown during the round, the result was
+        settled in advance and nobody could have changed it.
       </div>
     </>
   );

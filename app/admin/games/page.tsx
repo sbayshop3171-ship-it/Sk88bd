@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminGames() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'games.write')) return <NoAccess role={session.role} what="গেম কন্ট্রোল" />;
+  if (!can(session.role, 'games.write')) return <NoAccess role={session.role} what="Game control" />;
 
   // 35 of the 209 games sit in more than one category (Aviator is both hot and
   // jackpot). An override applies to the game, not to one of its listings, so
@@ -51,12 +51,12 @@ export default async function AdminGames() {
 
   return (
     <>
-      <h1 className="adm__h1">গেম</h1>
+      <h1 className="adm__h1">Games</h1>
       <p className="adm__sub">
-        কোন গেম সাইটে দেখা যাবে, কোনটায় HOT/NEW ব্যাজ বসবে আর কোনটা তালিকার
-        উপরে থাকবে — সব এখান থেকে। তালিকাটি নিজে আসে{' '}
-        <code>lib/catalogue.ts</code> থেকে, আর আর্ট{' '}
-        <code>public/games/icons/</code> থেকে।
+        Which games appear on the site, which carry a HOT/NEW badge and which sit at the
+        top of the list — all from here. The list itself comes from{' '}
+        <code>lib/catalogue.ts</code>, and the art from{' '}
+        <code>public/games/icons/</code>.
       </p>
       <GameControl games={games} initialOverrides={await listOverrides()} />
     </>

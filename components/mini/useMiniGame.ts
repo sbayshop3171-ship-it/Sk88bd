@@ -72,7 +72,7 @@ export function useMiniGame(game: MiniGameId) {
     const seed = randomHex(8);
     setClientSeed(seed);
     try { localStorage.setItem(SEED_KEY, seed); } catch { /* private window */ }
-    toast('নতুন সিড তৈরি হয়েছে');
+    toast('A new seed has been created');
   }, [toast]);
 
   const remember = useCallback((multiplier: number, won: boolean) => {

@@ -145,26 +145,26 @@ function Board() {
             {fmtX(shown ?? 1)}
           </div>
           <p className="mg-limbo__mark">
-            <span>টার্গেট</span>
+            <span>Target</span>
             <b>{fmtX(target)}</b>
           </p>
         </div>
 
         <p className="mg-board__line">
           {state === 'rolling'
-            ? 'ড্র হচ্ছে…'
+            ? 'Drawing…'
             : state === 'idle'
-              ? `${fmtX(target)} বা তার বেশি উঠলে জয়`
+              ? `Win if it lands on ${fmtX(target)} or above`
               : state === 'win'
-                ? `${fmtX(target)} পেরিয়েছে — জিতেছেন ${money(Math.floor(g.stake * target))}`
-                : `${fmtX(target)} পর্যন্ত ওঠেনি`}
+                ? `Passed ${fmtX(target)} — you won ${money(Math.floor(g.stake * target))}`
+                : `It did not reach ${fmtX(target)}`}
         </p>
       </div>
 
       <div className="mg-panel">
         <div className="mg-limbo__pair">
           <label className="mg-field">
-            <span>টার্গেট গুণ</span>
+            <span>Target multiplier</span>
             <input
               type="text"
               inputMode="decimal"
@@ -179,7 +179,7 @@ function Board() {
             />
           </label>
           <label className="mg-field">
-            <span>জয়ের সম্ভাবনা</span>
+            <span>Win chance</span>
             <input
               type="text"
               inputMode="decimal"
@@ -213,9 +213,9 @@ function Board() {
         <StakeBar stake={g.stake} setStake={g.setStake} balance={g.balance} disabled={busy} />
 
         <div className="mg-odds">
-          <p><span>সম্ভাবনা</span><b>{fmtChance(chance)}</b></p>
-          <p><span>জিতলে লাভ</span><b className="gold">+{money(profit)}</b></p>
-          <p><span>ফেরত</span><b>{money(Math.floor(g.stake * target))}</b></p>
+          <p><span>Chance</span><b>{fmtChance(chance)}</b></p>
+          <p><span>Profit if you win</span><b className="gold">+{money(profit)}</b></p>
+          <p><span>Returns</span><b>{money(Math.floor(g.stake * target))}</b></p>
         </div>
 
         {g.err && <p className="cz-err">{g.err}</p>}
@@ -226,7 +226,7 @@ function Board() {
           disabled={busy}
           onClick={() => void send()}
         >
-          {busy ? 'ড্র হচ্ছে…' : `${money(g.stake)} বাজি — খেলুন`}
+          {busy ? 'Drawing…' : `Stake ${money(g.stake)} — Play`}
         </button>
       </div>
     </GameShell>

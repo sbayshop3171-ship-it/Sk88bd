@@ -78,7 +78,7 @@ export default function FreeTrialPage() {
 
         <div className="sec__hd">
           <h2 className="sec__title">{t.freeTrial}</h2>
-          <div className="sec__ctrl"><span>{games.length} গেম</span></div>
+          <div className="sec__ctrl"><span>{games.length} games</span></div>
         </div>
 
         {visible.length ? (

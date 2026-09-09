@@ -26,7 +26,7 @@ export default function CasinoLobbyPage() {
 
   return (
     <>
-      <PageHeader title="গেম লবি" />
+      <PageHeader title="Game Lobby" />
 
       <div className="cats scroll-x" style={{ top: 'var(--hdr-h)' }}>
         {HOME_SECTIONS.map((key) => (
@@ -40,7 +40,7 @@ export default function CasinoLobbyPage() {
       <section className="sec">
         <div className="sec__hd">
           <h2 className="sec__title">{CATEGORY_LABEL[active]}</h2>
-          <div className="sec__ctrl"><span>{games.length} গেম</span></div>
+          <div className="sec__ctrl"><span>{games.length} games</span></div>
         </div>
         <div className="grid">
           {games.map((g) => (

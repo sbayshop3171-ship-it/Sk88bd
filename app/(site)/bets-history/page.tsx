@@ -59,11 +59,11 @@ export default function BetsHistoryPage() {
 
   return (
     <>
-      <PageHeader title="বেটিং রেকর্ড" />
+      <PageHeader title="Betting Record" />
 
       {ready && !signedIn && (
         <>
-          <Empty glyph="📋" text="নিজের বেট দেখতে লগইন করুন।" />
+          <Empty glyph="📋" text="Log in to see your own bets." />
           <div className="wallet-bar">
             <Link href="/login" className="btn btn--ghost" style={{ padding: 12 }}>{t.login}</Link>
             <Link href="/register" className="btn btn--gold" style={{ padding: 12 }}>{t.register}</Link>
@@ -71,12 +71,12 @@ export default function BetsHistoryPage() {
         </>
       )}
 
-      {signedIn && rows === null && <Empty glyph="📋" text="লোড হচ্ছে…" />}
+      {signedIn && rows === null && <Empty glyph="📋" text="Loading…" />}
       {signedIn && rows && bets.length === 0 && (
         <>
-          <Empty glyph="📋" text="এখনো কোনো বেট রেকর্ড নেই।" />
+          <Empty glyph="📋" text="No bet records yet." />
           <div style={{ margin: 12 }}>
-            <Link href="/game/aviator" className="btn btn--gold btn--block">Aviator খেলুন</Link>
+            <Link href="/game/aviator" className="btn btn--gold btn--block">Play Aviator</Link>
           </div>
         </>
       )}
@@ -84,11 +84,11 @@ export default function BetsHistoryPage() {
       {signedIn && bets.length > 0 && (
         <>
           <div className="stat">
-            <div><b>{bets.length}</b><small>মোট বেট</small></div>
-            <div><b>{money(toTaka(staked))}</b><small>মোট স্টেক</small></div>
+            <div><b>{bets.length}</b><small>Total bets</small></div>
+            <div><b>{money(toTaka(staked))}</b><small>Total staked</small></div>
             <div className={won - staked >= 0 ? 'is-up' : 'is-down'}>
               <b>{(won - staked < 0 ? '−' : '+') + money(toTaka(Math.abs(won - staked)))}</b>
-              <small>নিট</small>
+              <small>Net</small>
             </div>
           </div>
 
@@ -97,17 +97,17 @@ export default function BetsHistoryPage() {
               <div className="hist__row" key={b.key}>
                 <div className="hist__main">
                   <b className={b.payout > 0 ? 'is-up' : b.settled ? 'is-down' : ''}>
-                    {b.payout > 0 ? `+${money(toTaka(b.payout), 2)}` : b.settled ? `−${money(toTaka(b.stake), 2)}` : 'চলছে…'}
+                    {b.payout > 0 ? `+${money(toTaka(b.payout), 2)}` : b.settled ? `−${money(toTaka(b.stake), 2)}` : 'Running…'}
                   </b>
-                  <span className="hist__ch">Aviator · রাউন্ড #{b.round}</span>
+                  <span className="hist__ch">Aviator · Round #{b.round}</span>
                 </div>
                 <div className="hist__side">
                   <span className={`hist__state ${b.payout > 0 ? 'hist__state--approved' : b.settled ? 'hist__state--rejected' : 'hist__state--pending'}`}>
-                    {b.payout > 0 ? `${b.multiplier?.toFixed(2)}x` : b.settled ? 'উড়ে গেছে' : 'চলছে'}
+                    {b.payout > 0 ? `${b.multiplier?.toFixed(2)}x` : b.settled ? 'Flew away' : 'Running'}
                   </span>
                   <small>{when(b.at)}</small>
                 </div>
-                <p className="hist__note">স্টেক {money(toTaka(b.stake))}</p>
+                <p className="hist__note">Stake {money(toTaka(b.stake))}</p>
               </div>
             ))}
           </div>

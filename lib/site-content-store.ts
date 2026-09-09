@@ -23,6 +23,7 @@ import {
   type SiteContent,
   type SlideStatus,
 } from './site-content';
+import { englishCopy } from './copy-migration';
 
 type ContentStore = {
   version: 1;
@@ -187,7 +188,7 @@ function normalize(
     title,
     amount: String(input.amount ?? '').trim().slice(0, 16),
     emoji: String(input.emoji ?? '🎁').trim().slice(0, 8),
-    cta: String(input.cta ?? 'বিস্তারিত').trim().slice(0, 24),
+    cta: String(input.cta ?? 'Details').trim().slice(0, 24),
     href,
     note: String(input.note ?? '').trim().slice(0, 90),
     art: ART_CLASSES.includes(input.art as ArtClass) ? (input.art as ArtClass) : 's1',
@@ -220,7 +221,9 @@ async function readStore(): Promise<ContentStore> {
   try {
     const raw = await readFile(STORE_FILE, 'utf8');
     const parsed = JSON.parse(raw) as ContentStore;
-    if (parsed?.version === 1 && Array.isArray(parsed.banners)) return parsed;
+    // Slides saved before the site went English still carry the Bangla
+    // defaults — see lib/copy-migration.ts.
+    if (parsed?.version === 1 && Array.isArray(parsed.banners)) return englishCopy(parsed);
   } catch {
     // First run: seed from what the site already shows.
   }

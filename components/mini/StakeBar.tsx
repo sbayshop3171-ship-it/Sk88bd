@@ -44,7 +44,7 @@ export default function StakeBar({
           disabled={disabled}
           onClick={() => setStake(clamp(Math.min(balance, MAX_STAKE)))}
         >
-          সর্বোচ্চ
+          Max
         </button>
       </div>
       <div className="mg-stake__chips">

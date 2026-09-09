@@ -6,11 +6,11 @@ import { money } from '@/lib/brand';
 import type { PlayerRow } from '@/lib/cashier';
 
 const ERROR_LABEL: Record<string, string> = {
-  forbidden: 'ব্যালেন্স বা ব্লক বদলানোর অনুমতি আপনার নেই।',
-  'invalid-amount': 'পরিমাণ দিন — শূন্য চলবে না।',
-  'amount-too-large': 'এক বারে সর্বোচ্চ ৳১,০০,০০০ পর্যন্ত সমন্বয় করা যায়।',
-  'invalid-user': 'প্লেয়ার পাওয়া যায়নি।',
-  unauthorized: 'সেশন শেষ হয়ে গেছে — আবার লগইন করুন।',
+  forbidden: 'You are not allowed to change balances or block players.',
+  'invalid-amount': 'Enter an amount — zero will not do.',
+  'amount-too-large': 'A single adjustment can be at most ৳100,000.',
+  'invalid-user': 'Player not found.',
+  unauthorized: 'Your session has expired — log in again.',
 };
 
 export default function PlayerControl({
@@ -44,12 +44,12 @@ export default function PlayerControl({
         | { ok: true; players: PlayerRow[] }
         | { ok: false; reason: string; message?: string };
       if (!data.ok) {
-        setError(data.message ?? ERROR_LABEL[data.reason] ?? `লোড হয়নি (${data.reason})`);
+        setError(data.message ?? ERROR_LABEL[data.reason] ?? `Could not load (${data.reason})`);
         return;
       }
       setPlayers(data.players);
     } catch {
-      setError('সার্ভারে পৌঁছানো গেল না।');
+      setError('Could not reach the server.');
     }
   }
 
@@ -68,14 +68,14 @@ export default function PlayerControl({
         | { ok: false; reason: string; message?: string };
 
       if (!data.ok) {
-        setError(data.message ?? ERROR_LABEL[data.reason] ?? `কাজ হয়নি (${data.reason})`);
+        setError(data.message ?? ERROR_LABEL[data.reason] ?? `That did not work (${data.reason})`);
         return false;
       }
       setPlayers(data.players);
       setNotice(okMessage);
       return true;
     } catch {
-      setError('সার্ভারে পৌঁছানো গেল না।');
+      setError('Could not reach the server.');
       return false;
     } finally {
       setBusyId('');
@@ -85,7 +85,7 @@ export default function PlayerControl({
   async function adjust(player: PlayerRow, sign: 1 | -1) {
     const taka = Number(amount);
     if (!Number.isFinite(taka) || taka <= 0) {
-      setError('কত টাকা সমন্বয় করবেন লিখুন।');
+      setError('Enter how much to adjust.');
       return;
     }
 
@@ -93,8 +93,8 @@ export default function PlayerControl({
       player.id,
       { action: 'adjust', amount: sign * toPaisa(taka), note },
       sign > 0
-        ? `${player.phone} এর ব্যালেন্সে ${money(taka)} যোগ হয়েছে।`
-        : `${player.phone} এর ব্যালেন্স থেকে ${money(taka)} কাটা হয়েছে।`,
+        ? `${money(taka)} added to ${player.phone}'s balance.`
+        : `${money(taka)} taken off ${player.phone}'s balance.`,
     );
     if (ok) {
       setAmount('');
@@ -106,8 +106,8 @@ export default function PlayerControl({
   if (!backendReady) {
     return (
       <p className="adm__warn">
-        ডেটাবেস যুক্ত হয়নি। <code>.env.local</code> এ Supabase কী বসিয়ে সার্ভার
-        রিস্টার্ট করলেই প্লেয়ার তালিকা দেখা যাবে — কোড সম্পূর্ণ তৈরি আছে।
+        The database is not connected. Put the Supabase keys in <code>.env.local</code> and
+        restart the server to see the player list — the code is all here.
       </p>
     );
   }
@@ -118,9 +118,9 @@ export default function PlayerControl({
   return (
     <>
       <div className="adm__tiles" style={{ marginBottom: 14 }}>
-        <div className="adm__tile"><b>{players.length}</b><small>এই তালিকায়</small></div>
-        <div className="adm__tile"><b>{money(toTaka(totalBalance))}</b><small>মোট ব্যালেন্স</small></div>
-        <div className="adm__tile"><b>{blocked}</b><small>ব্লক করা</small></div>
+        <div className="adm__tile"><b>{players.length}</b><small>In this list</small></div>
+        <div className="adm__tile"><b>{money(toTaka(totalBalance))}</b><small>Total balance</small></div>
+        <div className="adm__tile"><b>{blocked}</b><small>Blocked</small></div>
       </div>
 
       <form
@@ -129,15 +129,15 @@ export default function PlayerControl({
       >
         <div className="adm__formgrid">
           <label className="adm__f adm__f--wide">
-            <span>ফোন নাম্বার বা নাম দিয়ে খুঁজুন</span>
+            <span>Search by phone number or name</span>
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="01XXXXXXXXX" />
           </label>
         </div>
         <div className="adm__actions">
-          <button type="submit" className="btn btn--gold">খুঁজুন</button>
+          <button type="submit" className="btn btn--gold">Search</button>
           {search && (
             <button type="button" className="btn btn--ghost" onClick={() => { setSearch(''); void load(''); }}>
-              সব দেখুন
+              Show all
             </button>
           )}
         </div>
@@ -150,14 +150,14 @@ export default function PlayerControl({
         <table className="adm__table">
           <thead>
             <tr>
-              <th>ফোন</th><th>নাম</th><th>ব্যালেন্স</th><th>বোনাস</th>
-              <th>VIP</th><th>রেফার কোড</th><th>এজেন্ট</th><th>রেজিস্ট্রেশন</th><th>অবস্থা</th>
+              <th>Phone</th><th>Name</th><th>Balance</th><th>Bonus</th>
+              <th>VIP</th><th>Referral code</th><th>Agent</th><th>Registered</th><th>Status</th>
               {canWrite && <th></th>}
             </tr>
           </thead>
           <tbody>
             {players.length === 0 ? (
-              <tr><td colSpan={canWrite ? 10 : 9} className="adm__empty">কোনো প্লেয়ার নেই।</td></tr>
+              <tr><td colSpan={canWrite ? 10 : 9} className="adm__empty">No players.</td></tr>
             ) : (
               players.map((p) => {
                 const busy = busyId === p.id;
@@ -178,8 +178,8 @@ export default function PlayerControl({
                       <td className="adm__muted">{new Date(p.createdAt).toLocaleDateString('en-GB')}</td>
                       <td>
                         {p.isBlocked
-                          ? <span className="adm__miss">ব্লক</span>
-                          : <span className="adm__ok">সক্রিয়</span>}
+                          ? <span className="adm__miss">Blocked</span>
+                          : <span className="adm__ok">Active</span>}
                       </td>
                       {canWrite && (
                       <td className="adm__rowacts">
@@ -187,7 +187,7 @@ export default function PlayerControl({
                           type="button" className="btn btn--ghost" disabled={busy}
                           onClick={() => { setOpenId(openId === p.id ? '' : p.id); setAmount(''); setNote(''); }}
                         >
-                          ব্যালেন্স
+                          Balance
                         </button>
                         <button
                           type="button" className={`btn btn--ghost${p.isBlocked ? '' : ' adm__danger'}`}
@@ -195,10 +195,10 @@ export default function PlayerControl({
                           onClick={() => void send(
                             p.id,
                             { action: 'block', blocked: !p.isBlocked },
-                            p.isBlocked ? `${p.phone} আনব্লক হয়েছে।` : `${p.phone} ব্লক হয়েছে।`,
+                            p.isBlocked ? `${p.phone} unblocked.` : `${p.phone} blocked.`,
                           )}
                         >
-                          {p.isBlocked ? 'আনব্লক' : 'ব্লক'}
+                          {p.isBlocked ? 'Unblock' : 'Block'}
                         </button>
                       </td>
                       )}
@@ -209,33 +209,33 @@ export default function PlayerControl({
                         <td colSpan={10}>
                           <div className="adm__adjust">
                             <label className="adm__f">
-                              <span>পরিমাণ (৳)</span>
+                              <span>Amount (৳)</span>
                               <input
                                 type="number" min={1} value={amount} disabled={busy}
                                 onChange={(e) => setAmount(e.target.value)} placeholder="500"
                               />
                             </label>
                             <label className="adm__f">
-                              <span>কারণ</span>
+                              <span>Reason</span>
                               <input
                                 value={note} disabled={busy}
                                 onChange={(e) => setNote(e.target.value)}
-                                placeholder="যেমন: বোনাস, ভুল সংশোধন"
+                                placeholder="e.g. bonus, correcting a mistake"
                               />
                             </label>
                             <div className="adm__rowacts">
                               <button type="button" className="btn btn--gold" disabled={busy}
                                       onClick={() => void adjust(p, 1)}>
-                                যোগ করুন
+                                Add
                               </button>
                               <button type="button" className="btn btn--ghost adm__danger" disabled={busy}
                                       onClick={() => void adjust(p, -1)}>
-                                কাটুন
+                                Deduct
                               </button>
                             </div>
                           </div>
                           <p className="adm__hint">
-                            প্রতিটি সমন্বয় লেজারে লেখা থাকে — কে করেছে, কেন করেছে।
+                            Every adjustment is written to the ledger — who did it, and why.
                           </p>
                         </td>
                       </tr>

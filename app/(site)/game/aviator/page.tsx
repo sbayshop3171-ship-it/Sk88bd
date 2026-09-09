@@ -72,7 +72,7 @@ function Board() {
     const lost = slotsRef.current
       .filter((s) => s.staked !== null && s.cashedAt === null)
       .reduce((a, s) => a + (s.staked ?? 0), 0);
-    if (lost > 0) toast(`${fmtX(crashAt)} এ উড়ে গেছে — ${money(lost)} হেরেছেন`);
+    if (lost > 0) toast(`Flew away at ${fmtX(crashAt)} — you lost ${money(lost)}`);
 
     // clear the round; seats on auto queue themselves up again
     setSlots((s) => s.map((x) => ({
@@ -104,12 +104,12 @@ function Board() {
 
       await refresh();
       if (!data.ok) {
-        toast(BET_ERROR[data.reason] ?? 'সমস্যা হয়েছে');
+        toast(BET_ERROR[data.reason] ?? 'Something went wrong');
         return null;
       }
       return data;
     } catch {
-      toast('সার্ভারে পৌঁছানো গেল না');
+      toast('Could not reach the server');
       return null;
     } finally {
       setBusySlot(null);
@@ -152,7 +152,7 @@ function Board() {
 
     const m = res.cashedAt ?? 0;
     patch(i, { cashedAt: m });
-    if (m > 0) toast(`${fmtX(m)} — ${money(toTaka(res.payout ?? 0))} জিতেছেন`);
+    if (m > 0) toast(`${fmtX(m)} — you won ${money(toTaka(res.payout ?? 0))}`);
   }, [patch, send, toast]);
 
   // auto cash-out, checked per seat
@@ -171,12 +171,12 @@ function Board() {
     if (busySlot !== null) return;   // a request is already in flight
     if (!requireFunds()) return;     // watching is free; staking is not
     const slot = slots[i];
-    if (slot.stake < MIN_STAKE) { toast(`সর্বনিম্ন বেট ${money(MIN_STAKE)}`); return; }
-    if (slot.stake > balance) { toast('ব্যালেন্স যথেষ্ট নয়'); return; }
+    if (slot.stake < MIN_STAKE) { toast(`Minimum bet is ${money(MIN_STAKE)}`); return; }
+    if (slot.stake > balance) { toast('Not enough balance'); return; }
 
     if (phase !== 'betting') {
       patch(i, { queued: true });
-      toast('পরের রাউন্ডে বেট বসবে');
+      toast('Your bet goes on the next round');
       return;
     }
 
@@ -189,7 +189,7 @@ function Board() {
       <PageHeader
         title={<img className="av-wordmark" src="/games/aviator/wordmark.png" alt="Aviator" />}
         action={
-          <Link href="/deposit" className="bal-pill bal-pill--av" title="ডিপোজিট করুন">
+          <Link href="/deposit" className="bal-pill bal-pill--av" title="Deposit">
             <b>{money(balance)}</b><i className="av" aria-hidden>＋</i>
           </Link>
         }

@@ -8,8 +8,8 @@ export default function SupportPage() {
 
   // [glyph, label, sub, link] — a blank admin link hides that row
   const channels: [string, string, string, string | null][] = [
-    ['💬', 'লাইভ চ্যাট', '২৪/৭ সরাসরি সাপোর্ট', null],
-    ['✉️', 'ইমেইল', support.email, support.email ? `mailto:${support.email}` : null],
+    ['💬', 'Live Chat', '24/7 direct support', null],
+    ['✉️', 'Email', support.email, support.email ? `mailto:${support.email}` : null],
     ['📱', 'WhatsApp', support.whatsapp, support.whatsapp],
     ['✈️', 'Telegram', support.telegram, support.telegram],
     ['📘', 'Facebook', support.facebook, support.facebook],
@@ -17,10 +17,10 @@ export default function SupportPage() {
 
   return (
     <>
-      <PageHeader title="কাস্টমার সাপোর্ট" />
+      <PageHeader title="Customer Support" />
       <div className="hero">
-        <h1>২৪/৭ সাপোর্ট</h1>
-        <p>যেকোনো সমস্যায় আমাদের সাথে যোগাযোগ করুন</p>
+        <h1>24/7 Support</h1>
+        <p>Get in touch with us about anything</p>
       </div>
       <div className="list-card">
         {channels.filter(([, , sub]) => sub).map(([e, label, sub, link]) => {
@@ -31,7 +31,7 @@ export default function SupportPage() {
                 <span style={{ display: 'block', fontSize: 13, fontWeight: 700 }}>{label}</span>
                 <span style={{ display: 'block', fontSize: 11, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sub}</span>
               </span>
-              {link && <span style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 800 }}>খুলুন ›</span>}
+              {link && <span style={{ color: 'var(--gold)', fontSize: 12, fontWeight: 800 }}>Open ›</span>}
             </>
           );
           const style = { display: 'flex', alignItems: 'center', gap: 11, padding: '13px 14px', borderBottom: '1px solid rgba(255,255,255,.05)', color: 'inherit' } as const;
@@ -41,7 +41,7 @@ export default function SupportPage() {
         })}
       </div>
       <div className="note" style={{ margin: 12 }}>
-        সাপোর্ট লিংকগুলো অ্যাডমিন প্যানেলের সেটিংস থেকে বদলানো যায়।
+        The support links can be changed from Settings in the admin panel.
       </div>
     </>
   );

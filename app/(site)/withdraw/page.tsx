@@ -137,7 +137,7 @@ export default function WithdrawPage() {
   }, [loadWallets, loadToday]);
 
   // One agent number per visit to the charge screen, from the numbers the
-  // admin marked "উইথড্র" for that channel.
+  // admin marked "Withdraw" for that channel.
   useEffect(() => {
     if (step !== 'pay' || !chargeMethod) return;
     let live = true;
@@ -165,8 +165,8 @@ export default function WithdrawPage() {
   const addWallet = async () => {
     if (!method || !supabase || !session) return;
     const no = newNo.replace(/[\s-]+/g, '');
-    if (no.length < 4) { setErr({ add: 'সঠিক নাম্বার দিন' }); return; }
-    if (forMethod.length >= cfg.maxWallets) { setErr({ add: `সর্বোচ্চ ${cfg.maxWallets} টি ওয়ালেট রাখা যায়` }); return; }
+    if (no.length < 4) { setErr({ add: 'Enter a valid number' }); return; }
+    if (forMethod.length >= cfg.maxWallets) { setErr({ add: `You can keep up to ${cfg.maxWallets} wallets` }); return; }
     setBusy(true);
     const { error } = await supabase.from('payout_accounts').insert({
       user_id: session.user.id,
@@ -176,7 +176,7 @@ export default function WithdrawPage() {
     });
     setBusy(false);
     if (error) {
-      setErr({ add: /duplicate|unique/i.test(error.message) ? 'এই নাম্বারটি আগে থেকেই আছে' : 'যোগ করা গেল না — আবার চেষ্টা করুন' });
+      setErr({ add: /duplicate|unique/i.test(error.message) ? 'That number is already saved' : 'Could not add it — try again' });
       return;
     }
     setErr({});
@@ -184,13 +184,13 @@ export default function WithdrawPage() {
     setNewHolder('');
     setAdding(false);
     await loadWallets();
-    toast('ই-ওয়ালেট যোগ হয়েছে');
+    toast('E-wallet added');
   };
 
   const removeWallet = async (id: number) => {
     if (!supabase) return;
     const { error } = await supabase.from('payout_accounts').delete().eq('id', id);
-    if (error) { toast('মুছে ফেলা গেল না'); return; }
+    if (error) { toast('Could not remove it'); return; }
     if (walletId === id) setWalletId(null);
     await loadWallets();
   };
@@ -202,22 +202,22 @@ export default function WithdrawPage() {
 
     const accountNo = walletsSupported ? picked?.account_no ?? '' : inlineNo.replace(/[\s-]+/g, '');
     const next: Record<string, string> = {};
-    if (!accountNo) next.account = walletsSupported ? 'আগে একটি ই-ওয়ালেট যোগ করুন' : 'অ্যাকাউন্ট নাম্বার দিন';
+    if (!accountNo) next.account = walletsSupported ? 'Add an e-wallet first' : 'Enter an account number';
     const n = Number(amount);
-    if (!Number.isFinite(n) || n < method.min) next.amount = `সর্বনিম্ন ${money(method.min)}`;
-    else if (n > method.max) next.amount = `এক রিকোয়েস্টে সর্বোচ্চ ${money(method.max)}`;
-    if (session && n > balance) next.amount = `ব্যালেন্সে আছে ${money(balance)}`;
-    if (remaining !== null && remaining <= 0) next.amount = 'আজকের উত্তোলন সীমা শেষ — কাল আবার চেষ্টা করুন';
-    if (!password) next.password = cfg.passwordHint || 'পাসওয়ার্ড দিন';
+    if (!Number.isFinite(n) || n < method.min) next.amount = `Minimum ${money(method.min)}`;
+    else if (n > method.max) next.amount = `Up to ${money(method.max)} in a single request`;
+    if (session && n > balance) next.amount = `Your balance is ${money(balance)}`;
+    if (remaining !== null && remaining <= 0) next.amount = 'Today’s withdrawal limit is used up — try again tomorrow';
+    if (!password) next.password = cfg.passwordHint || 'Enter your password';
     setErr(next);
     if (Object.keys(next).length) return;
 
     if (!backendReady) {
-      toast('উইথড্র প্রসেসিং ব্যাকএন্ড যুক্ত হলে কাজ করবে');
+      toast('Withdrawals start working once the processing backend is connected');
       return;
     }
     if (!session || !supabase) {
-      setErr({ amount: 'উইথড্র করতে আগে লগইন করুন' });
+      setErr({ amount: 'Log in first to withdraw' });
       return;
     }
 
@@ -227,7 +227,7 @@ export default function WithdrawPage() {
     const check = await supabase.auth.signInWithPassword({ email: session.user.email ?? '', password });
     setBusy(false);
     if (check.error) {
-      setErr({ password: 'পাসওয়ার্ড ভুল' });
+      setErr({ password: 'Wrong password' });
       return;
     }
 
@@ -260,8 +260,8 @@ export default function WithdrawPage() {
     if (error) {
       setErr({
         apply: /balance|check/i.test(error.message)
-          ? 'ব্যালেন্স যথেষ্ট নয়'
-          : 'রিকোয়েস্ট পাঠানো গেল না — আবার চেষ্টা করুন',
+          ? 'Not enough balance'
+          : 'Could not send the request — try again',
       });
       return;
     }
@@ -312,7 +312,7 @@ export default function WithdrawPage() {
   const confirmCharge = async () => {
     if (!raised) return;
     const trx = chargeTrx.trim();
-    if (!trx) { setErr({ trx: 'TrxID অবশ্যই পূরণ করতে হবে!' }); return; }
+    if (!trx) { setErr({ trx: 'The TrxID is required!' }); return; }
 
     setBusy(true);
     const saved = raised.id === null
@@ -324,7 +324,7 @@ export default function WithdrawPage() {
     setBusy(false);
 
     if (!saved) {
-      setErr({ trx: 'TrxID জমা দেওয়া গেল না — আবার চেষ্টা করুন' });
+      setErr({ trx: 'Could not submit the TrxID — try again' });
       return;
     }
     setErr({});
@@ -346,9 +346,9 @@ export default function WithdrawPage() {
   const copy = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value);
-      toast(`${label} কপি হয়েছে`);
+      toast(`${label} copied`);
     } catch {
-      toast('কপি করা গেল না — হাতে লিখে নিন');
+      toast('Could not copy — write it down');
     }
   };
 
@@ -357,7 +357,7 @@ export default function WithdrawPage() {
       <>
         <CashierHeader title={t.withdraw} historyHref="/withdraw-history" direction="out" />
         <div className="note" style={{ margin: 12 }}>
-          {configReady ? 'এই মুহূর্তে কোনো উইথড্র মেথড চালু নেই। সাপোর্টে যোগাযোগ করুন।' : 'লোড হচ্ছে…'}
+          {configReady ? 'No withdraw method is active right now. Please contact support.' : 'Loading…'}
         </div>
       </>
     );
@@ -380,17 +380,17 @@ export default function WithdrawPage() {
         <CashierHeader title={t.withdraw} historyHref="/withdraw-history" direction="out" />
         <div className="cz-done">
           <span className="cz-done__tick" aria-hidden>✓</span>
-          <h2>রিকোয়েস্ট জমা হয়েছে!</h2>
+          <h2>Request submitted!</h2>
           <p>
-            {money(raised.amount)} {method.name} ({raised.account}) এ পাঠানোর রিকোয়েস্ট জমা হয়েছে।
+            Your request to send {money(raised.amount)} to {method.name} ({raised.account}) has been submitted.
             {raised.charge > 0 && chargeTrx.trim()
-              ? ` চার্জের TrxID (${chargeTrx.trim()}) যাচাই হলে ${cfg.processingTime} এর মধ্যে টাকা পৌঁছাবে।`
-              : ` অ্যাডমিন অনুমোদন করলে ${cfg.processingTime} এর মধ্যে পৌঁছাবে।`}
+              ? ` Once the charge TrxID (${chargeTrx.trim()}) is verified the money arrives within ${cfg.processingTime}.`
+              : ` Once an admin approves it, the money arrives within ${cfg.processingTime}.`}
           </p>
-          <button type="button" className="btn btn--gold" onClick={restart}>আরেকটি উত্তোলন</button>
+          <button type="button" className="btn btn--gold" onClick={restart}>Another withdrawal</button>
           <div className="cz-done__links">
-            <Link href="/withdraw-history">হিস্টোরি দেখুন</Link>
-            <Link href="/">হোমে ফিরুন</Link>
+            <Link href="/withdraw-history">View history</Link>
+            <Link href="/">Back to home</Link>
           </div>
         </div>
       </>
@@ -434,35 +434,35 @@ export default function WithdrawPage() {
           {chargeMethod && (
             <div className="cz-gate" style={{ background: chargeMethod.color }}>
               <MethodIcon method={chargeMethod} size={40} />
-              <b>{channelName(chargeMethod.channelId)} এজেন্ট চার্জ</b>
+              <b>{channelName(chargeMethod.channelId)} agent charge</b>
             </div>
           )}
 
-          <div className="cz-label">এজেন্ট নাম্বার<span>*</span></div>
+          <div className="cz-label">Agent number<span>*</span></div>
           {cfg.agentNote && <p className="cz-sub">{cfg.agentNote}</p>}
           {loadingAgent ? (
-            <div className="paybox paybox--wait">নাম্বার আনা হচ্ছে…</div>
+            <div className="paybox paybox--wait">Fetching the number…</div>
           ) : agent ? (
             <div className="cz-wallet">
               <div className="cz-wallet__row">
                 <b>{agent.number}</b>
-                <button type="button" className="cz-wallet__copy" onClick={() => void copy(agent.number, 'নাম্বার')} aria-label="কপি">⧉</button>
+                <button type="button" className="cz-wallet__copy" onClick={() => void copy(agent.number, 'Number')} aria-label="Copy">⧉</button>
               </div>
               {agent.holder && <div className="cz-wallet__meta"><span>{agent.holder}</span></div>}
             </div>
           ) : (
             <div className="paybox paybox--empty">
-              এই মুহূর্তে এজেন্ট নাম্বার দেওয়া নেই। সাপোর্টে যোগাযোগ করুন — আপনার
-              রিকোয়েস্ট জমা আছে, বাতিল হয়নি।
+              No agent number is set right now. Please contact support — your request is
+              still saved, it has not been cancelled.
             </div>
           )}
 
-          <div className="cz-label">চার্জের পরিমাণ<span>*</span></div>
+          <div className="cz-label">Charge amount<span>*</span></div>
           {cfg.chargeExactNote && <p className="cz-sub">{cfg.chargeExactNote}</p>}
           <div className="cz-wallet cz-wallet--gold">
             <div className="cz-wallet__row">
               <b>{money(raised.charge)}</b>
-              <button type="button" className="cz-wallet__copy" onClick={() => void copy(String(raised.charge), 'চার্জ')} aria-label="কপি">⧉</button>
+              <button type="button" className="cz-wallet__copy" onClick={() => void copy(String(raised.charge), 'Charge')} aria-label="Copy">⧉</button>
             </div>
           </div>
 
@@ -476,12 +476,12 @@ export default function WithdrawPage() {
           )}
 
           <p className="cz-meta">
-            উত্তোলন: <b>{money(raised.amount)}</b> · ব্যালেন্স ছিল: <b>{money(raised.balance)}</b>
+            Withdrawal: <b>{money(raised.amount)}</b> · Balance was: <b>{money(raised.balance)}</b>
           </p>
 
           <div className="cz-label">
             {cfg.chargeTrxLabel}
-            <span>(প্রয়োজন)</span>
+            <span>(required)</span>
           </div>
           <input
             className={`cz-trx${chargeTrx.trim() ? ' ok' : ''}`}
@@ -495,12 +495,12 @@ export default function WithdrawPage() {
           {err.trx && <p className="cz-err">{err.trx}</p>}
 
           <button type="button" className="btn btn--gold cz-confirm" disabled={busy} onClick={() => void confirmCharge()}>
-            {busy ? 'পাঠানো হচ্ছে…' : 'নিশ্চিত'}
+            {busy ? 'Sending…' : 'Confirm'}
           </button>
 
           {cfg.chargeCaution && (
             <div className="cz-caution">
-              <b>সতর্কতা:</b>
+              <b>Caution:</b>
               <p>{cfg.chargeCaution}</p>
             </div>
           )}
@@ -516,7 +516,7 @@ export default function WithdrawPage() {
     return (
       <>
         <div className="cz-top cz-top--pay">
-          <button type="button" className="cz-top__back" aria-label="পিছনে" onClick={() => { setStep('form'); setErr({}); }}>‹</button>
+          <button type="button" className="cz-top__back" aria-label="Back" onClick={() => { setStep('form'); setErr({}); }}>‹</button>
           <div>
             <b>BDT {raised.amount.toLocaleString('en-IN')}</b>
             <small>{cfg.summaryTitle}</small>
@@ -532,11 +532,11 @@ export default function WithdrawPage() {
             <b>{method.name}</b>
           </div>
 
-          <div className="cz-label">অ্যাকাউন্ট নাম্বার<span>*</span></div>
-          <p className="cz-sub">এই নাম্বারে উত্তোলনের টাকা পাঠানো হবে</p>
+          <div className="cz-label">Account number<span>*</span></div>
+          <p className="cz-sub">Your withdrawal is sent to this number</p>
           <div className="cz-ro">{raised.account}</div>
 
-          <div className="cz-label">উত্তোলনের পরিমাণ</div>
+          <div className="cz-label">Withdrawal amount</div>
           <div className="cz-ro cz-ro--gold">{money(raised.amount)}</div>
 
           {chargeOn && raised.charge > 0 && (
@@ -567,22 +567,22 @@ export default function WithdrawPage() {
 
           {chargeOn && raised.charge > 0 && (
             <div className="cz-calc">
-              <b>🧮 চার্জ হিসাব</b>
-              <p><span>{cfg.chargeBasis === 'balance' ? 'আপনার ব্যালেন্স' : 'উত্তোলনের পরিমাণ'}</span><b>{money(base)}</b></p>
-              <p><span>চার্জ রেট</span><b>প্রতি ৳1,000 এ {money(cfg.chargePerThousand)}</b></p>
-              <p className="cz-calc__total"><span>মোট চার্জ</span><b>{money(raised.charge)}</b></p>
+              <b>🧮 Charge calculation</b>
+              <p><span>{cfg.chargeBasis === 'balance' ? 'Your balance' : 'Withdrawal amount'}</span><b>{money(base)}</b></p>
+              <p><span>Charge rate</span><b>{money(cfg.chargePerThousand)} per ৳1,000</b></p>
+              <p className="cz-calc__total"><span>Total charge</span><b>{money(raised.charge)}</b></p>
             </div>
           )}
 
           {err.apply && <p className="cz-err">{err.apply}</p>}
 
           <button type="button" className="btn btn--gold cz-confirm" disabled={busy} onClick={() => void apply()}>
-            {busy ? 'পাঠানো হচ্ছে…' : cfg.applyLabel}
+            {busy ? 'Sending…' : cfg.applyLabel}
           </button>
 
           {cfg.chargeWarning && (
             <div className="cz-caution">
-              <b>সতর্কতা:</b>
+              <b>Caution:</b>
               <p>{cfg.chargeWarning}</p>
             </div>
           )}
@@ -621,7 +621,7 @@ export default function WithdrawPage() {
             {!signedIn ? (
               <div className="ck-empty">
                 <EmptyWalletArt />
-                <p className="ck-empty__text">লগইন করলে আপনার ওয়ালেট এখানে দেখা যাবে</p>
+                <p className="ck-empty__text">Log in and your wallets show up here</p>
               </div>
             ) : forMethod.length === 0 ? (
               <div className="ck-empty">
@@ -638,7 +638,7 @@ export default function WithdrawPage() {
                       <b>{w.account_no}</b>
                       {w.holder && <small>{w.holder}</small>}
                     </span>
-                    <button type="button" className="cz-wallet-row__x" aria-label="মুছুন" onClick={() => void removeWallet(w.id)}>×</button>
+                    <button type="button" className="cz-wallet-row__x" aria-label="Remove" onClick={() => void removeWallet(w.id)}>×</button>
                   </label>
                 ))}
               </div>
@@ -650,9 +650,9 @@ export default function WithdrawPage() {
               <button
                 type="button"
                 className="cz-add"
-                aria-label="ওয়ালেট যোগ করুন"
+                aria-label="Add wallet"
                 onClick={() => {
-                  if (!signedIn) { toast('ওয়ালেট যোগ করতে আগে লগইন করুন'); return; }
+                  if (!signedIn) { toast('Log in first to add a wallet'); return; }
                   setAdding(true);
                   setErr({});
                 }}
@@ -662,7 +662,7 @@ export default function WithdrawPage() {
           </section>
         ) : (
           <section className="cz-sec">
-            <h2 className="cz-sec__h">আপনার {method.name} নাম্বার</h2>
+            <h2 className="cz-sec__h">Your {method.name} number</h2>
             <input
               className="cz-input" type="tel" inputMode="numeric" placeholder={method.accountHint}
               value={inlineNo} onChange={(e) => setInlineNo(e.target.value)}
@@ -672,22 +672,22 @@ export default function WithdrawPage() {
         )}
 
         <section className="cz-sec cz-info">
-          <p><span>উত্তোলন সময়:</span> <b>{cfg.processingTime}</b></p>
-          {cfg.reminder && <p className="cz-info__rem"><i aria-hidden>✅</i> <span>সৌজন্যমূলক স্মরণিকা:</span> {cfg.reminder}</p>}
+          <p><span>Withdrawal time:</span> <b>{cfg.processingTime}</b></p>
+          {cfg.reminder && <p className="cz-info__rem"><i aria-hidden>✅</i> <span>Friendly reminder:</span> {cfg.reminder}</p>}
           {remaining !== null && (
-            <p className="cz-info__daily">দৈনিক উত্তোলন {cfg.dailyLimit} (বার), অবশিষ্ট উত্তোলন {remaining} (বার)</p>
+            <p className="cz-info__daily">Daily withdrawals {cfg.dailyLimit}, remaining {remaining}</p>
           )}
-          <p><span>প্রধান ওয়ালেট:</span> <b>{money(balance, 2)}</b></p>
-          <p><span>উপলব্ধ পরিমাণ:</span> <b>{money(balance, 2)}</b></p>
-          <button type="button" className="cz-refresh" onClick={() => { void refresh(); void loadToday(); toast('ব্যালেন্স রিফ্রেশ হয়েছে'); }}>
-            <i aria-hidden>⟳</i> আপনার ব্যালেন্স রিফ্রেশ করুন
+          <p><span>Main wallet:</span> <b>{money(balance, 2)}</b></p>
+          <p><span>Available amount:</span> <b>{money(balance, 2)}</b></p>
+          <button type="button" className="cz-refresh" onClick={() => { void refresh(); void loadToday(); toast('Balance refreshed'); }}>
+            <i aria-hidden>⟳</i> Refresh your balance
           </button>
         </section>
 
         <section className="cz-sec">
           <h2 className="cz-sec__h">{cfg.amountLabel}:</h2>
           <label className="cz-field">
-            <span>পরিমাণ</span>
+            <span>Amount</span>
             <input
               type="number" inputMode="numeric" placeholder={`${method.min} — ${method.max}`}
               value={amount} onChange={(e) => setAmount(e.target.value)}
@@ -700,7 +700,7 @@ export default function WithdrawPage() {
               type={showPass ? 'text' : 'password'} autoComplete="current-password" placeholder={cfg.passwordLabel}
               value={password} onChange={(e) => setPassword(e.target.value)}
             />
-            <button type="button" className="cz-field__eye" aria-label="দেখান" onClick={() => setShowPass((v) => !v)}>
+            <button type="button" className="cz-field__eye" aria-label="Show" onClick={() => setShowPass((v) => !v)}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden>
                 <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke="currentColor" strokeWidth="1.6" />
                 <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
@@ -720,7 +720,7 @@ export default function WithdrawPage() {
 
         <div className="cz-next cz-next--inline">
           <button type="submit" className="btn btn--gold btn--block" disabled={busy || !typedOk || !password.trim()}>
-            {busy ? 'যাচাই হচ্ছে…' : `${t.withdraw} রিকোয়েস্ট`}
+            {busy ? 'Verifying…' : `${t.withdraw} request`}
           </button>
           {cfg.note && <p className="cz-limit">{cfg.note}</p>}
         </div>
@@ -730,20 +730,20 @@ export default function WithdrawPage() {
         <>
           <div className="scrim on" onClick={() => setAdding(false)} />
           <div className="modal cz-modal" role="dialog" aria-modal="true">
-            <h3>{method.name} ওয়ালেট যোগ করুন</h3>
-            <p>যে নাম্বারে টাকা নিতে চান। নিজের নামে থাকা অ্যাকাউন্ট দিন।</p>
+            <h3>Add a {method.name} wallet</h3>
+            <p>The number you want the money sent to. Use an account in your own name.</p>
             <label className="cz-field">
-              <span>নাম্বার</span>
+              <span>Number</span>
               <input type="tel" inputMode="numeric" placeholder={method.accountHint} value={newNo} onChange={(e) => setNewNo(e.target.value)} autoFocus />
             </label>
             <label className="cz-field">
-              <span>অ্যাকাউন্টের নাম (ঐচ্ছিক)</span>
+              <span>Account name (optional)</span>
               <input value={newHolder} onChange={(e) => setNewHolder(e.target.value)} />
             </label>
             {err.add && <p className="cz-err">{err.add}</p>}
             <div className="cz-modal__acts">
-              <button type="button" className="btn btn--ghost" onClick={() => setAdding(false)}>বাতিল</button>
-              <button type="button" className="btn btn--gold" disabled={busy} onClick={() => void addWallet()}>যোগ করুন</button>
+              <button type="button" className="btn btn--ghost" onClick={() => setAdding(false)}>Cancel</button>
+              <button type="button" className="btn btn--gold" disabled={busy} onClick={() => void addWallet()}>Add</button>
             </div>
           </div>
         </>

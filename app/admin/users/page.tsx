@@ -11,16 +11,16 @@ export const dynamic = 'force-dynamic';
 export default async function AdminUsers() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'players.read')) return <NoAccess role={session.role} what="ইউজার তালিকা" />;
+  if (!can(session.role, 'players.read')) return <NoAccess role={session.role} what="The player list" />;
 
   const players = await listPlayers();
 
   return (
     <>
-      <h1 className="adm__h1">ইউজার</h1>
+      <h1 className="adm__h1">Users</h1>
       <p className="adm__sub">
-        ব্যালেন্স সমন্বয়, ব্লক/আনব্লক, VIP লেভেল ও রেফারেল কোড। ব্যালেন্সের প্রতিটি
-        পরিবর্তন লেজারে লেখা থাকে, তাই পরে কে কী করেছে দেখা যায়।
+        Balance adjustments, block/unblock, VIP level and referral code. Every balance
+        change is written to the ledger, so who did what stays visible afterwards.
       </p>
       <PlayerControl
         initialPlayers={players.ok ? players.data : []}

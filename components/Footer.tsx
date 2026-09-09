@@ -5,7 +5,7 @@ import { BRAND } from '@/lib/brand';
 import { PAYMENT_METHODS } from '@/lib/catalogue';
 import { t } from '@/lib/strings';
 
-const GAME_CHIPS = ['স্লট', 'লাইভ ক্যাসিনো', 'পোকার', 'ফিশিং', 'স্পোর্টস', 'ই-স্পোর্টস', 'লটারি'];
+const GAME_CHIPS = ['Slots', 'Live Casino', 'Poker', 'Fishing', 'Sports', 'E-Sports', 'Lottery'];
 const SOCIAL_CHIPS = ['Telegram', 'Facebook', 'WhatsApp', 'YouTube'];
 
 function Group({ title, items }: { title: string; items: readonly string[] }) {
@@ -30,16 +30,16 @@ export default function Footer() {
       <Group title={t.gameCenter} items={GAME_CHIPS} />
       <Group title={t.followUs} items={SOCIAL_CHIPS} />
       <div className="ftr__grp">
-        <div className="ftr__ttl">যোগাযোগ</div>
+        <div className="ftr__ttl">Contact</div>
         <div className="ftr__row">
           {email
             ? <a className="chip" href={`mailto:${email}`}>{email}</a>
-            : <span className="chip">লাইভ চ্যাট</span>}
+            : <span className="chip">Live Chat</span>}
         </div>
       </div>
       <p className="ftr__legal">
-        {BRAND.name} — এই সাইটে এখনো কোনো রিয়েল পেমেন্ট,
-        রিয়েল অ্যাকাউন্ট বা রিয়েল গেম যুক্ত নেই; সব সংখ্যা ও নাম নমুনা ডেটা।
+        {BRAND.name} — no real payments, real accounts or real games are
+        connected to this site yet; every figure and name is sample data.
         {' '}{t.ageNote}
       </p>
       <div className="ftr__age">18+</div>

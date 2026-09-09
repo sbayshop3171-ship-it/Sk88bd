@@ -16,9 +16,9 @@ import {
 } from '@/lib/mini-games';
 
 const RISKS: { id: PlinkoRisk; label: string }[] = [
-  { id: 'low', label: 'কম' },
-  { id: 'medium', label: 'মাঝারি' },
-  { id: 'high', label: 'বেশি' },
+  { id: 'low', label: 'Low' },
+  { id: 'medium', label: 'Medium' },
+  { id: 'high', label: 'High' },
 ];
 
 /* The board is drawn in a 100-wide viewBox: a triangle of pegs with row i
@@ -103,7 +103,7 @@ function Board() {
       onNewSeed={g.newSeed}
     >
       <div className="mg-board mg-plinko">
-        <svg className="mg-plinko__svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="প্লিংকো বোর্ড">
+        <svg className="mg-plinko__svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Plinko board">
           {Array.from({ length: rows }, (_, i) =>
             Array.from({ length: i + 1 }, (_, j) => (
               <circle
@@ -132,10 +132,10 @@ function Board() {
 
         <p className="mg-board__line">
           {dropping
-            ? 'বল নামছে…'
+            ? 'The ball is dropping…'
             : landed === null
-              ? `${rows} সারি · ঝুঁকি ${RISKS.find((r) => r.id === risk)?.label}`
-              : `${table[landed]}× — ${won ? `ফেরত ${money(Math.floor(g.stake * table[landed]))}` : 'এবার কম পড়ল'}`}
+              ? `${rows} rows · risk ${RISKS.find((r) => r.id === risk)?.label}`
+              : `${table[landed]}× — ${won ? `returns ${money(Math.floor(g.stake * table[landed]))}` : 'not this time'}`}
         </p>
       </div>
 
@@ -149,7 +149,7 @@ function Board() {
               disabled={g.busy || dropping}
               onClick={() => { setRows(r); setLanded(null); setPath(null); }}
             >
-              {r} সারি
+              {r} rows
             </button>
           ))}
         </div>
@@ -162,7 +162,7 @@ function Board() {
               disabled={g.busy || dropping}
               onClick={() => { setRisk(r.id); setLanded(null); setPath(null); }}
             >
-              ঝুঁকি {r.label}
+              Risk {r.label}
             </button>
           ))}
         </div>
@@ -177,7 +177,7 @@ function Board() {
           disabled={g.busy || dropping}
           onClick={() => void send()}
         >
-          {g.busy || dropping ? 'বল নামছে…' : `${money(g.stake)} বাজি — বল ছাড়ুন`}
+          {g.busy || dropping ? 'The ball is dropping…' : `Stake ${money(g.stake)} — Drop the ball`}
         </button>
       </div>
     </GameShell>

@@ -61,28 +61,28 @@ export default async function AdminDashboard() {
   const mine = (tiles: Tile[]) => tiles.filter(([, , , need]) => can(session.role, need));
 
   const live = mine([
-    ['সক্রিয় পেমেন্ট নাম্বার', String(activeAccounts.length), '/admin/payments', 'payments.read'],
-    ['ডিপোজিট নাম্বার', String(deposits.length), '/admin/payments', 'payments.read'],
-    ['দেখানো গেম', String(totalGames - hidden), '/admin/games', 'games.write'],
-    ['লুকানো গেম', String(hidden), '/admin/games', 'games.write'],
-    ['হোম ব্যানার', String(activeSorted(content.banners).length), '/admin/banners', 'content.write'],
-    ['ঘোষণা কার্ড', String(activeSorted(content.announcements).length), '/admin/banners', 'content.write'],
+    ['Active payment numbers', String(activeAccounts.length), '/admin/payments', 'payments.read'],
+    ['Deposit numbers', String(deposits.length), '/admin/payments', 'payments.read'],
+    ['Games showing', String(totalGames - hidden), '/admin/games', 'games.write'],
+    ['Games hidden', String(hidden), '/admin/games', 'games.write'],
+    ['Home banners', String(activeSorted(content.banners).length), '/admin/banners', 'content.write'],
+    ['Announcement cards', String(activeSorted(content.announcements).length), '/admin/banners', 'content.write'],
   ]);
 
   const cashier = stats.ok
     ? mine([
-        ['পেন্ডিং ডিপোজিট', String(stats.data.pendingDeposits), '/admin/deposits', 'cashier.review'],
-        ['পেন্ডিং উইথড্র', String(stats.data.pendingWithdrawals), '/admin/withdrawals', 'cashier.review'],
-        ['আজকের ডিপোজিট', money(toTaka(stats.data.todayDeposited)), '/admin/deposits', 'cashier.review'],
-        ['আজকের উইথড্র', money(toTaka(stats.data.todayWithdrawn)), '/admin/withdrawals', 'cashier.review'],
-        ['মোট ইউজার', String(stats.data.totalPlayers), '/admin/users', 'players.read'],
+        ['Pending deposits', String(stats.data.pendingDeposits), '/admin/deposits', 'cashier.review'],
+        ['Pending withdrawals', String(stats.data.pendingWithdrawals), '/admin/withdrawals', 'cashier.review'],
+        ['Deposited today', money(toTaka(stats.data.todayDeposited)), '/admin/deposits', 'cashier.review'],
+        ['Withdrawn today', money(toTaka(stats.data.todayWithdrawn)), '/admin/withdrawals', 'cashier.review'],
+        ['Total players', String(stats.data.totalPlayers), '/admin/users', 'players.read'],
       ])
     : [];
 
   return (
     <>
-      <h1 className="adm__h1">ড্যাশবোর্ড</h1>
-      <p className="adm__sub">এই সার্ভারে যা আছে তার হিসাব।</p>
+      <h1 className="adm__h1">Dashboard</h1>
+      <p className="adm__sub">What this server currently holds.</p>
 
       {live.length > 0 && (
         <div className="adm__tiles">
@@ -97,36 +97,36 @@ export default async function AdminDashboard() {
 
       {can(session.role, 'agents.self') && (
         <>
-          <h2 className="adm__h2">{seesEveryAgent ? 'এজেন্ট' : 'আমার লিংক'}</h2>
+          <h2 className="adm__h2">{seesEveryAgent ? 'Agents' : 'My link'}</h2>
           <p className="adm__sub">
             {seesEveryAgent
-              ? 'এজেন্টের লিংক দিয়ে যারা রেজিস্টার করেছে তাদের হিসাব। বিস্তারিত এজেন্ট পেজে।'
-              : 'আপনার লিংক দিয়ে যারা রেজিস্টার করেছে তাদের হিসাব।'}
+              ? 'Players who registered through an agent’s link. The Agents page has the detail.'
+              : 'Players who registered through your link.'}
           </p>
           <div className="adm__tiles">
             {seesEveryAgent && (
               <Link className="adm__tile adm__tile--link" href={panelHref(base, '/admin/agents')}>
                 <b>{agentScope.filter((s) => s.role === 'agent').length}</b>
-                <small>এজেন্ট</small>
+                <small>Agents</small>
               </Link>
             )}
             <Link className="adm__tile adm__tile--link" href={panelHref(base, '/admin/agents')}>
               <b>{agents ? agents.reduce((n, a) => n + a.players, 0) : '—'}</b>
-              <small>{seesEveryAgent ? 'এজেন্টের আনা ইউজার' : 'আমার আনা ইউজার'}</small>
+              <small>{seesEveryAgent ? 'Players brought in' : 'Players I brought in'}</small>
             </Link>
             <Link className="adm__tile adm__tile--link" href={panelHref(base, '/admin/agents')}>
               <b>{agents ? agents.reduce((n, a) => n + a.activePlayers, 0) : '—'}</b>
-              <small>তার মধ্যে ডিপোজিট করেছে</small>
+              <small>Of those, have deposited</small>
             </Link>
             <Link className="adm__tile adm__tile--link" href={panelHref(base, '/admin/agents')}>
               <b>{agents ? money(toTaka(agents.reduce((n, a) => n + a.deposited, 0))) : '—'}</b>
-              <small>তাদের মোট ডিপোজিট</small>
+              <small>Their total deposits</small>
             </Link>
           </div>
         </>
       )}
 
-      <h2 className="adm__h2">প্লেয়ার ও ক্যাশিয়ার</h2>
+      <h2 className="adm__h2">Players &amp; cashier</h2>
 
       {cashier.length > 0 ? (
         <div className="adm__tiles">
@@ -141,11 +141,11 @@ export default async function AdminDashboard() {
         <>
           <p className="adm__sub">
             {isBackendReady()
-              ? `ডেটাবেস থেকে হিসাব আনা গেল না${stats.ok ? '' : ` — ${stats.message ?? stats.reason}`}।`
-              : 'এই হিসাবগুলো Supabase এ থাকে। ডেটাবেস যুক্ত হয়নি, তাই শূন্য না দেখিয়ে খালি রাখা হয়েছে।'}
+              ? `Could not read the figures from the database${stats.ok ? '' : ` — ${stats.message ?? stats.reason}`}.`
+              : 'These figures live in Supabase. The database is not connected, so they are left blank rather than shown as zero.'}
           </p>
           <div className="adm__tiles">
-            {['আজকের ডিপোজিট', 'আজকের উইথড্র', 'মোট ইউজার', 'পেন্ডিং রিকোয়েস্ট'].map((label) => (
+            {['Deposited today', 'Withdrawn today', 'Total players', 'Pending requests'].map((label) => (
               <div className="adm__tile adm__tile--off" key={label}>
                 <b>—</b>
                 <small>{label}</small>

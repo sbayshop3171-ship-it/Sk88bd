@@ -15,13 +15,13 @@ export type LedgerRow = {
 };
 
 export const KIND_LABEL: Record<LedgerRow['kind'], string> = {
-  deposit: 'ডিপোজিট',
-  withdraw: 'উইথড্র',
-  bet: 'বেট',
-  win: 'জয়',
-  bonus: 'বোনাস',
-  rebate: 'রিবেট',
-  adjust: 'সমন্বয়',
+  deposit: 'Deposit',
+  withdraw: 'Withdraw',
+  bet: 'Bet',
+  win: 'Win',
+  bonus: 'Bonus',
+  rebate: 'Rebate',
+  adjust: 'Adjustment',
 };
 
 /**

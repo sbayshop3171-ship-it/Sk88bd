@@ -24,20 +24,20 @@ type Tile = {
 };
 
 const TILES: Tile[] = [
-  { icon: GiftIcon,     label: 'রিওয়ার্ড সেন্টার',   href: '/reward' },
-  { icon: RecordIcon,   label: 'বেটিং রেকর্ড',       href: '/bets-history' },
-  { icon: TrendIcon,    label: 'লাভ ও ক্ষতি',        href: '/balance-overview' },
-  { icon: DepositIcon,  label: 'ডিপোজিট রেকর্ড',     href: '/deposit-history' },
-  { icon: WithdrawIcon, label: 'উইথড্র রেকর্ড',      href: '/withdraw-history' },
-  { icon: LedgerIcon,   label: 'অ্যাকাউন্ট রেকর্ড',  href: '/account-statement' },
-  { icon: UserIcon,     label: 'আমার অ্যাকাউন্ট',    href: '/my-profile' },
-  { icon: ShieldIcon,   label: 'সিকিউরিটি সেন্টার',  href: '/security' },
-  { icon: UsersIcon,    label: 'বন্ধুকে আমন্ত্রণ',    href: '/refer' },
-  { icon: TargetIcon,   label: 'মিশন',               href: '/promotions' },
-  { icon: RebateIcon,   label: 'রিবেট',              href: '/turnover' },
-  { icon: MedalIcon,    label: 'ভিআইপি ক্লাব',       href: '/vip' },
-  { icon: DownloadIcon, label: 'অ্যাপ ডাউনলোড',      href: '/download' },
-  { icon: ChatIcon,     label: 'কাস্টমার সার্ভিস',   href: '/support' },
+  { icon: GiftIcon,     label: 'Reward Center',     href: '/reward' },
+  { icon: RecordIcon,   label: 'Betting Record',    href: '/bets-history' },
+  { icon: TrendIcon,    label: 'Profit & Loss',     href: '/balance-overview' },
+  { icon: DepositIcon,  label: 'Deposit Record',    href: '/deposit-history' },
+  { icon: WithdrawIcon, label: 'Withdraw Record',   href: '/withdraw-history' },
+  { icon: LedgerIcon,   label: 'Account Record',    href: '/account-statement' },
+  { icon: UserIcon,     label: 'My Account',        href: '/my-profile' },
+  { icon: ShieldIcon,   label: 'Security Center',   href: '/security' },
+  { icon: UsersIcon,    label: 'Invite a Friend',   href: '/refer' },
+  { icon: TargetIcon,   label: 'Mission',           href: '/promotions' },
+  { icon: RebateIcon,   label: 'Rebate',            href: '/turnover' },
+  { icon: MedalIcon,    label: 'VIP Club',          href: '/vip' },
+  { icon: DownloadIcon, label: 'App Download',      href: '/download' },
+  { icon: ChatIcon,     label: 'Customer Service',  href: '/support' },
 ];
 
 export default function MemberPage() {
@@ -48,7 +48,7 @@ export default function MemberPage() {
 
   const signedIn = ready && Boolean(session);
   const userId = profile?.phone ?? '';
-  const nickname = profile?.display_name || userId || 'প্লেয়ার';
+  const nickname = profile?.display_name || userId || 'Player';
 
   /* Supabase stamps the auth row, and that is the account's real birthday —
      `profiles` has its own created_at but the provider does not load it. */
@@ -60,9 +60,9 @@ export default function MemberPage() {
     if (!userId) return;
     try {
       await navigator.clipboard.writeText(userId);
-      toast('আইডি কপি হয়েছে');
+      toast('ID copied');
     } catch {
-      toast('কপি করা গেল না');
+      toast('Could not copy');
     }
   };
 
@@ -75,7 +75,7 @@ export default function MemberPage() {
 
   return (
     <>
-      <PageHeader title="আমার অ্যাকাউন্ট" />
+      <PageHeader title="My Account" />
 
       <div className="mc">
         <div className="mc__card">
@@ -89,20 +89,20 @@ export default function MemberPage() {
                 <>
                   <div className="mc__id">
                     <b>{userId}</b>
-                    <button type="button" onClick={copyId} aria-label="আইডি কপি করুন">
+                    <button type="button" onClick={copyId} aria-label="Copy ID">
                       <CopyIcon />
                     </button>
                   </div>
                   <div className="mc__meta">
-                    <span>নাম: {nickname}</span>
-                    <Link href="/my-profile" aria-label="নাম বদলান"><PencilIcon /></Link>
+                    <span>Name: {nickname}</span>
+                    <Link href="/my-profile" aria-label="Change name"><PencilIcon /></Link>
                   </div>
-                  {joined && <div className="mc__meta">যোগ দিয়েছেন: {joined}</div>}
+                  {joined && <div className="mc__meta">Joined: {joined}</div>}
                 </>
               ) : (
                 <>
-                  <div className="mc__id"><b>গেস্ট</b></div>
-                  <div className="mc__meta">খেলতে হলে লগইন করুন</div>
+                  <div className="mc__id"><b>Guest</b></div>
+                  <div className="mc__meta">Log in to play</div>
                 </>
               )}
             </div>
@@ -115,7 +115,7 @@ export default function MemberPage() {
                 type="button"
                 className={`mc__refresh${spinning ? ' is-spin' : ''}`}
                 onClick={reload}
-                aria-label="ব্যালেন্স রিফ্রেশ করুন"
+                aria-label="Refresh balance"
               >
                 <RefreshIcon />
               </button>
@@ -126,7 +126,7 @@ export default function MemberPage() {
             <div className="mc__acts">
               <Link href="/deposit"><DepositIcon />{t.deposit}</Link>
               <Link href="/withdraw"><WithdrawIcon />{t.withdraw}</Link>
-              <Link href="/withdraw"><BankIcon />ব্যাংক অ্যাকাউন্ট</Link>
+              <Link href="/withdraw"><BankIcon />Bank Account</Link>
             </div>
           ) : (
             <div className="mc__acts">
@@ -137,7 +137,7 @@ export default function MemberPage() {
         </div>
 
         <div className="mc__sechd">
-          <span>মেম্বার সেন্টার</span>
+              <span>Member Center</span>
           <i aria-hidden />
         </div>
 
@@ -156,7 +156,7 @@ export default function MemberPage() {
             <button
               type="button"
               className="mc__tile"
-              onClick={async () => { await signOut(); toast('লগআউট হয়েছে'); router.push('/'); }}
+              onClick={async () => { await signOut(); toast('Logged out'); router.push('/'); }}
             >
               <span className="mc__ico"><LogoutIcon /></span>
               <span className="mc__lbl">{t.logout}</span>

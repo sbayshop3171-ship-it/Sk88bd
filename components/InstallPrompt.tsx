@@ -14,7 +14,7 @@ const AUTO_DELAY_MS = 4000;
  *
  * The sheet opens by itself a few seconds into the first visit, and again
  * whenever something calls openInstallSheet() — the app strip on the home
- * page and the download page both do. "পরে" hides it for a week.
+ * page and the download page both do. "Later" hides it for a week.
  */
 export default function InstallPrompt() {
   const path = usePathname();
@@ -52,7 +52,7 @@ export default function InstallPrompt() {
     return () => window.removeEventListener(INSTALL_OPEN_EVENT, onOpen);
   }, []);
 
-  // and once by itself, unless the player said "পরে" recently. Never over a
+  // and once by itself, unless the player said "Later" recently. Never over a
   // game — those screens are the game and nothing else.
   useEffect(() => {
     if (onGameScreen || installed || snoozed()) return;
@@ -84,40 +84,40 @@ export default function InstallPrompt() {
     <>
       <div className="scrim on" onClick={() => close(true)} />
       <div className="pwa" role="dialog" aria-modal="true" aria-labelledby="pwa-title">
-        <button className="pwa__x" type="button" aria-label="বন্ধ করুন" onClick={() => close(true)}>×</button>
+        <button className="pwa__x" type="button" aria-label="Close" onClick={() => close(true)}>×</button>
 
         <div className="pwa__head">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img className="pwa__icon" src="/icons/icon-192.png" alt="" width={56} height={56} />
           <div>
-            <h2 className="pwa__title" id="pwa-title">{BRAND.name} অ্যাপ</h2>
-            <p className="pwa__sub">ফোনের হোম স্ক্রিনে যোগ করুন</p>
+            <h2 className="pwa__title" id="pwa-title">{BRAND.name} App</h2>
+            <p className="pwa__sub">Add it to your phone’s home screen</p>
           </div>
         </div>
 
         <ul className="pwa__points">
-          <li><span aria-hidden>⚡</span> ব্রাউজার খোলার ঝামেলা নেই — এক ট্যাপে খুলবে</li>
-          <li><span aria-hidden>📲</span> ফুল স্ক্রিন, অ্যাপের মতোই চলবে</li>
-          <li><span aria-hidden>🎁</span> ইনস্টল করলেই ৳১৮ বোনাস</li>
+          <li><span aria-hidden>⚡</span> No browser to open — one tap and you are in</li>
+          <li><span aria-hidden>📲</span> Full screen, just like an app</li>
+          <li><span aria-hidden>🎁</span> ৳18 bonus on install</li>
         </ul>
 
         {canInstall ? (
           <button className="btn btn--gold btn--block" type="button" disabled={busy} onClick={onInstall}>
-            {busy ? 'ইনস্টল হচ্ছে…' : 'ইনস্টল করুন'}
+            {busy ? 'Installing…' : 'Install'}
           </button>
         ) : needsIosSteps ? (
           <ol className="pwa__ios">
-            <li>নিচের <b>শেয়ার</b> বাটনে ট্যাপ করুন <span aria-hidden>⬆️</span></li>
-            <li><b>Add to Home Screen</b> বেছে নিন</li>
-            <li><b>Add</b> চাপুন — হয়ে গেল</li>
+            <li>Tap the <b>Share</b> button below <span aria-hidden>⬆️</span></li>
+            <li>Choose <b>Add to Home Screen</b></li>
+            <li>Tap <b>Add</b> — done</li>
           </ol>
         ) : (
           <p className="pwa__note">
-            ব্রাউজারের মেনু (⋮) খুলে <b>Install app</b> অথবা <b>Add to Home screen</b> বেছে নিন।
+            Open the browser menu (⋮) and choose <b>Install app</b> or <b>Add to Home screen</b>.
           </p>
         )}
 
-        <button className="pwa__later" type="button" onClick={() => close(true)}>পরে দেখব</button>
+        <button className="pwa__later" type="button" onClick={() => close(true)}>Later</button>
       </div>
     </>
   );

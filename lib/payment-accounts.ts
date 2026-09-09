@@ -65,21 +65,21 @@ export type AccountMutationResult =
   | { ok: false; reason: AccountMutationReason };
 
 export const KIND_LABEL: Record<PaymentAccountKind, string> = {
-  personal: 'পার্সোনাল',
-  agent: 'এজেন্ট',
-  merchant: 'মার্চেন্ট',
+  personal: 'Personal',
+  agent: 'Agent',
+  merchant: 'Merchant',
 };
 
 export const USE_LABEL: Record<PaymentAccountUse, string> = {
-  deposit: 'ডিপোজিট',
-  withdraw: 'উইথড্র চার্জ',
-  both: 'দুটোই',
+  deposit: 'Deposit',
+  withdraw: 'Withdraw charge',
+  both: 'Both',
 };
 
-/** Spelled out under the picker, because "উইথড্র" on a number the operator
+/** Spelled out under the picker, because "Withdraw" on a number the operator
     *receives* on is easy to read backwards. */
 export const USE_HELP: Record<PaymentAccountUse, string> = {
-  deposit: 'প্লেয়ার এই নাম্বারে ডিপোজিট পাঠাবে',
-  withdraw: 'উত্তোলনের এজেন্ট চার্জ এই নাম্বারে জমা হবে',
-  both: 'ডিপোজিট আর উত্তোলনের চার্জ — দুটোই এই নাম্বারে',
+  deposit: 'Players send their deposits to this number',
+  withdraw: 'Withdrawal agent charges are collected on this number',
+  both: 'Both deposits and withdrawal charges come to this number',
 };

@@ -8,8 +8,8 @@ export default function PromotionsPage() {
     <>
       <Header />
       <div className="hero">
-        <h1>প্রোমোশন</h1>
-        <p>চলমান সব বোনাস ও অফার এক জায়গায়</p>
+        <h1>Promotions</h1>
+        <p>Every running bonus and offer in one place</p>
       </div>
 
       <div style={{ margin: 12 }}>
@@ -19,7 +19,7 @@ export default function PromotionsPage() {
             <div className="promo__b">
               <h3>{p.title}</h3>
               <p>{p.body}</p>
-              <Link className="btn btn--gold" href="/register">এখনই নিন</Link>
+              <Link className="btn btn--gold" href="/register">Claim Now</Link>
             </div>
           </article>
         ))}

@@ -86,9 +86,9 @@ function Board() {
         />
 
         <div className="mg-odds">
-          <p><span>{mode === 'over' ? 'এর উপরে' : 'এর নিচে'}</span><b>{target}</b></p>
-          <p><span>জেতার সম্ভাবনা</span><b>{chance.toFixed(2)}%</b></p>
-          <p><span>গুণ</span><b className="gold">{fmtX(multiplier)}</b></p>
+          <p><span>{mode === 'over' ? 'Over' : 'Under'}</span><b>{target}</b></p>
+          <p><span>Win chance</span><b>{chance.toFixed(2)}%</b></p>
+          <p><span>Multiplier</span><b className="gold">{fmtX(multiplier)}</b></p>
         </div>
       </div>
 
@@ -103,7 +103,7 @@ function Board() {
               onClick={() => { setMode(m); g.setErr(''); }}
             >
               <i aria-hidden>{m === 'under' ? '▼' : '▲'}</i>
-              <span>{m === 'under' ? 'কম (Under)' : 'বেশি (Over)'}</span>
+              <span>{m === 'under' ? 'Under' : 'Over'}</span>
             </button>
           ))}
         </div>
@@ -118,7 +118,7 @@ function Board() {
           disabled={g.busy}
           onClick={() => void send()}
         >
-          {g.busy ? 'রোল হচ্ছে…' : `${money(g.stake)} বাজি — জিতলে ${money(Math.floor(g.stake * multiplier))}`}
+          {g.busy ? 'Rolling…' : `Stake ${money(g.stake)} — win ${money(Math.floor(g.stake * multiplier))}`}
         </button>
       </div>
     </GameShell>

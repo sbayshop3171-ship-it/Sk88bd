@@ -1838,13 +1838,13 @@ body:has(.gpv) .refer-bubble{display:none}
   0%{transform:translate(0,0) rotate(0);opacity:1}
   100%{transform:translate(46px,-30px) rotate(-8deg);opacity:0}
 }
-/* "উড়ে গেছে!" sits above the red multiplier on a bust */
+/* "Flew away!" sits above the red multiplier on a bust */
 .av-hud__flew{
   font-size:19px;font-weight:800;letter-spacing:.5px;color:#fff;
   text-shadow:0 3px 14px rgba(0,0,0,.9);
 }
 /* the big green action button: 109px tall, 2px light-green edge, 14px corners,
-   "বেট" at 24px over the stake at 15px */
+   "Bet" at 24px over the stake at 15px */
 .av-skin .av-act{min-height:109px;font-size:24px;font-weight:500;border-radius:14px;gap:4px}
 .av-skin .av-act small{font-size:15px;font-weight:400;opacity:1}
 .av-skin .av-act--bet{background:#31A91B;border:2px solid #96F26D;box-shadow:none;color:#fff}
@@ -2338,7 +2338,7 @@ body.cz-light .cz-pink{background:#fff1f1;border-color:#f0bcbc;color:#b02020}
 body.cz-light .cz-channel i{color:#b02020}
 body.cz-light .cz-channel em{color:var(--muted)}
 
-/* the account kind chip, e.g. পার্সোনাল */
+/* the account kind chip, e.g. Personal */
 body.cz-light .paybox__kind{background:#e3f5ef;color:#0d6a58}
 
 /* the "how to send" tiles: the unpicked ones were faded to 45%, which on
@@ -2370,7 +2370,7 @@ body.cz-light .btn[disabled]{
 
 body.cz-light .cz-caution b{color:var(--text)}
 body.cz-light .cz-caution p{color:#b02020}
-/* the "how do I find my TrxID" link, and the (প্রয়োজন) mark beside a
+/* the "how do I find my TrxID" link, and the (required) mark beside a
    required label — both were faint accents chosen against dark green */
 body.cz-light .cz-help{color:#1f5fbf}
 body.cz-light .cz-label span{color:#c02626}

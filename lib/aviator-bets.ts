@@ -60,15 +60,15 @@ export const publicBet = (bet: AviatorBet): PublicBet => ({
 });
 
 export const BET_ERROR: Record<BetReason, string> = {
-  unauthorized: 'বেট করতে লগইন করুন',
-  'no-backend': 'ডেটাবেস যুক্ত হয়নি',
-  'betting-closed': 'এই রাউন্ডে বেটের সময় শেষ',
-  'already-placed': 'এই সিটে বেট বসানো আছে',
-  'invalid-stake': 'বেটের পরিমাণ ঠিক নয়',
-  'below-minimum': 'সর্বনিম্ন বেট ৳১০',
-  'insufficient-balance': 'ব্যালেন্স যথেষ্ট নয়',
-  'no-open-bet': 'এই সিটে চালু কোনো বেট নেই',
-  'round-crashed': 'রাউন্ড উড়ে গেছে',
-  'not-flying': 'এখনো ওড়া শুরু হয়নি',
-  'db-error': 'সমস্যা হয়েছে, আবার চেষ্টা করুন',
+  unauthorized: 'Log in to place a bet',
+  'no-backend': 'The database is not connected',
+  'betting-closed': 'Betting is closed for this round',
+  'already-placed': 'This seat already has a bet',
+  'invalid-stake': 'That bet amount is not valid',
+  'below-minimum': 'Minimum bet is ৳10',
+  'insufficient-balance': 'Not enough balance',
+  'no-open-bet': 'No open bet on this seat',
+  'round-crashed': 'The round flew away',
+  'not-flying': 'The plane has not taken off yet',
+  'db-error': 'Something went wrong, try again',
 };

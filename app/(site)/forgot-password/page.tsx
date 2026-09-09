@@ -12,24 +12,24 @@ export default function ForgotPasswordPage() {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!/^01\d{9}$/.test(phone.trim())) { setErr('সঠিক ১১ ডিজিটের নাম্বার দিন'); return; }
+    if (!/^01\d{9}$/.test(phone.trim())) { setErr('Enter a valid 11-digit number'); return; }
     setErr('');
-    toast('SMS গেটওয়ে যুক্ত হলে OTP পাঠানো হবে');
+    toast('An OTP will be sent once an SMS gateway is connected');
   };
 
   return (
     <>
-      <PageHeader title="পাসওয়ার্ড রিসেট" />
+      <PageHeader title="Reset Password" />
       <div className="hero">
-        <h1>পাসওয়ার্ড ভুলে গেছেন?</h1>
-        <p>রেজিস্টার করা মোবাইল নাম্বারে OTP পাঠানো হবে</p>
+        <h1>Forgot your password?</h1>
+        <p>An OTP is sent to your registered mobile number</p>
       </div>
       <form style={{ margin: 12 }} onSubmit={submit} noValidate>
-        <Field label="মোবাইল নাম্বার" error={err}>
+        <Field label="Mobile number" error={err}>
           <input type="tel" inputMode="numeric" placeholder="01XXXXXXXXX"
                  value={phone} onChange={(e) => setPhone(e.target.value)} />
         </Field>
-        <button type="submit" className="btn btn--gold btn--block">OTP পাঠান</button>
+        <button type="submit" className="btn btn--gold btn--block">Send OTP</button>
       </form>
     </>
   );

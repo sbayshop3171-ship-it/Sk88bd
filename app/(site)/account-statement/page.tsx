@@ -15,11 +15,11 @@ export default function AccountStatementPage() {
 
   return (
     <>
-      <PageHeader title="অ্যাকাউন্ট স্টেটমেন্ট" />
+      <PageHeader title="Account Statement" />
 
       {ready && !signedIn && (
         <>
-          <Empty glyph="🧾" text="নিজের লেনদেন দেখতে লগইন করুন।" />
+          <Empty glyph="🧾" text="Log in to see your own transactions." />
           <div className="wallet-bar">
             <Link href="/login" className="btn btn--ghost" style={{ padding: 12 }}>{t.login}</Link>
             <Link href="/register" className="btn btn--gold" style={{ padding: 12 }}>{t.register}</Link>
@@ -27,8 +27,8 @@ export default function AccountStatementPage() {
         </>
       )}
 
-      {signedIn && rows === null && <Empty glyph="🧾" text="লোড হচ্ছে…" />}
-      {signedIn && rows?.length === 0 && <Empty glyph="🧾" text="এখনো কোনো লেনদেন নেই।" />}
+      {signedIn && rows === null && <Empty glyph="🧾" text="Loading…" />}
+      {signedIn && rows?.length === 0 && <Empty glyph="🧾" text="No transactions yet." />}
 
       {signedIn && rows && rows.length > 0 && (
         <div className="hist">
@@ -41,7 +41,7 @@ export default function AccountStatementPage() {
                 <span className="hist__ch">{KIND_LABEL[r.kind]}</span>
               </div>
               <div className="hist__side">
-                <span className="hist__after">ব্যালেন্স {money(toTaka(r.balance_after), 2)}</span>
+                <span className="hist__after">Balance {money(toTaka(r.balance_after), 2)}</span>
                 <small>{when(r.created_at)}</small>
               </div>
               {r.ref && <p className="hist__note">{r.ref}</p>}

@@ -14,25 +14,25 @@ export const dynamic = 'force-dynamic';
 export default async function AdminStaff() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'staff.manage')) return <NoAccess role={session.role} what="স্টাফ অ্যাকাউন্ট" />;
+  if (!can(session.role, 'staff.manage')) return <NoAccess role={session.role} what="Staff accounts" />;
 
   return (
     <>
-      <h1 className="adm__h1">স্টাফ অ্যাকাউন্ট</h1>
+      <h1 className="adm__h1">Staff Accounts</h1>
       <p className="adm__sub">
-        অ্যাডমিন আর এজেন্টদের লগইন। এজেন্ট শুধু ডিপোজিট-উইথড্র অনুমোদন করতে আর
-        ইউজার দেখতে পারে — <b>পেমেন্ট নাম্বার বদলাতে পারে না</b>। অ্যাডমিন গেম,
-        ব্যানার আর ব্যালেন্সও সামলাতে পারে, কিন্তু পেমেন্ট নাম্বার শুধু সুপার
-        অ্যাডমিনের হাতে।
+        Logins for admins and agents. An agent can only approve deposits and withdrawals
+        and view players — <b>they cannot change payment numbers</b>. An admin also handles
+        games, banners and balances, but payment numbers stay with the super admin
+        alone.
       </p>
       <p className="adm__sub">
-        প্রত্যেক অ্যাকাউন্ট নিজের একটি <b>লিংক কোড</b> পায়। সেই কোডের রেজিস্ট্রেশন
-        লিংক দিয়ে কেউ অ্যাকাউন্ট খুললে সে ওই এজেন্টের নিচে যোগ হয় — পুরো লিংক আর
-        কার নিচে কতজন, দেখা যাবে <b>এজেন্ট</b> পেজে।
+        Every account gets its own <b>link code</b>. When somebody registers through that
+        code’s link they are added under that agent — the full link, and who is under
+        whom, is on the <b>Agents</b> page.
       </p>
       <p className="adm__sub">
-        সুপার অ্যাডমিনের লগইন (<b>{superAdminUsername()}</b>) সার্ভারের{' '}
-        <code>.env</code> এ থাকে — এই তালিকায় আসে না, এখান থেকে মোছাও যায় না।
+        The super admin login (<b>{superAdminUsername()}</b>) lives in the server's{' '}
+        <code>.env</code> — it never appears in this list and cannot be deleted here.
       </p>
       <StaffControl initialStaff={await listStaff()} />
     </>

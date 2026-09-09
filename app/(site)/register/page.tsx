@@ -57,9 +57,9 @@ export default function RegisterPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const next: Record<string, string> = {};
-    if (!isValidPhone(f.phone)) next.phone = 'সঠিক ১১ ডিজিটের নাম্বার দিন';
-    if (f.pass.length < 6) next.pass = 'পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে';
-    if (f.confirm !== f.pass) next.confirm = 'পাসওয়ার্ড মিলছে না';
+    if (!isValidPhone(f.phone)) next.phone = 'Enter a valid 11-digit number';
+    if (f.pass.length < 6) next.pass = 'The password must be at least 6 characters';
+    if (f.confirm !== f.pass) next.confirm = 'The passwords do not match';
     setErr(next);
     if (Object.keys(next).length) return;
 
@@ -70,7 +70,7 @@ export default function RegisterPage() {
     if (message) { setErr({ form: message }); return; }
     // credited now; a second account from the same phone is not this agent's
     try { localStorage.removeItem(AGENT_KEY); } catch { /* private mode */ }
-    toast('অ্যাকাউন্ট তৈরি হয়েছে');
+    toast('Account created');
     router.push('/member');
   };
 
@@ -79,47 +79,47 @@ export default function RegisterPage() {
       <PageHeader title={t.register} />
 
       <div className="hero">
-        <h1>৳১৮ সাইন আপ বোনাস</h1>
-        <p>রেজিস্টার করে নাম্বার ভেরিফাই করলেই বোনাস পাবেন</p>
+        <h1>৳18 Sign Up Bonus</h1>
+        <p>Register and verify your number to get the bonus</p>
       </div>
 
       <form style={{ margin: 12 }} onSubmit={submit} noValidate>
-        <Field label="মোবাইল নাম্বার" error={err.phone}>
+        <Field label="Mobile number" error={err.phone}>
           <input type="tel" inputMode="numeric" placeholder="01XXXXXXXXX"
                  value={f.phone} onChange={set('phone')} disabled={busy} />
         </Field>
-        <Field label="পাসওয়ার্ড" error={err.pass}>
+        <Field label="Password" error={err.pass}>
           <input type="password" autoComplete="new-password" placeholder="••••••••"
                  value={f.pass} onChange={set('pass')} disabled={busy} />
         </Field>
-        <Field label="পাসওয়ার্ড নিশ্চিত করুন" error={err.confirm}>
+        <Field label="Confirm password" error={err.confirm}>
           <input type="password" autoComplete="new-password" placeholder="••••••••"
                  value={f.confirm} onChange={set('confirm')} disabled={busy} />
         </Field>
-        <Field label="রেফারেল কোড (ঐচ্ছিক)">
+        <Field label="Referral code (optional)">
           <input type="text" placeholder={`${BRAND.name.toUpperCase()}XX`}
                  value={f.ref} onChange={set('ref')} disabled={busy} />
         </Field>
 
         {agent && (
           <div className="note" style={{ marginBottom: 10 }}>
-            এজেন্ট কোড <b>{agent}</b> এর লিংক দিয়ে এসেছেন — অ্যাকাউন্টটি তার তালিকায় যাবে।
+            You arrived through agent code <b>{agent}</b> — this account goes on their list.
           </div>
         )}
 
         {err.form && <div className="field__err" style={{ marginBottom: 10 }}>{err.form}</div>}
 
         <button type="submit" className="btn btn--gold btn--block" disabled={busy}>
-          {busy ? 'অপেক্ষা করুন…' : t.registerNow}
+          {busy ? 'Please wait…' : t.registerNow}
         </button>
 
         <div className="form-alt">
-          আগে থেকেই অ্যাকাউন্ট আছে? <Link href="/login"><b>{t.login}</b></Link>
+          Already have an account? <Link href="/login"><b>{t.login}</b></Link>
         </div>
 
         <div className="note">
-          রেজিস্টার করে আপনি নিশ্চিত করছেন যে আপনার বয়স ১৮ বছরের বেশি।
-          {!backendReady && ' ডেটাবেস যুক্ত হয়নি — রেজিস্ট্রেশন কাজ করবে না।'}
+          By registering you confirm that you are over 18 years of age.
+          {!backendReady && ' The database is not connected — registration will not work.'}
         </div>
       </form>
     </>

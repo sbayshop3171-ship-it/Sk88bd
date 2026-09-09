@@ -17,10 +17,10 @@ type Row = {
 };
 
 const STATE_LABEL: Record<Row['state'], string> = {
-  pending: 'অপেক্ষমাণ',
-  approved: 'সফল',
-  rejected: 'বাতিল',
-  cancelled: 'বাতিল',
+  pending: 'Pending',
+  approved: 'Approved',
+  rejected: 'Rejected',
+  cancelled: 'Cancelled',
 };
 
 /** The player's own deposit or withdrawal requests. RLS scopes the read to
@@ -59,14 +59,14 @@ export default function CashierHistory({
         <Empty glyph={glyph} text={emptyText} />
         {backendReady && (
           <div className="note" style={{ margin: 12 }}>
-            নিজের রেকর্ড দেখতে <Link href="/login">লগইন করুন</Link>।
+            <Link href="/login">Log in</Link> to see your own records.
           </div>
         )}
       </>
     );
   }
 
-  if (rows === null) return <Empty glyph={glyph} text="লোড হচ্ছে…" />;
+  if (rows === null) return <Empty glyph={glyph} text="Loading…" />;
   if (rows.length === 0) return <Empty glyph={glyph} text={emptyText} />;
 
   return (

@@ -12,44 +12,44 @@ export const dynamic = 'force-dynamic';
 export default async function AdminSettings() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'settings.write')) return <NoAccess role={session.role} what="সেটিংস" />;
+  if (!can(session.role, 'settings.write')) return <NoAccess role={session.role} what="Settings" />;
 
   const settings = await getSiteSettings();
 
   return (
     <>
-      <h1 className="adm__h1">সেটিংস</h1>
+      <h1 className="adm__h1">Settings</h1>
 
-      <h2 className="adm__h2">অ্যাডমিন লগইন</h2>
+      <h2 className="adm__h2">Admin login</h2>
       <p className="adm__sub">
-        সুপার অ্যাডমিনের ইউজারনেম ও পাসওয়ার্ড সার্ভারের{' '}
-        <code>.env.production</code> এ — <code>ADMIN_USERNAME</code> /{' '}
-        <code>ADMIN_PASSWORD</code>। বদলে অ্যাপ রিস্টার্ট করলে চালু সেশনগুলো
-        লগআউট হয়ে যাবে। এই অ্যাকাউন্টটি কোনো স্ক্রিন থেকে মোছা যায় না, তাই
-        প্যানেল থেকে পুরোপুরি বেরিয়ে যাওয়ার ভয় নেই।
+        The super admin's username and password live in the server's{' '}
+        <code>.env.production</code> — <code>ADMIN_USERNAME</code> /{' '}
+        <code>ADMIN_PASSWORD</code>. Changing them and restarting the app logs out every
+        open session. This account cannot be deleted from any screen, so there is no way
+        to lock yourself out of the panel entirely.
       </p>
       <p className="adm__sub">
-        অ্যাডমিন আর এজেন্টদের লগইন <b>“স্টাফ”</b> ট্যাব থেকে — সেখানে বানানো,
-        রোল বদলানো, পাসওয়ার্ড রিসেট বা বন্ধ করা যায়। এজেন্ট শুধু ডিপোজিট-উইথড্র
-        অনুমোদন আর ইউজার দেখতে পারে; <b>পেমেন্ট নাম্বার শুধু সুপার অ্যাডমিন</b>{' '}
-        বদলাতে পারেন।
+        Admin and agent logins are managed in the <b>“Staff”</b> tab — create them there,
+        change roles, reset passwords or disable them. An agent can only approve deposits
+        and withdrawals and view players; <b>only the super admin</b>{' '}
+        can change payment numbers.
       </p>
 
-      <h2 className="adm__h2">লিমিট, সাপোর্ট ও নোটিশ</h2>
+      <h2 className="adm__h2">Limits, support &amp; notice</h2>
       <p className="adm__sub">
-        ডিপোজিট / উইথড্রের সর্বনিম্ন-সর্বোচ্চ, সাপোর্ট বাটনের লিংক আর হোম পেজের
-        চলমান নোটিশ — সেভ করলেই সাইটে বদলে যায়। রিসিভিং নাম্বার “পেমেন্ট” ট্যাবে।
+        Deposit and withdrawal minimums and maximums, the support button links and the
+        scrolling notice on the home page — all live on save. Receiving numbers are in the “Payments” tab.
       </p>
       <SiteSettingsControl initial={settings} />
 
-      <h2 className="adm__h2">সাইট</h2>
+      <h2 className="adm__h2">Site</h2>
       <DataTable
-        columns={['কী', 'মান']}
+        columns={['Key', 'Value']}
         rows={[
-          ['সাইটের নাম', BRAND.name],
-          ['ডোমেইন', BRAND.domain],
-          ['কারেন্সি', `${BRAND.currency} BDT`],
-          ['সাপোর্ট ইমেইল', settings.support.email || '—'],
+          ['Site name', BRAND.name],
+          ['Domain', BRAND.domain],
+          ['Currency', `${BRAND.currency} BDT`],
+          ['Support email', settings.support.email || '—'],
         ]}
       />
     </>

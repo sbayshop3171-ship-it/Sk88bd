@@ -11,17 +11,17 @@ export const dynamic = 'force-dynamic';
 export default async function AdminDeposits() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'cashier.review')) return <NoAccess role={session.role} what="ডিপোজিট রিকোয়েস্ট" />;
+  if (!can(session.role, 'cashier.review')) return <NoAccess role={session.role} what="Deposit requests" />;
 
   const rows = await listCashier('deposits', 'pending');
 
   return (
     <>
-      <h1 className="adm__h1">ডিপোজিট রিকোয়েস্ট</h1>
+      <h1 className="adm__h1">Deposit Requests</h1>
       <p className="adm__sub">
-        অনুমোদন করলে প্লেয়ারের ওয়ালেটে টাকা যোগ হবে এবং লেজারে এন্ট্রি হবে —
-        দুটো একসাথে, একটা হয়ে অন্যটা বাদ পড়ার সুযোগ নেই। একই রিকোয়েস্টে দুবার
-        চাপলেও টাকা একবারই যাবে।
+        Approving one credits the player’s wallet and writes a ledger entry — both
+        together, with no way for one to happen without the other. Pressing approve twice
+        on the same request still only pays once.
       </p>
       <CashierControl
         table="deposits"

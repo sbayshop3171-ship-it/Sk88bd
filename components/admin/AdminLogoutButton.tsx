@@ -19,7 +19,7 @@ export default function AdminLogoutButton() {
 
   return (
     <button className="btn btn--ghost adm__logout" type="button" onClick={logout} disabled={busy}>
-      {busy ? '...' : 'লগআউট'}
+      {busy ? '…' : 'Log out'}
     </button>
   );
 }

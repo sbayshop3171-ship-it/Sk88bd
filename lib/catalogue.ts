@@ -250,7 +250,7 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('Wolf Gold', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/Pragmatic-Play__Wolf-Gold.png', 'wolf-gold', undefined, true),
     g('Wild West Gold', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/Pragmatic-Play__Wild-West-Gold.png', 'wild-west-gold', undefined, true),
 
-    /* ---- The same eighteen, listed here too: they are slots, and স্লট is
+    /* ---- The same eighteen, listed here too: they are slots, and the Slots tab is
        where a player goes looking for them. The catalogue already carries
        Gates of Olympus in both rails for the same reason. ---- */
     g('Fruit Party', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/fruit-party.webp', 'fruit-party', undefined, true),
@@ -634,8 +634,8 @@ export const hasDemo = (id: string): boolean =>
 
 /** Previewable, but deliberately not part of the front rail. Crazy Time has
     only a looping clip — no real table behind it — so leading the lobby with
-    it oversells what a tap gets you. It still sits in লাইভ ক্যাসিনো and
-    জ্যাকপট for anyone who goes looking. */
+    it oversells what a tap gets you. It still sits in Live Casino and
+    Jackpot for anyone who goes looking. */
 const NOT_FEATURED = new Set(['crazy-time']);
 
 /** Unique previewable games: the featured order first, then the rest in

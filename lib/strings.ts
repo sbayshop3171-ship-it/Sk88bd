@@ -1,72 +1,72 @@
 /* ============================================================
-   Bangla copy. Every user-facing string lives here so the site
+   English copy. Every user-facing string lives here so the site
    can be re-worded (or a second locale added) without touching
    components.
    ============================================================ */
 
 export const t = {
   // chrome
-  login: 'লগইন',
-  register: 'রেজিস্টার',
-  registerNow: 'এখনই রেজিস্টার',
-  logout: 'লগআউট',
-  download: 'ডাউনলোড',
-  downloadBonus: 'অ্যাপ ডাউনলোড করলেই ৳১৮ বোনাস',
-  deposit: 'ডিপোজিট',
-  withdraw: 'উইথড্র',
-  refer: 'রেফার',
-  announcement: 'ঘোষণা',
-  previous: 'পূর্ববর্তী',
-  next: 'পরবর্তী',
-  all: 'সব',
-  seeAll: 'সব দেখুন',
-  play: 'খেলুন',
-  favourite: 'প্রিয়',
-  fullscreen: 'ফুল স্ক্রিন',
-  freeTrial: 'ফ্রি ট্রায়াল',
-  noTrial: 'এই গেমের ফ্রি ট্রায়াল নেই',
-  trialNote: 'সব গেম ফ্রি — অ্যাকাউন্ট বা ডিপোজিট ছাড়াই খেলে দেখুন। জেতা টাকা আসল নয়।',
-  trialSearch: 'গেম খুঁজুন',
-  trialEmpty: 'এই নামে কোনো গেম নেই',
-  gameDetails: 'গেমের বিস্তারিত',
-  liveSoon: 'লাইভ গেমটি শীঘ্রই এখানে চলবে',
-  otherGames: 'অন্য গেম',
-  previewOnly: 'শুধু দেখার জন্য — ডিপোজিট করলে খেলতে পারবেন',
-  favourites: 'প্রিয় গেম',
-  close: 'বন্ধ',
+  login: 'Log In',
+  register: 'Register',
+  registerNow: 'Register Now',
+  logout: 'Log Out',
+  download: 'Download',
+  downloadBonus: 'Download the app and get a ৳18 bonus',
+  deposit: 'Deposit',
+  withdraw: 'Withdraw',
+  refer: 'Refer',
+  announcement: 'Announcement',
+  previous: 'Previous',
+  next: 'Next',
+  all: 'All',
+  seeAll: 'See All',
+  play: 'Play',
+  favourite: 'Favourite',
+  fullscreen: 'Fullscreen',
+  freeTrial: 'Free Trial',
+  noTrial: 'This game has no free trial',
+  trialNote: 'Every game here is free — play without an account or a deposit. Winnings are not real.',
+  trialSearch: 'Search games',
+  trialEmpty: 'No game by that name',
+  gameDetails: 'Game Details',
+  liveSoon: 'This live game will run here soon',
+  otherGames: 'Other Games',
+  previewOnly: 'Preview only — deposit to play',
+  favourites: 'Favourites',
+  close: 'Close',
 
   // home
   welcome:
-    'sk88bd.com এ আপনাকে স্বাগতম — বাংলাদেশের #১ ক্রিকেট এক্সচেঞ্জ এবং বেটিং প্ল্যাটফর্ম।',
-  latestWinners: 'সর্বশেষ বিজয়ী',
-  ourPartners: 'আমাদের পার্টনার',
+    'Welcome to sk88bd.com — Bangladesh’s #1 cricket exchange and betting platform.',
+  latestWinners: 'Latest Winners',
+  ourPartners: 'Our Partners',
 
   // bottom nav
-  navHome: 'হোম',
-  navPromotion: 'প্রোমোশন',
-  navInvite: 'রেফার',
-  navReward: 'রিওয়ার্ড',
-  navMember: 'অ্যাকাউন্ট',
+  navHome: 'Home',
+  navPromotion: 'Promotion',
+  navInvite: 'Refer',
+  navReward: 'Reward',
+  navMember: 'Account',
 
   // drawer groups
-  gameCenter: 'গেম সেন্টার',
-  myAccount: 'আমার অ্যাকাউন্ট',
-  support: 'সাপোর্ট',
+  gameCenter: 'Game Center',
+  myAccount: 'My Account',
+  support: 'Support',
 
   // footer
-  paymentMethods: 'পেমেন্ট মেথড',
-  followUs: 'আমাদের ফলো করুন',
-  ageNote: '১৮ বছরের কম বয়সীদের জন্য নয়।',
+  paymentMethods: 'Payment Methods',
+  followUs: 'Follow Us',
+  ageNote: 'Not for anyone under 18 years of age.',
 } as const;
 
 /** Category labels — used by the tab rail and the section headers alike. */
 export const CATEGORY_LABEL: Record<string, string> = {
-  hot: 'হট গেমস',
-  sports: 'স্পোর্টস',
-  live: 'লাইভ ক্যাসিনো',
-  slot: 'স্লট',
-  poker: 'পোকার',
-  fish: 'ফিশিং',
-  jackpot: 'জ্যাকপট',
-  lottery: 'লটারি',
+  hot: 'Hot Games',
+  sports: 'Sports',
+  live: 'Live Casino',
+  slot: 'Slots',
+  poker: 'Poker',
+  fish: 'Fishing',
+  jackpot: 'Jackpot',
+  lottery: 'Lottery',
 };

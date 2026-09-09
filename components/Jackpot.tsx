@@ -34,7 +34,7 @@ export default function Jackpot() {
       <Image className="jp__plane" src="/games/aviator/plane.png" alt="" aria-hidden width={120} height={74} />
       <span className="jp__word">Jackpot</span>
 
-      <div className="jp__reels" role="img" aria-label={`জ্যাকপট ${text}`}>
+      <div className="jp__reels" role="img" aria-label={`Jackpot ${text}`}>
         {[...text].map((ch, i) =>
           /\d/.test(ch) ? (
             <span className="jp__digit" key={i} aria-hidden>

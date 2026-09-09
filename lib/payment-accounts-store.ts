@@ -127,7 +127,7 @@ export async function removeAccount(id: string): Promise<AccountMutationResult> 
  * `side` says which till the money is for. Deposits skip anything the admin
  * marked withdraw-only. A withdrawal charge is money coming in too, but the
  * operator usually wants it landing somewhere of its own, so it prefers the
- * numbers marked "উইথড্র" (or "দুটোই") and only falls back to the rest when
+ * numbers marked "Withdraw" (or "Both") and only falls back to the rest when
  * none is set — nobody is left unable to pay a charge because a number was
  * never designated.
  */

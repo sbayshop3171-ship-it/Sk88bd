@@ -17,7 +17,7 @@ export default function BottomNav() {
   const path = usePathname();
 
   return (
-    <nav className="nav" aria-label="প্রধান মেনু">
+    <nav className="nav" aria-label="Main menu">
       {NAV.map(({ href, label, Icon, mid }) => {
         const active = href === '/' ? path === '/' : path.startsWith(href);
         const cls = [mid ? 'mid' : '', active ? 'on' : ''].filter(Boolean).join(' ');

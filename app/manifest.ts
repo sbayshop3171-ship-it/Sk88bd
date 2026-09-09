@@ -6,10 +6,10 @@ import { BRAND } from '@/lib/brand';
     prompt itself is raised by components/InstallPrompt.tsx. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${BRAND.name} — অনলাইন ক্যাসিনো ও ক্রিকেট এক্সচেঞ্জ`,
+    name: `${BRAND.name} — Online Casino & Cricket Exchange`,
     short_name: BRAND.name,
     description:
-      'বাংলাদেশের অনলাইন গেমিং প্ল্যাটফর্ম — লাইভ ক্যাসিনো, স্লট, ক্রিকেট এক্সচেঞ্জ, ফিশিং ও লটারি।',
+      'Bangladesh’s online gaming platform — live casino, slots, cricket exchange, fishing and lottery.',
     lang: 'bn',
     dir: 'ltr',
     start_url: '/?src=pwa',
@@ -26,8 +26,8 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: '/icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
     shortcuts: [
-      { name: 'ডিপোজিট', url: '/deposit' },
-      { name: 'উইথড্র', url: '/withdraw' },
+      { name: 'Deposit', url: '/deposit' },
+      { name: 'Withdraw', url: '/withdraw' },
       { name: 'Aviator', url: '/game/aviator' },
     ],
   };
