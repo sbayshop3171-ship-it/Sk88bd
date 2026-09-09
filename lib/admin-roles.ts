@@ -110,6 +110,7 @@ export const ADMIN_TABS: { href: string; label: string; permission?: AdminPermis
   { href: '/admin/agents', label: 'Agents', permission: 'agents.self' },
   { href: '/admin/payments', label: 'Payments', permission: 'payments.read' },
   { href: '/admin/cashier', label: 'Cashier', permission: 'cashier.config' },
+  { href: '/admin/bonus', label: 'Bonuses', permission: 'cashier.config' },
   { href: '/admin/games', label: 'Games', permission: 'games.write' },
   { href: '/admin/aviator-signal', label: 'Signal', permission: 'signal.write' },
   { href: '/admin/app-keys', label: 'App Keys', permission: 'app-keys.write' },

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useBonus } from '@/components/useBonus';
 import { useAuth } from '@/components/AuthProvider';
 import PageHeader from '@/components/PageHeader';
 import { CopyIcon, GiftIcon, MedalIcon, PencilIcon, RefreshIcon, UserIcon, UsersIcon } from '@/components/Icons';
@@ -33,15 +34,14 @@ type Tile = {
   /** the tile's own colour, as the reference gives each one its own */
   tone: string;
   href?: string;
-  badge?: number;
 };
 
 const TILES: Tile[] = [
-  { key: 'bonus',  label: 'Bonus',         icon: GiftIcon,  tone: 'green', href: '/promotions' },
-  { key: 'signin', label: 'Sign In',       icon: MedalIcon, tone: 'blue' },
-  { key: 'rescue', label: 'Rescue fund',   icon: RefreshIcon, tone: 'amber' },
-  { key: 'invite', label: 'Invite Friends', icon: UsersIcon, tone: 'pink', href: '/refer' },
-  { key: 'promo',  label: 'Promo Code',    icon: CopyIcon,  tone: 'cyan' },
+  { key: 'bonus',  label: 'Bonus',          icon: GiftIcon,    tone: 'green', href: '/promotions' },
+  { key: 'signin', label: 'Sign In',        icon: MedalIcon,   tone: 'blue' },
+  { key: 'rescue', label: 'Rescue fund',    icon: RefreshIcon, tone: 'amber' },
+  { key: 'invite', label: 'Invite Friends', icon: UsersIcon,   tone: 'pink', href: '/refer' },
+  { key: 'promo',  label: 'Promo Code',     icon: CopyIcon,    tone: 'cyan' },
 ];
 
 export default function RewardPage() {
@@ -49,6 +49,9 @@ export default function RewardPage() {
   const { ready, session, profile, wallet, refresh } = useAuth();
   const { toast } = useUI();
   const [spinning, setSpinning] = useState(false);
+  const { state, busy, claim } = useBonus();
+  const [code, setCode] = useState('');
+  const [asking, setAsking] = useState(false);
 
   const signedIn = ready && Boolean(session);
   const userId = profile?.phone ?? '';
@@ -124,30 +127,104 @@ export default function RewardPage() {
 
         <div className="rc__grid">
           {TILES.map((tile) => {
+            /* Three of the five pay out, and what they pay is the operator's
+               to set — so the tile shows the figure the server just worked
+               out for this player rather than a number written here. */
+            const live =
+              tile.key === 'signin' ? state?.signIn
+              : tile.key === 'rescue' ? state?.rescue
+              : tile.key === 'promo' ? state?.promo
+              : null;
+            const amount =
+              tile.key === 'signin' ? state?.signIn.amount
+              : tile.key === 'rescue' ? state?.rescue.amount
+              : 0;
+            const taken =
+              tile.key === 'signin' ? state?.signIn.claimed
+              : tile.key === 'rescue' ? state?.rescue.claimed
+              : false;
+
             const inner = (
               <>
-                <span className="rc__ico">
-                  <tile.icon />
-                  {tile.badge ? <i className="rc__badge">{tile.badge}</i> : null}
-                </span>
+                <span className="rc__ico"><tile.icon /></span>
                 <b>{tile.label}</b>
-                {!tile.href && <small>শীঘ্রই</small>}
+                {live && !live.active && <small>বন্ধ</small>}
+                {live?.active && taken && <small>নেওয়া হয়েছে</small>}
+                {live?.active && !taken && tile.key === 'signin' && (
+                  <small>দিন {state?.signIn.day} · {money(toTaka(amount ?? 0))}</small>
+                )}
+                {live?.active && !taken && tile.key === 'rescue' && (
+                  <small>{(amount ?? 0) > 0 ? money(toTaka(amount ?? 0)) : 'কিছু নেই'}</small>
+                )}
+                {live?.active && tile.key === 'promo' && <small>কোড দিন</small>}
               </>
             );
-            return tile.href ? (
-              <Link key={tile.key} href={tile.href} className={`rc__tile is-${tile.tone}`}>{inner}</Link>
-            ) : (
+
+            if (tile.href) {
+              return <Link key={tile.key} href={tile.href} className={`rc__tile is-${tile.tone}`}>{inner}</Link>;
+            }
+
+            const take = async () => {
+              if (!signedIn) { toast('আগে লগইন করুন'); return; }
+              if (tile.key === 'promo') { setAsking(true); return; }
+              const kind = tile.key === 'signin' ? 'signin' : 'rescue';
+              const reply = await claim(kind);
+              toast(reply.ok
+                ? `${money(toTaka(reply.amount))} যোগ হয়েছে`
+                : reply.message ?? 'নেওয়া গেল না');
+              if (reply.ok) void reload();
+            };
+
+            return (
               <button
                 key={tile.key}
                 type="button"
-                className={`rc__tile is-${tile.tone} is-soon`}
-                onClick={() => toast('এই অফারটি শীঘ্রই চালু হবে')}
+                className={`rc__tile is-${tile.tone}${taken || live?.active === false ? ' is-soon' : ''}`}
+                disabled={busy !== null}
+                onClick={() => void take()}
               >
                 {inner}
               </button>
             );
           })}
         </div>
+
+        {asking && (
+          <>
+            <div className="scrim on" onClick={() => setAsking(false)} />
+            <div className="modal cz-modal" role="dialog" aria-modal="true">
+              <h3>প্রোমো কোড</h3>
+              <p>যে কোডটি পেয়েছেন সেটি লিখুন।</p>
+              <label className="cz-field">
+                <span>কোড</span>
+                <input
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  placeholder="WELCOME50"
+                  autoCapitalize="characters"
+                  autoFocus
+                />
+              </label>
+              <div className="cz-modal__acts">
+                <button type="button" className="btn btn--ghost" onClick={() => setAsking(false)}>বাতিল</button>
+                <button
+                  type="button"
+                  className="btn btn--gold"
+                  disabled={busy !== null || code.trim().length === 0}
+                  onClick={async () => {
+                    const reply = await claim('promo', code.trim());
+                    toast(reply.ok
+                      ? `${money(toTaka(reply.amount))} যোগ হয়েছে`
+                      : reply.message ?? 'কোডটি নেওয়া গেল না');
+                    if (reply.ok) { setAsking(false); setCode(''); void reload(); }
+                  }}
+                >
+                  নিন
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );
