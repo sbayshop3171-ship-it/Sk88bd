@@ -39,21 +39,23 @@ export default function HomePage() {
           categories below with a "coming soon" placeholder. */}
       <GameSection games={demoGames()} title="জনপ্রিয় গেম" />
 
-      {/* ~650 games that open with play money on the studio's own demo host —
-          no account, no deposit. The rail shows a slice; the page has them
-          all with a search box. */}
-      <GameSection
-        games={trialRail(60)}
-        title={t.freeTrial}
-        href="/free-trial"
-      />
-
       {/* only rendered once the visitor has starred a tile */}
       <FavouriteGames />
 
       {HOME_SECTIONS.map((key) => (
         <GameSection key={key} category={key} />
       ))}
+
+      {/* ~650 games that open with play money on the studio's own demo host —
+          no account, no deposit. It sits under every real category: a player
+          who has scrolled this far is browsing rather than choosing, and
+          play money is what you offer someone who is browsing. The rail
+          shows a slice; the page has them all with a search box. */}
+      <GameSection
+        games={trialRail(60)}
+        title={t.freeTrial}
+        href="/free-trial"
+      />
 
       <Winners />
 

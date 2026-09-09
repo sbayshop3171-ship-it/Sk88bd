@@ -153,6 +153,8 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('Chilli Heat', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/chilli-heat.webp', 'chilli-heat', undefined, true),
     g('Zeus vs Hades - Gods of War', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/zeus-vs-hades-gods-of-war.webp', 'zeus-vs-hades-gods-of-war', undefined, true),
     g('Curse of the Werewolf Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/curse-of-the-werewolf-megaways.webp', 'curse-of-the-werewolf-megaways', undefined, true),
+    g('Bounty Hunter', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/bounty-hunter.webp', 'bounty-hunter', undefined, true),
+    g('Fishin\' Reels', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/fishin-reels.webp', 'fishin-reels', undefined, true),
   ],
   sports: [
     g('Animal Racing', 'FaChai', 'hot', '/games/icons/HOT/FaChai__ANIMAL-RACING.avif', 'animal-racing', '1342', true),
@@ -269,6 +271,8 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('Chilli Heat', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/chilli-heat.webp', 'chilli-heat', undefined, true),
     g('Zeus vs Hades - Gods of War', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/zeus-vs-hades-gods-of-war.webp', 'zeus-vs-hades-gods-of-war', undefined, true),
     g('Curse of the Werewolf Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/curse-of-the-werewolf-megaways.webp', 'curse-of-the-werewolf-megaways', undefined, true),
+    g('Bounty Hunter', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/bounty-hunter.webp', 'bounty-hunter', undefined, true),
+    g('Fishin\' Reels', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/fishin-reels.webp', 'fishin-reels', undefined, true),
   ],
   poker: [
     g('American Roulette 3D', 'Evoplay', undefined, '/games/icons/POKER/Evoplay__American-Roulette-3D.avif', 'american-roulette-3d-evoplay-2', '20720', false),
@@ -478,6 +482,8 @@ export const DEMOS: Record<string, string> = {
   'chilli-heat': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs25chilli&lang=en&cur=USD',
   'zeus-vs-hades-gods-of-war': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs15godsofwar&lang=en&cur=USD',
   'curse-of-the-werewolf-megaways': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vswayswerewolf&lang=en&cur=USD',
+  'bounty-hunter': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs20bhunter&lang=en&cur=USD',
+  'fishin-reels': 'https://demogamesfree.pragmaticplay.net/gs2c/openGame.do?gameSymbol=vs10goldfish&lang=en&cur=USD',
 
   /* Evolution live game shows have no fun mode at all, so there is no demo
      URL to give — a real launch URL would be one player's real-money session,
@@ -595,11 +601,13 @@ export function findGame(id: string): Game | undefined {
    safe to prune. */
 export const FEATURED_IDS = [
   'aviator', 'jetx',
+  '3-buzzing-wilds', '3-dancing-monkeys',
+  'big-bass-bonanza', 'bounty-hunter',
+  'fish-eye', 'fishin-reels',
   'gates-of-olympus', 'gates-of-olympus-1000',
   'sweet-bonanza', 'sweet-bonanza-1000',
   'sugar-rush', 'starlight-princess',
-  'fish-eye',
-  'big-bass-bonanza', 'big-bass-amazon-xtreme',
+  'big-bass-amazon-xtreme',
   'the-dog-house', 'wolf-gold', 'wild-west-gold',
   'fruit-party', 'great-rhino-megaways',
   'buffalo-king-megaways', 'release-the-kraken',
