@@ -594,7 +594,7 @@ export function findGame(id: string): Game | undefined {
    in catalogue order. Ids not in the catalogue are ignored, so this list is
    safe to prune. */
 export const FEATURED_IDS = [
-  'aviator',
+  'aviator', 'jetx',
   'gates-of-olympus', 'gates-of-olympus-1000',
   'sweet-bonanza', 'sweet-bonanza-1000',
   'sugar-rush', 'starlight-princess',
