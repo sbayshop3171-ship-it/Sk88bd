@@ -3819,3 +3819,50 @@ body.cz-light .cz-wallet-row__x{background:#f6f6f6;color:#9a9a9a}
 
 /* the floating rail would sit on top of the betting totals bar */
 body:has(.br__sum) .fabs{bottom:calc(var(--nav-h) + 100px)}
+
+/* ---------- Deposit / Withdrawal Record ----------
+   One card per request: the channel and when it was raised, the request's
+   own detail, and the four figures underneath. */
+.cr__tabs{display:flex;border-bottom:1px solid var(--line);background:rgba(0,0,0,.15)}
+.cr__tabs button{
+  flex:1;padding:12px 8px;background:none;font-size:13.5px;font-weight:700;
+  color:var(--muted);border-bottom:2.5px solid transparent;
+}
+.cr__tabs button.on{color:var(--mint);border-bottom-color:var(--mint)}
+.cr__filters{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;
+  border-bottom:1px solid var(--line);
+}
+.cr__filters select{
+  padding:7px 10px;border-radius:var(--r-sm);border:1px solid var(--line);
+  background:rgba(0,0,0,.25);color:#fff;font-size:12.5px;font-weight:700;font-family:inherit;
+}
+.cr__filters select:focus{outline:none;border-color:var(--mint)}
+.cr__span{
+  margin-left:auto;padding:7px 11px;border-radius:var(--r-sm);
+  border:1px solid var(--line);background:rgba(0,0,0,.25);
+  font-size:12px;font-weight:700;color:var(--mint);font-variant-numeric:tabular-nums;
+}
+.cr__card{margin:12px;border-radius:var(--r-md);border:1px solid var(--line);overflow:hidden}
+.cr__card>header{display:grid;gap:2px;padding:12px 14px 10px}
+.cr__card>header b{font-size:14px;font-weight:800;letter-spacing:.3px}
+.cr__card>header time{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.cr__detail{margin:0 14px;padding:11px 12px;border-radius:var(--r-sm);background:rgba(255,255,255,.04)}
+.cr__detail>div{display:flex;align-items:center;gap:10px;padding:5px 0}
+.cr__detail dt{flex:0 0 auto;font-size:12.5px;color:var(--muted);font-weight:600}
+.cr__detail dt::after{content:':';margin-left:1px}
+.cr__detail dd{
+  margin:0;display:flex;align-items:center;gap:7px;min-width:0;
+  font-size:12.5px;font-weight:700;overflow-wrap:anywhere;
+}
+.cr__detail dd button{background:none;color:var(--muted);display:grid;place-items:center}
+.cr__detail dd svg{width:15px;height:15px}
+.cr__figs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:13px 12px 14px}
+.cr__figs div{display:grid;gap:3px;justify-items:center;text-align:center;min-width:0}
+.cr__figs b{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+.cr__figs b.is-req{color:#ff8f6b}
+.cr__figs span{font-size:10.5px;color:var(--muted);font-weight:600;line-height:1.3}
+.cr__state{font-size:12px}
+.cr__state--pending{color:#ffc42e}
+.cr__state--approved{color:#3fd68b}
+.cr__state--rejected,.cr__state--cancelled{color:#ff8f8f}
