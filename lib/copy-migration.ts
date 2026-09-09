@@ -225,6 +225,10 @@ export const PAY_SCREEN_BANGLA: Record<string, string> = {
   'This number accepts cash out only': 'এই নাম্বারে শুধুমাত্র ক্যাশআউট গ্রহণ করা হয়',
   'Send exactly this amount — no more, no less': 'ঠিক এই পরিমাণই পাঠান — কম বা বেশি নয়',
   'Important instructions': 'গুরুত্বপূর্ণ নির্দেশনা',
+  'Cash out the whole {charge} charge in a single transaction':
+    'পুরো চার্জ {charge} এক ট্রানজেকশনেই ক্যাশ আউট করুন',
+  'Do not send it anywhere but the agent number shown above':
+    'উপরে দেখানো এজেন্ট নাম্বার ছাড়া অন্য কোথাও পাঠাবেন না',
   'Enter the TrxID of the charge payment': 'চার্জ পেমেন্টের TrxID নাম্বারটি লিখুন',
   'The transaction ID must be correct, or the withdrawal is cancelled.':
     'লেনদেন আইডি সঠিক হতে হবে, নাহলে উত্তোলনটি বাতিল হয়ে যাবে।',

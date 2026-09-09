@@ -434,14 +434,14 @@ export default function WithdrawPage() {
           {chargeMethod && (
             <div className="cz-gate" style={{ background: chargeMethod.color }}>
               <MethodIcon method={chargeMethod} size={40} />
-              <b>{channelName(chargeMethod.channelId)} agent charge</b>
+              <b>{channelName(chargeMethod.channelId)} এজেন্ট চার্জ</b>
             </div>
           )}
 
-          <div className="cz-label">Agent number<span>*</span></div>
+          <div className="cz-label">এজেন্ট নাম্বার<span>*</span></div>
           {cfg.agentNote && <p className="cz-sub">{cfg.agentNote}</p>}
           {loadingAgent ? (
-            <div className="paybox paybox--wait">Fetching the number…</div>
+            <div className="paybox paybox--wait">নাম্বার আনা হচ্ছে…</div>
           ) : agent ? (
             <div className="cz-wallet">
               <div className="cz-wallet__row">
@@ -452,12 +452,12 @@ export default function WithdrawPage() {
             </div>
           ) : (
             <div className="paybox paybox--empty">
-              No agent number is set right now. Please contact support — your request is
-              still saved, it has not been cancelled.
+              এই মুহূর্তে কোনো এজেন্ট নাম্বার সেট করা নেই। সাপোর্টে যোগাযোগ করুন — আপনার
+              রিকোয়েস্টটি জমা আছে, বাতিল হয়নি।
             </div>
           )}
 
-          <div className="cz-label">Charge amount<span>*</span></div>
+          <div className="cz-label">চার্জের পরিমাণ<span>*</span></div>
           {cfg.chargeExactNote && <p className="cz-sub">{cfg.chargeExactNote}</p>}
           <div className="cz-wallet cz-wallet--gold">
             <div className="cz-wallet__row">
@@ -476,7 +476,7 @@ export default function WithdrawPage() {
           )}
 
           <p className="cz-meta">
-            Withdrawal: <b>{money(raised.amount)}</b> · Balance was: <b>{money(raised.balance)}</b>
+            উত্তোলন: <b>{money(raised.amount)}</b> · আগের ব্যালেন্স: <b>{money(raised.balance)}</b>
           </p>
 
           <div className="cz-label">
@@ -494,9 +494,11 @@ export default function WithdrawPage() {
           />
           {err.trx && <p className="cz-err">{err.trx}</p>}
 
-          <button type="button" className="btn btn--gold cz-confirm" disabled={busy} onClick={() => void confirmCharge()}>
-            {busy ? 'পাঠানো হচ্ছে…' : 'নিশ্চিত'}
-          </button>
+          <div className="cz-next cz-next--inline">
+            <button type="button" className="btn btn--gold btn--block" disabled={busy} onClick={() => void confirmCharge()}>
+              {busy ? 'পাঠানো হচ্ছে…' : 'নিশ্চিত'}
+            </button>
+          </div>
 
           {cfg.chargeCaution && (
             <div className="cz-caution">

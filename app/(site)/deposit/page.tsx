@@ -238,7 +238,7 @@ export default function DepositPage() {
           <div className="cz-label">{cfg.walletLabel}<span>*</span></div>
           {cfg.channelNote && <p className="cz-pink">{cfg.channelNote}</p>}
           {loadingAccount ? (
-            <div className="paybox paybox--wait">Fetching the number…</div>
+            <div className="paybox paybox--wait">নাম্বার আনা হচ্ছে…</div>
           ) : account ? (
             <div className="cz-wallet">
               <div className="cz-wallet__row">
@@ -253,8 +253,8 @@ export default function DepositPage() {
             </div>
           ) : (
             <div className="paybox paybox--empty">
-              No {method.name} number is set right now. Please contact support or pick
-              another method.
+              এই মুহূর্তে {method.name} এর কোনো নাম্বার সেট করা নেই। সাপোর্টে যোগাযোগ করুন,
+              অথবা অন্য একটি মেথড বেছে নিন।
             </div>
           )}
 
@@ -312,14 +312,16 @@ export default function DepositPage() {
           )}
           {err && <p className="cz-err">{err}</p>}
 
-          <button
-            type="button"
-            className="btn btn--gold cz-confirm"
-            disabled={busy || loadingAccount || !account || (method.trxRequired && !trxOk)}
-            onClick={askConfirm}
-          >
-            {busy ? 'পাঠানো হচ্ছে…' : 'নিশ্চিত'}
-          </button>
+          <div className="cz-next cz-next--inline">
+            <button
+              type="button"
+              className="btn btn--gold btn--block"
+              disabled={busy || loadingAccount || !account || (method.trxRequired && !trxOk)}
+              onClick={askConfirm}
+            >
+              {busy ? 'পাঠানো হচ্ছে…' : 'নিশ্চিত'}
+            </button>
+          </div>
 
           {(cfg.cautionTitle || cfg.cautionText) && (
             <div className="cz-caution">
