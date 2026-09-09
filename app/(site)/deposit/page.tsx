@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
-import PageHeader from '@/components/PageHeader';
+import CashierHeader from '@/components/CashierHeader';
 import { useCashierConfig } from '@/components/useCashierConfig';
 import { useUI } from '@/components/UIProvider';
 import { toPaisa } from '@/lib/auth';
@@ -171,7 +171,7 @@ export default function DepositPage() {
   if (!method) {
     return (
       <>
-        <PageHeader title={t.deposit} />
+        <CashierHeader title={t.deposit} historyHref="/deposit-history" direction="in" />
         <div className="note" style={{ margin: 12 }}>
           {configReady ? 'এই মুহূর্তে কোনো ডিপোজিট মেথড চালু নেই। সাপোর্টে যোগাযোগ করুন।' : 'লোড হচ্ছে…'}
         </div>
@@ -347,10 +347,7 @@ export default function DepositPage() {
   /* ---------------- step 1: pick ---------------- */
   return (
     <>
-      <PageHeader
-        title={t.deposit}
-        action={<Link href="/deposit-history" className="btn btn--ghost" style={{ fontSize: 11, padding: '6px 12px' }}>হিস্টোরি</Link>}
-      />
+      <CashierHeader title={t.deposit} historyHref="/deposit-history" direction="in" />
 
       <div className="cz">
         {cfg.noticeTitle && (
@@ -386,11 +383,21 @@ export default function DepositPage() {
         </section>
 
         <section className="cz-sec">
-          <h2 className="cz-sec__h"><i className="cz-dot cz-dot--mint" />{cfg.channelTitle}</h2>
-          <div className="cz-channel on">
-            <MethodIcon method={method} size={22} />
-            <span>{method.name}</span>
+          {/* the picked method, spelled out in red above the heading — the
+              line the reference prints so the channel below is read as
+              belonging to the tile that was just tapped */}
+          <p className="cz-chtitle">
+            {method.name}
             {method.tag && <><em>|</em><i>{method.tag}</i></>}
+          </p>
+          <h2 className="cz-sec__h"><i className="cz-dot cz-dot--mint" />{cfg.channelTitle}</h2>
+          <div className="cz-channels">
+            <div className="cz-channel on">
+              <span>
+                {method.name}
+                {method.tag && <><em>|</em><i>{method.tag}</i></>}
+              </span>
+            </div>
           </div>
           {cfg.channelNote && <p className="cz-pink">{cfg.channelNote}</p>}
         </section>

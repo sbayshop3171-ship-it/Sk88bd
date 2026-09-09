@@ -3276,3 +3276,212 @@ body.cz-light .cz-add{box-shadow:0 8px 20px rgba(229,32,63,.28)}
 .mg__proof dd{margin:0}
 .mg__proof code{font-size:10.5px;color:#a7d8cf;word-break:break-all}
 .mg__hint{margin:6px 0 0;font-size:10.5px;color:var(--muted);line-height:1.7}
+
+/* ============================================================
+   Cashier skin — the deposit and withdraw screens
+   ------------------------------------------------------------
+   The cashier is the one place on the site that is not ours to
+   style freely: players arrive from other books and expect the
+   same white sheet, the same teal bar with a gold title, the
+   same red for "this is the one you picked". So the two screens
+   are pinned to that, down to the four-across method grid and
+   the flat bar across the bottom. Everything here hangs off
+   `body.cz-light`, which only those pages set.
+   ============================================================ */
+
+/* ---- the bar ---- */
+.ck-hd{
+  position:sticky;top:0;z-index:60;display:flex;align-items:center;
+  height:52px;padding:0 10px;background:#155155;
+}
+.ck-hd__back{
+  display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;
+  background:none;color:#ffb800;
+}
+.ck-hd__title{
+  flex:1;min-width:0;margin:0;text-align:center;
+  font-size:18px;font-weight:800;color:#ffb800;letter-spacing:.2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.ck-hd__rec{display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;color:#ffb800}
+
+/* the cashier is a screen of its own: no lobby nav under it, and no
+   space held for one */
+body.cz-light .nav{display:none}
+body.cz-light .app{padding-bottom:0}
+
+/* ---- sections ---- */
+body.cz-light .cz{margin:0 12px}
+body.cz-light .cz-sec{padding:12px 0 10px;border-bottom:0}
+body.cz-light .cz-sec__h{
+  display:flex;align-items:center;gap:7px;margin:0 0 10px;
+  font-size:14.5px;font-weight:800;color:#333;
+}
+body.cz-light .cz-dot{width:6px;height:6px;flex:0 0 6px}
+body.cz-light .cz-dot--gold{background:#f5a524}
+body.cz-light .cz-dot--mint{background:#2ec5b6}
+body.cz-light .cz-dot--purple{background:#a78bfa}
+
+/* ---- deposit: the method grid ----
+   Four across, all but touching, each card carrying the little ribbon the
+   reference hangs off every tile. The picked one turns red and folds a
+   corner. */
+body.cz-light .cz-methods{grid-template-columns:repeat(4,1fr);gap:3px}
+body.cz-light .cz-method{
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:7px;
+  min-height:96px;padding:11px 3px 12px;
+  background:#fff;border:1px solid #e8e8e8;border-radius:6px;
+}
+body.cz-light .cz-method__name{
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:10.5px;font-weight:700;line-height:1.25;letter-spacing:0;
+  text-transform:none;color:#1a1a1a;
+}
+body.cz-light .cz-method .cz-icon{width:auto;height:34px;max-width:56px;border-radius:4px}
+body.cz-light .cz-method__bonus{font-size:9.5px;font-weight:700;color:#ec2529}
+
+/* the ribbon: a folded tab that overhangs the top-left corner */
+body.cz-light .cz-method::before,
+body.cz-light .cz-channel::before{
+  content:'';position:absolute;left:-1px;top:-3px;z-index:2;
+  width:19px;height:25px;
+  background-image:url("/img/thumb-up.svg"),linear-gradient(180deg,#ff8a2b,#f4511e);
+  background-repeat:no-repeat;
+  background-position:center 4px,center;
+  background-size:11px 11px,100% 100%;
+  clip-path:polygon(0 0,100% 0,100% 100%,50% 82%,0 100%);
+}
+
+/* picked */
+body.cz-light .cz-method.on,
+body.cz-light .cz-channel.on{border:1.5px solid #ec2529;background:#fff}
+body.cz-light .cz-method.on .cz-method__name,
+body.cz-light .cz-channel.on{color:#ec2529}
+body.cz-light .cz-method.on::after{
+  content:'✓';position:absolute;right:0;bottom:0;
+  width:26px;height:26px;padding:9px 2px 0 0;
+  background:#ec2529;clip-path:polygon(100% 0,100% 100%,0 100%);
+  color:#fff;font-size:11px;font-weight:900;line-height:1;text-align:right;
+  border-radius:0;
+}
+
+/* ---- deposit: the channel row ---- */
+body.cz-light .cz-chtitle{
+  margin:14px 0 0;font-family:Georgia,'Times New Roman',serif;
+  font-size:15px;font-weight:700;color:#ec2529;line-height:1.4;
+}
+body.cz-light .cz-chtitle em{font-style:normal;color:#f19b9c;margin:0 6px}
+body.cz-light .cz-chtitle i{font-style:italic}
+body.cz-light .cz-channels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+body.cz-light .cz-channel{
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  min-height:76px;padding:12px 6px;gap:0;
+  background:#fff;border:1px solid #e8e8e8;border-radius:6px;
+  font-family:Georgia,'Times New Roman',serif;font-size:11px;font-weight:700;
+  color:#1a1a1a;line-height:1.35;overflow-wrap:break-word;
+}
+body.cz-light .cz-channel>span{min-width:0;max-width:100%;text-align:center;word-break:break-word}
+body.cz-light .cz-channel em{font-style:normal;color:#dcdcdc;margin:0 4px}
+body.cz-light .cz-channel i{font-style:italic}
+body.cz-light .cz-channel.on i{color:#ec2529}
+
+/* ---- deposit: the amounts ---- */
+body.cz-light .cz-amounts{grid-template-columns:repeat(5,1fr);gap:8px}
+body.cz-light .cz-amt{
+  padding:9px 2px;border:1px solid #fbd3d4;border-radius:6px;background:#fff;
+  font-size:13px;font-weight:500;color:#333;
+}
+body.cz-light .cz-amt b{font-weight:500}
+body.cz-light .cz-amt.on{border-color:#ec2529;background:#fff;color:#ec2529}
+body.cz-light .cz-amt__badge{
+  display:block;margin-bottom:2px;font-size:9px;font-weight:700;color:#ec2529;
+  background:none;padding:0;
+}
+body.cz-light .cz-amtin{
+  margin-top:8px;padding:0 12px;height:44px;
+  border:1px solid #e4e4e4;border-radius:6px;background:#fff;
+}
+body.cz-light .cz-amtin span{color:#b7b7b7;font-weight:400;font-size:14px}
+body.cz-light .cz-amtin input{padding:0;font-size:14px;font-weight:400}
+body.cz-light .cz-amtin input::placeholder{color:#b7b7b7}
+body.cz-light .cz-limit{margin:10px 0 0;font-size:13px;font-weight:400;color:#ec2529;text-align:left}
+
+/* ---- the bar across the bottom ----
+   Full bleed, flat, grey until there is something to press it for. */
+body.cz-light .cz-next{
+  position:fixed;left:50%;bottom:0;transform:translateX(-50%);
+  width:100%;max-width:var(--app-w);z-index:70;
+  margin:0;padding:0;background:none;
+}
+body.cz-light .cz-next .btn{
+  display:block;width:100%;height:48px;padding:0 12px;
+  padding-bottom:env(safe-area-inset-bottom);
+  height:calc(48px + env(safe-area-inset-bottom));
+  border:0;border-radius:0;box-shadow:none;
+  background:#ec2529;color:#fff;font-size:16px;font-weight:500;letter-spacing:.2px;
+}
+body.cz-light .cz-next .btn[disabled]{background:#cdcdcd;color:#fff;opacity:1}
+body.cz-light .cz-next--inline{position:static;transform:none;max-width:none;margin:14px 0 0}
+body.cz-light .cz-next--inline .btn{
+  height:48px;padding-bottom:0;border-radius:6px;
+}
+/* room for the fixed bar so the last section is not sat on */
+body.cz-light .cz{padding-bottom:64px}
+
+/* ---- withdraw: the wallet tabs ---- */
+body.cz-light .cz-tabs{
+  gap:0;padding:0;background:#fff;border-bottom:1px solid #ededed;
+}
+body.cz-light .cz-tab{
+  flex-direction:row;align-items:center;gap:8px;min-width:0;
+  padding:10px 14px;border-bottom:3px solid transparent;
+  font-size:14px;font-weight:400;color:#595959;
+}
+body.cz-light .cz-tab .cz-icon{width:auto;height:26px;max-width:64px;border-radius:3px}
+body.cz-light .cz-tab.on{color:#ec2529;border-bottom-color:#ec2529}
+
+/* ---- withdraw: the linked wallets ---- */
+body.cz-light .cz-wallets{padding-bottom:16px;border-bottom:1px solid #ededed}
+body.cz-light .cz-wallets .cz-sec__h{font-size:15px;font-weight:400;color:#333}
+body.cz-light .ck-empty{
+  position:relative;display:flex;flex-direction:column;align-items:center;
+  padding:10px 0 4px;
+}
+body.cz-light .ck-empty__art{width:min(74%,260px);height:auto;display:block}
+body.cz-light .ck-empty__text{margin:-14px 0 0;font-size:15px;color:#8a8a8a}
+body.cz-light .cz-add{
+  position:absolute;right:12px;bottom:-26px;width:56px;height:56px;
+  background:#f5222d;color:#fff;font-size:30px;font-weight:300;
+  box-shadow:0 4px 14px rgba(245,34,45,.35);
+}
+
+/* ---- withdraw: the numbers above the form ---- */
+body.cz-light .cz-info{padding-top:18px;font-size:14px;line-height:1.7;color:#1a1a1a}
+body.cz-light .cz-info p{margin:0 0 2px}
+body.cz-light .cz-info p span,
+body.cz-light .cz-info__rem,
+body.cz-light .cz-info__daily{color:#bcbcbc;font-weight:400}
+body.cz-light .cz-info p b{color:#1a1a1a;font-weight:400}
+body.cz-light .cz-refresh{
+  margin:14px auto 4px;padding:9px 20px;border:0;
+  background:#d7e7fe;color:#3b79f3;font-size:15px;font-weight:400;
+}
+body.cz-light .cz-refresh i{
+  display:grid;place-items:center;width:26px;height:26px;border-radius:50%;
+  background:#3b79f3;color:#fff;font-size:13px;font-style:normal;
+}
+
+/* ---- withdraw: the two rows and the button ---- */
+body.cz-light .cz-sec .cz-sec__h{font-weight:400;font-size:14.5px;color:#1a1a1a}
+body.cz-light .cz-field{
+  margin-bottom:12px;padding:0 14px;min-height:52px;
+  border:1px solid #e4e4e4;border-radius:6px;background:#fff;
+}
+body.cz-light .cz-field>span{
+  min-width:104px;font-size:15px;font-weight:400;color:#1a1a1a;line-height:1.3;
+}
+body.cz-light .cz-field input{padding:14px 0;font-size:15px;font-weight:400}
+body.cz-light .cz-field input::placeholder{color:#b7b7b7}
+body.cz-light .cz-field__eye{display:grid;place-items:center;color:#9a9a9a;background:none}

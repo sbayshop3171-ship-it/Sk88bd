@@ -27,6 +27,9 @@ const securityHeaders = [
 
 const nextConfig = {
   reactStrictMode: true,
+  // `next dev` blocks cross-origin requests to dev assets; the phone on the
+  // LAN loads the site by the machine's address, so name it here. Dev only.
+  allowedDevOrigins: ['192.168.0.111'],
   // the version banner names the framework and its version to anyone asking
   poweredByHeader: false,
   // game tiles ask for quality 72; Next 16 only serves listed qualities

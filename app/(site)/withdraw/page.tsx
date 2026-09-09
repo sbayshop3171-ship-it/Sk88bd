@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
-import PageHeader from '@/components/PageHeader';
+import CashierHeader from '@/components/CashierHeader';
+import EmptyWalletArt from '@/components/EmptyWalletArt';
 import { useCashierConfig } from '@/components/useCashierConfig';
 import { useUI } from '@/components/UIProvider';
 import { toPaisa, toTaka } from '@/lib/auth';
@@ -354,7 +355,7 @@ export default function WithdrawPage() {
   if (!method) {
     return (
       <>
-        <PageHeader title={t.withdraw} />
+        <CashierHeader title={t.withdraw} historyHref="/withdraw-history" direction="out" />
         <div className="note" style={{ margin: 12 }}>
           {configReady ? 'এই মুহূর্তে কোনো উইথড্র মেথড চালু নেই। সাপোর্টে যোগাযোগ করুন।' : 'লোড হচ্ছে…'}
         </div>
@@ -376,7 +377,7 @@ export default function WithdrawPage() {
   if (step === 'done' && raised) {
     return (
       <>
-        <PageHeader title={t.withdraw} />
+        <CashierHeader title={t.withdraw} historyHref="/withdraw-history" direction="out" />
         <div className="cz-done">
           <span className="cz-done__tick" aria-hidden>✓</span>
           <h2>রিকোয়েস্ট জমা হয়েছে!</h2>
@@ -593,10 +594,7 @@ export default function WithdrawPage() {
   /* ---------------- step 1: the form ---------------- */
   return (
     <>
-      <PageHeader
-        title={t.withdraw}
-        action={<Link href="/withdraw-history" className="btn btn--ghost" style={{ fontSize: 11, padding: '6px 12px' }}>হিস্টোরি</Link>}
-      />
+      <CashierHeader title={t.withdraw} historyHref="/withdraw-history" direction="out" />
 
       <div className="cz-tabs scroll-x" role="tablist">
         {methods.map((m) => (
@@ -621,11 +619,14 @@ export default function WithdrawPage() {
               {cfg.walletsTitle} ({forMethod.length}/{cfg.maxWallets})
             </h2>
             {!signedIn ? (
-              <p className="cz-note">লগইন করলে আপনার সংরক্ষিত ওয়ালেট এখানে দেখা যাবে।</p>
+              <div className="ck-empty">
+                <EmptyWalletArt />
+                <p className="ck-empty__text">লগইন করলে আপনার ওয়ালেট এখানে দেখা যাবে</p>
+              </div>
             ) : forMethod.length === 0 ? (
-              <div className="cz-wallets__empty">
-                <span aria-hidden>💳</span>
-                <small>{cfg.emptyWalletsText}</small>
+              <div className="ck-empty">
+                <EmptyWalletArt />
+                <p className="ck-empty__text">{cfg.emptyWalletsText}</p>
               </div>
             ) : (
               <div className="cz-wallets__list">
@@ -642,8 +643,20 @@ export default function WithdrawPage() {
                 ))}
               </div>
             )}
-            {signedIn && forMethod.length < cfg.maxWallets && (
-              <button type="button" className="cz-add" aria-label="ওয়ালেট যোগ করুন" onClick={() => { setAdding(true); setErr({}); }}>+</button>
+            {/* the button is always there, the way the reference has it — a
+                player who is not signed in is sent to sign in rather than
+                left looking for the way to add a wallet */}
+            {forMethod.length < cfg.maxWallets && (
+              <button
+                type="button"
+                className="cz-add"
+                aria-label="ওয়ালেট যোগ করুন"
+                onClick={() => {
+                  if (!signedIn) { toast('ওয়ালেট যোগ করতে আগে লগইন করুন'); return; }
+                  setAdding(true);
+                  setErr({});
+                }}
+              >+</button>
             )}
             {err.account && <p className="cz-err">{err.account}</p>}
           </section>
@@ -667,7 +680,7 @@ export default function WithdrawPage() {
           <p><span>প্রধান ওয়ালেট:</span> <b>{money(balance, 2)}</b></p>
           <p><span>উপলব্ধ পরিমাণ:</span> <b>{money(balance, 2)}</b></p>
           <button type="button" className="cz-refresh" onClick={() => { void refresh(); void loadToday(); toast('ব্যালেন্স রিফ্রেশ হয়েছে'); }}>
-            <i aria-hidden>🔄</i> আপনার ব্যালেন্স রিফ্রেশ করুন
+            <i aria-hidden>⟳</i> আপনার ব্যালেন্স রিফ্রেশ করুন
           </button>
         </section>
 
@@ -684,11 +697,15 @@ export default function WithdrawPage() {
           <label className="cz-field">
             <span>{cfg.passwordLabel}</span>
             <input
-              type={showPass ? 'text' : 'password'} autoComplete="current-password" placeholder="••••"
+              type={showPass ? 'text' : 'password'} autoComplete="current-password" placeholder={cfg.passwordLabel}
               value={password} onChange={(e) => setPassword(e.target.value)}
             />
             <button type="button" className="cz-field__eye" aria-label="দেখান" onClick={() => setShowPass((v) => !v)}>
-              {showPass ? '🙈' : '👁'}
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden>
+                <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke="currentColor" strokeWidth="1.6" />
+                <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
+                {!showPass && <path d="M4 20 20 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />}
+              </svg>
             </button>
           </label>
           {err.password && <p className="cz-err">{err.password}</p>}
@@ -702,7 +719,7 @@ export default function WithdrawPage() {
             withdrawal for it to apply to. */}
 
         <div className="cz-next cz-next--inline">
-          <button type="submit" className="btn btn--gold btn--block" disabled={busy}>
+          <button type="submit" className="btn btn--gold btn--block" disabled={busy || !typedOk || !password.trim()}>
             {busy ? 'যাচাই হচ্ছে…' : `${t.withdraw} রিকোয়েস্ট`}
           </button>
           {cfg.note && <p className="cz-limit">{cfg.note}</p>}
