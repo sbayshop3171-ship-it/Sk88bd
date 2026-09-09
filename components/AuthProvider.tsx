@@ -5,6 +5,7 @@ import {
 } from 'react';
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { browserClient, isBackendReady } from '@/lib/supabase';
+import { normalizeAgentCode } from '@/lib/agent-links';
 import { emailToPhone, phoneToEmail } from '@/lib/auth';
 
 export interface Profile {
@@ -30,7 +31,12 @@ interface AuthValue {
   profile: Profile | null;
   wallet: Wallet | null;
   supabase: SupabaseClient | null;
-  signUp: (phone: string, password: string, referral?: string) => Promise<string | null>;
+  signUp: (
+    phone: string,
+    password: string,
+    referral?: string,
+    agentCode?: string,
+  ) => Promise<string | null>;
   signIn: (phone: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -89,12 +95,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase, load]);
 
   /** Returns an error message, or null on success. */
-  const signUp = useCallback<AuthValue['signUp']>(async (phone, password, referral) => {
+  const signUp = useCallback<AuthValue['signUp']>(async (phone, password, referral, agentCode) => {
     if (!supabase) return 'ডেটাবেস যুক্ত হয়নি';
+    // agent_code is read by the signup trigger (migration 008) and written
+    // to profiles once. It is metadata rather than a follow-up update so a
+    // client that dies right after signUp still leaves the agent credited.
     const { data, error } = await supabase.auth.signUp({
       email: phoneToEmail(phone),
       password,
-      options: { data: { phone, referral_code: referral || null } },
+      options: {
+        data: {
+          phone,
+          referral_code: referral || null,
+          agent_code: normalizeAgentCode(agentCode) ?? null,
+        },
+      },
     });
     if (error) return translate(error.message);
     // the signup trigger seeds profiles.phone from the synthetic email —

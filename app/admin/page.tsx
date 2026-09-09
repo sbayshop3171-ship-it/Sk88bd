@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { getCurrentAdminSession } from '@/lib/admin-auth-next';
 import { can, type AdminPermission } from '@/lib/admin-roles';
+import { listStaff } from '@/lib/admin-users-store';
+import { agentNetwork } from '@/lib/agent-network';
 import { CATALOGUE, HOME_SECTIONS } from '@/lib/catalogue';
 import { listOverrides } from '@/lib/game-control-store';
 import { cashierStats } from '@/lib/cashier';
@@ -30,12 +32,22 @@ export default async function AdminDashboard() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
 
-  const [accounts, overrides, content, stats] = await Promise.all([
+  const [accounts, overrides, content, stats, staff] = await Promise.all([
     listAccounts(),
     listOverrides(),
     getSiteContent(),
     cashierStats(),
+    listStaff(),
   ]);
+
+  // An agent's dashboard counts only their own signups; an admin's counts
+  // every agent. Same query, scoped the same way the agent screen scopes it.
+  const seesEveryAgent = can(session.role, 'agents.read');
+  const agentScope = seesEveryAgent
+    ? staff.filter((s) => s.role === 'agent' || s.id === session.uid)
+    : staff.filter((s) => s.id === session.uid);
+  const network = agentScope.length > 0 ? await agentNetwork(agentScope) : null;
+  const agents = network?.ok && network.data.migrated ? network.data.agents : null;
 
   // a game can be listed in several categories; count each one once
   const totalGames = new Set(HOME_SECTIONS.flatMap((cat) => CATALOGUE[cat].map((g) => g.id))).size;
@@ -78,6 +90,37 @@ export default async function AdminDashboard() {
             </Link>
           ))}
         </div>
+      )}
+
+      {can(session.role, 'agents.self') && (
+        <>
+          <h2 className="adm__h2">{seesEveryAgent ? 'এজেন্ট' : 'আমার লিংক'}</h2>
+          <p className="adm__sub">
+            {seesEveryAgent
+              ? 'এজেন্টের লিংক দিয়ে যারা রেজিস্টার করেছে তাদের হিসাব। বিস্তারিত এজেন্ট পেজে।'
+              : 'আপনার লিংক দিয়ে যারা রেজিস্টার করেছে তাদের হিসাব।'}
+          </p>
+          <div className="adm__tiles">
+            {seesEveryAgent && (
+              <Link className="adm__tile adm__tile--link" href="/admin/agents">
+                <b>{agentScope.filter((s) => s.role === 'agent').length}</b>
+                <small>এজেন্ট</small>
+              </Link>
+            )}
+            <Link className="adm__tile adm__tile--link" href="/admin/agents">
+              <b>{agents ? agents.reduce((n, a) => n + a.players, 0) : '—'}</b>
+              <small>{seesEveryAgent ? 'এজেন্টের আনা ইউজার' : 'আমার আনা ইউজার'}</small>
+            </Link>
+            <Link className="adm__tile adm__tile--link" href="/admin/agents">
+              <b>{agents ? agents.reduce((n, a) => n + a.activePlayers, 0) : '—'}</b>
+              <small>তার মধ্যে ডিপোজিট করেছে</small>
+            </Link>
+            <Link className="adm__tile adm__tile--link" href="/admin/agents">
+              <b>{agents ? money(toTaka(agents.reduce((n, a) => n + a.deposited, 0))) : '—'}</b>
+              <small>তাদের মোট ডিপোজিট</small>
+            </Link>
+          </div>
+        </>
       )}
 
       <h2 className="adm__h2">প্লেয়ার ও ক্যাশিয়ার</h2>

@@ -15,6 +15,7 @@
 import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { generateAgentCode, normalizeAgentCode } from './agent-links';
 import {
   MAX_STAFF,
   MIN_PASSWORD_LENGTH,
@@ -46,8 +47,37 @@ let writeQueue = Promise.resolve();
 
 /** Everybody, newest last, without a single hash. */
 export async function listStaff(): Promise<AdminStaff[]> {
-  const store = await readStore();
+  const store = await ensureRefCodes(await readStore());
   return store.users.map(publicOf).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+/** Accounts created before invite links existed have no code. Mint one on
+    the first read that notices, and only then — a write on every render of
+    the staff screen would be a file rewrite for nothing. */
+async function ensureRefCodes(store: StaffStore): Promise<StaffStore> {
+  if (store.users.every((u) => normalizeAgentCode(u.refCode))) return store;
+
+  return mutateStore((live) => {
+    const taken = new Set(live.users.map((u) => u.refCode).filter(Boolean));
+    for (const user of live.users) {
+      if (normalizeAgentCode(user.refCode)) continue;
+      user.refCode = freshCode(taken);
+      taken.add(user.refCode);
+    }
+    live.updatedAt = iso(Date.now());
+    return live;
+  });
+}
+
+/** A code nobody else holds. The alphabet gives 32^6 ≈ 1.07 billion, so the
+    loop is a formality — but a duplicate would quietly hand one agent's
+    players to another, which is not a thing to leave to probability. */
+function freshCode(taken: Set<string>): string {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const code = generateAgentCode();
+    if (!taken.has(code)) return code;
+  }
+  throw new Error('could not mint an unused agent code');
 }
 
 export async function findStaffById(id: string): Promise<StaffRecord | null> {
@@ -129,6 +159,7 @@ export async function createStaff(input: {
     store.users.push({
       id: randomBytes(8).toString('hex'),
       username,
+      refCode: freshCode(new Set(store.users.map((u) => u.refCode))),
       role: input.role,
       active: true,
       createdBy: input.createdBy,

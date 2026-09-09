@@ -32,11 +32,15 @@ export type AdminPermission =
   | 'signal.write'
   | 'app-keys.write'
   /** create staff logins and set their roles */
-  | 'staff.manage';
+  | 'staff.manage'
+  /** one's own invite link and the players who signed up through it */
+  | 'agents.self'
+  /** every agent's link, their player counts, and whose player is whose */
+  | 'agents.read';
 
 /* An agent sits at the cashier: they see who is asking and they answer.
    Nothing they touch changes where money lands. */
-const AGENT: AdminPermission[] = ['cashier.review', 'players.read'];
+const AGENT: AdminPermission[] = ['cashier.review', 'players.read', 'agents.self'];
 
 /* An admin runs the day: the cashier, the players, the games, the front
    page. Still not the wallet numbers — see below. */
@@ -44,6 +48,7 @@ const ADMIN: AdminPermission[] = [
   ...AGENT,
   'players.write',
   'payments.read',
+  'agents.read',
   'cashier.config',
   'games.write',
   'content.write',
@@ -78,7 +83,7 @@ export const ROLE_LABEL: Record<AdminRole, string> = {
 export const ROLE_HELP: Record<AdminRole, string> = {
   super_admin: 'সব কিছু — পেমেন্ট নাম্বার, সেটিংস আর স্টাফ অ্যাকাউন্ট সহ।',
   admin: 'ক্যাশিয়ার, ইউজার, গেম আর সাইটের কনটেন্ট। পেমেন্ট নাম্বার বদলাতে পারবে না।',
-  agent: 'শুধু ডিপোজিট-উইথড্র অনুমোদন আর ইউজার দেখা। পেমেন্ট নাম্বার বদলাতে পারবে না।',
+  agent: 'শুধু ডিপোজিট-উইথড্র অনুমোদন, ইউজার দেখা আর নিজের রেফারেল লিংক। পেমেন্ট নাম্বার বদলাতে পারবে না।',
 };
 
 /** What a super admin may hand out. The super admin login itself comes from
@@ -102,6 +107,7 @@ export const ADMIN_TABS: { href: string; label: string; permission?: AdminPermis
   { href: '/admin/deposits', label: 'ডিপোজিট', permission: 'cashier.review' },
   { href: '/admin/withdrawals', label: 'উইথড্র', permission: 'cashier.review' },
   { href: '/admin/users', label: 'ইউজার', permission: 'players.read' },
+  { href: '/admin/agents', label: 'এজেন্ট', permission: 'agents.self' },
   { href: '/admin/payments', label: 'পেমেন্ট', permission: 'payments.read' },
   { href: '/admin/cashier', label: 'ক্যাশিয়ার', permission: 'cashier.config' },
   { href: '/admin/games', label: 'গেম', permission: 'games.write' },
@@ -121,6 +127,8 @@ export function tabsFor(role: AdminRole) {
 export type AdminStaff = {
   id: string;
   username: string;
+  /** the code in this account's invite link — see lib/agent-links.ts */
+  refCode: string;
   role: AdminRole;
   active: boolean;
   createdBy: string;

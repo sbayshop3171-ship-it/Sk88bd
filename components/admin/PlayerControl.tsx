@@ -151,13 +151,13 @@ export default function PlayerControl({
           <thead>
             <tr>
               <th>ফোন</th><th>নাম</th><th>ব্যালেন্স</th><th>বোনাস</th>
-              <th>VIP</th><th>রেফার কোড</th><th>রেজিস্ট্রেশন</th><th>অবস্থা</th>
+              <th>VIP</th><th>রেফার কোড</th><th>এজেন্ট</th><th>রেজিস্ট্রেশন</th><th>অবস্থা</th>
               {canWrite && <th></th>}
             </tr>
           </thead>
           <tbody>
             {players.length === 0 ? (
-              <tr><td colSpan={canWrite ? 9 : 8} className="adm__empty">কোনো প্লেয়ার নেই।</td></tr>
+              <tr><td colSpan={canWrite ? 10 : 9} className="adm__empty">কোনো প্লেয়ার নেই।</td></tr>
             ) : (
               players.map((p) => {
                 const busy = busyId === p.id;
@@ -170,6 +170,11 @@ export default function PlayerControl({
                       <td className="adm__muted">{money(toTaka(p.bonusBalance))}</td>
                       <td>{p.vipLevel}</td>
                       <td><code>{p.referralCode}</code></td>
+                      <td>
+                        {p.agentCode
+                          ? <code>{p.agentCode}</code>
+                          : <span className="adm__muted">—</span>}
+                      </td>
                       <td className="adm__muted">{new Date(p.createdAt).toLocaleDateString('en-GB')}</td>
                       <td>
                         {p.isBlocked
@@ -201,7 +206,7 @@ export default function PlayerControl({
 
                     {canWrite && openId === p.id && (
                       <tr className="adm__subrow">
-                        <td colSpan={9}>
+                        <td colSpan={10}>
                           <div className="adm__adjust">
                             <label className="adm__f">
                               <span>পরিমাণ (৳)</span>

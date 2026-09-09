@@ -183,14 +183,14 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
         <table className="adm__table">
           <thead>
             <tr>
-              <th>ইউজারনেম</th><th>রোল</th><th>অবস্থা</th>
+              <th>ইউজারনেম</th><th>রোল</th><th>লিংক কোড</th><th>অবস্থা</th>
               <th>শেষ লগইন</th><th>যোগ করেছেন</th><th></th>
             </tr>
           </thead>
           <tbody>
             {staff.length === 0 ? (
               <tr>
-                <td colSpan={6} className="adm__empty">
+                <td colSpan={7} className="adm__empty">
                   কোনো স্টাফ অ্যাকাউন্ট নেই — উপরের ফর্ম থেকে যোগ করুন।
                 </td>
               </tr>
@@ -212,6 +212,7 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
                       ))}
                     </select>
                   </td>
+                  <td><code>{s.refCode}</code></td>
                   <td>
                     {s.active
                       ? <span className="adm__ok">সক্রিয়</span>

@@ -45,6 +45,8 @@ export type PlayerRow = {
   role: string;
   vipLevel: number;
   referralCode: string;
+  /** the agent whose invite link this player signed up through, if any */
+  agentCode: string | null;
   isBlocked: boolean;
   createdAt: string;
   /** paisa */
@@ -108,26 +110,53 @@ export async function listCashier(
   return { ok: true, data: (data ?? []).map(toCashierRow) };
 }
 
-export async function listPlayers(search = '', limit = 100): Promise<CashierResult<PlayerRow[]>> {
+/** Players, newest first. `agentCode` narrows the list to one agent's
+    signups — that is the agent screen's whole query. */
+export async function listPlayers(
+  search = '',
+  limit = 100,
+  agentCode?: string,
+): Promise<CashierResult<PlayerRow[]>> {
   const db = adminClient();
   if (!db) return NO_BACKEND;
 
-  let query = db
-    .from('profiles')
-    .select(
-      `id, phone, display_name, role, vip_level, referral_code, is_blocked, created_at,
-       wallets (balance, bonus_balance, turnover_need, turnover_done)`,
-    )
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  // agent_code arrives with migration 008. A server that has not run it yet
+  // drops back to the narrower select rather than losing the player list.
+  const run = async (withAgent: boolean) => {
+    let query = db
+      .from('profiles')
+      .select(
+        `id, phone, display_name, role, vip_level, referral_code, is_blocked, created_at${
+          withAgent ? ', agent_code' : ''
+        },
+         wallets (balance, bonus_balance, turnover_need, turnover_done)`,
+      )
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-  const term = search.trim();
-  if (term) query = query.or(`phone.ilike.%${term}%,display_name.ilike.%${term}%`);
+    const term = search.trim();
+    if (term) query = query.or(`phone.ilike.%${term}%,display_name.ilike.%${term}%`);
+    if (withAgent && agentCode) query = query.eq('agent_code', agentCode);
 
-  const { data, error } = await query.returns<Record<string, unknown>[]>();
+    return query.returns<Record<string, unknown>[]>();
+  };
+
+  let { data, error } = await run(true);
+  if (error && isMissingColumn(error.message)) {
+    // asked to filter by a column this database does not have: an empty list
+    // is the honest answer, not every player on the site
+    if (agentCode) return { ok: true, data: [] };
+    ({ data, error } = await run(false));
+  }
   if (error) return { ok: false, reason: 'db-error', message: error.message };
 
   return { ok: true, data: (data ?? []).map(toPlayerRow) };
+}
+
+/** Postgres has no column by that name, or PostgREST has not reloaded its
+    schema cache since the migration ran. */
+export function isMissingColumn(message: string) {
+  return /column|schema cache/i.test(message);
 }
 
 /** Headline figures for the dashboard. */
@@ -256,6 +285,7 @@ function toPlayerRow(row: Record<string, unknown>): PlayerRow {
     role: String(row.role ?? 'player'),
     vipLevel: Number(row.vip_level ?? 0),
     referralCode: String(row.referral_code ?? ''),
+    agentCode: (row.agent_code as string) || null,
     isBlocked: Boolean(row.is_blocked),
     createdAt: String(row.created_at),
     balance: Number(wallet?.balance ?? 0),
