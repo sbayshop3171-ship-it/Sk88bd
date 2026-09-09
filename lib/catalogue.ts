@@ -153,8 +153,8 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('Chilli Heat', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/chilli-heat.webp', 'chilli-heat', undefined, true),
     g('Zeus vs Hades - Gods of War', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/zeus-vs-hades-gods-of-war.webp', 'zeus-vs-hades-gods-of-war', undefined, true),
     g('Curse of the Werewolf Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/curse-of-the-werewolf-megaways.webp', 'curse-of-the-werewolf-megaways', undefined, true),
-    g('Bounty Hunter', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/bounty-hunter.webp', 'bounty-hunter', undefined, true),
-    g('Fishin\' Reels', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/fishin-reels.webp', 'fishin-reels', undefined, true),
+    g('Bounty Hunter', 'Pragmatic Play', 'hot', '/games/icons/FISH/Pragmatic-Play__Bounty-Hunter.avif', 'bounty-hunter', undefined, true),
+    g('Fishin\' Reels', 'Pragmatic Play', 'hot', '/games/icons/FISH/Pragmatic-Play__Fishin-Reels.avif', 'fishin-reels', undefined, true),
   ],
   sports: [
     g('Animal Racing', 'FaChai', 'hot', '/games/icons/HOT/FaChai__ANIMAL-RACING.avif', 'animal-racing', '1342', true),
@@ -271,8 +271,8 @@ export const CATALOGUE: Record<CategoryKey, Game[]> = {
     g('Chilli Heat', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/chilli-heat.webp', 'chilli-heat', undefined, true),
     g('Zeus vs Hades - Gods of War', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/zeus-vs-hades-gods-of-war.webp', 'zeus-vs-hades-gods-of-war', undefined, true),
     g('Curse of the Werewolf Megaways', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/curse-of-the-werewolf-megaways.webp', 'curse-of-the-werewolf-megaways', undefined, true),
-    g('Bounty Hunter', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/bounty-hunter.webp', 'bounty-hunter', undefined, true),
-    g('Fishin\' Reels', 'Pragmatic Play', 'hot', '/games/icons/PRAGMATIC/fishin-reels.webp', 'fishin-reels', undefined, true),
+    g('Bounty Hunter', 'Pragmatic Play', 'hot', '/games/icons/FISH/Pragmatic-Play__Bounty-Hunter.avif', 'bounty-hunter', undefined, true),
+    g('Fishin\' Reels', 'Pragmatic Play', 'hot', '/games/icons/FISH/Pragmatic-Play__Fishin-Reels.avif', 'fishin-reels', undefined, true),
   ],
   poker: [
     g('American Roulette 3D', 'Evoplay', undefined, '/games/icons/POKER/Evoplay__American-Roulette-3D.avif', 'american-roulette-3d-evoplay-2', '20720', false),
