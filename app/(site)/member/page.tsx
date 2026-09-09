@@ -7,9 +7,9 @@ import { useAuth } from '@/components/AuthProvider';
 import PageHeader from '@/components/PageHeader';
 import { useUI } from '@/components/UIProvider';
 import {
-  BankIcon, ChatIcon, CopyIcon, DepositIcon, DownloadIcon, GiftIcon, LedgerIcon,
-  LogoutIcon, MedalIcon, PencilIcon, RebateIcon, RecordIcon, RefreshIcon,
-  ShieldIcon, TargetIcon, TrendIcon, UserIcon, UsersIcon, WithdrawIcon,
+  BankIcon, ChatIcon, CopyIcon, DepositIcon, GiftIcon, LedgerIcon,
+  LogoutIcon, MailIcon, PencilIcon, RebateIcon, RecordIcon, RefreshIcon,
+  ShieldIcon, SuggestIcon, TargetIcon, TrendIcon, UserIcon, UsersIcon, WithdrawIcon,
 } from '@/components/Icons';
 import { toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
@@ -23,21 +23,25 @@ type Tile = {
   badge?: number;
 };
 
+/* The reference's Member Center, tile for tile and in its order. VIP Club
+   and App Download are not on it — they are still reachable from the drawer
+   and the home strip, but this grid is the one screen players arrive at
+   already knowing, so it matches. */
 const TILES: Tile[] = [
-  { icon: GiftIcon,     label: 'Reward Center',     href: '/reward' },
-  { icon: RecordIcon,   label: 'Betting Record',    href: '/bets-history' },
-  { icon: TrendIcon,    label: 'Profit & Loss',     href: '/balance-overview' },
-  { icon: DepositIcon,  label: 'Deposit Record',    href: '/deposit-history' },
-  { icon: WithdrawIcon, label: 'Withdraw Record',   href: '/withdraw-history' },
-  { icon: LedgerIcon,   label: 'Account Record',    href: '/account-statement' },
-  { icon: UserIcon,     label: 'My Account',        href: '/my-profile' },
-  { icon: ShieldIcon,   label: 'Security Center',   href: '/security' },
-  { icon: UsersIcon,    label: 'Invite a Friend',   href: '/refer' },
-  { icon: TargetIcon,   label: 'Mission',           href: '/promotions' },
-  { icon: RebateIcon,   label: 'Rebate',            href: '/turnover' },
-  { icon: MedalIcon,    label: 'VIP Club',          href: '/vip' },
-  { icon: DownloadIcon, label: 'App Download',      href: '/download' },
-  { icon: ChatIcon,     label: 'Customer Service',  href: '/support' },
+  { icon: GiftIcon,     label: 'Reward Center',    href: '/reward' },
+  { icon: RecordIcon,   label: 'Betting Record',   href: '/bets-history' },
+  { icon: TrendIcon,    label: 'Profit And Loss',  href: '/balance-overview' },
+  { icon: DepositIcon,  label: 'Deposit Record',   href: '/deposit-history' },
+  { icon: WithdrawIcon, label: 'Withdrawal Record', href: '/withdraw-history' },
+  { icon: LedgerIcon,   label: 'Account Record',   href: '/account-statement' },
+  { icon: UserIcon,     label: 'My Account',       href: '/my-profile' },
+  { icon: ShieldIcon,   label: 'Security Center',  href: '/security' },
+  { icon: UsersIcon,    label: 'Invite Friends',   href: '/refer' },
+  { icon: TargetIcon,   label: 'Mission',          href: '/promotions' },
+  { icon: RebateIcon,   label: 'Rebate',           href: '/turnover' },
+  { icon: MailIcon,     label: 'Internal Message', href: '/messages' },
+  { icon: SuggestIcon,  label: 'Suggestion',       href: '/suggestion' },
+  { icon: ChatIcon,     label: 'Customer Service', href: '/support' },
 ];
 
 export default function MemberPage() {
@@ -79,6 +83,13 @@ export default function MemberPage() {
 
       <div className="mc">
         <div className="mc__card">
+          {/* the reference hangs the daily sign-in off the card's corner —
+              it is the one thing on this screen that pays, so it does not
+              wait its turn down in the grid */}
+          <Link href="/reward" className="mc__signin">
+            <span aria-hidden>☑</span> Sign In <i aria-hidden>›</i>
+          </Link>
+
           <div className="mc__top">
             <span className="mc__av" aria-hidden><UserIcon /></span>
 

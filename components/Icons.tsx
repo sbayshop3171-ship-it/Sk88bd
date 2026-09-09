@@ -125,3 +125,11 @@ export const DownloadIcon = (p: P) => (
 export const LogoutIcon = (p: P) => (
   <svg {...base} {...p}><path d="M15 3h4a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-4" /><path d="M10 17l5-5-5-5" /><path d="M15 12H3" /></svg>
 );
+/** the @ in a ring the reference uses for its internal mailbox */
+export const MailIcon = (p: P) => (
+  <svg {...base} {...p}><circle cx="12" cy="12" r="4" /><path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3.5 7.1" /></svg>
+);
+/** a speech bubble with a star: the complaint / suggestion form */
+export const SuggestIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1z" /><path d="m12.5 8 .9 1.9 2 .3-1.5 1.4.4 2-1.8-1-1.8 1 .4-2L9.6 10.2l2-.3z" /></svg>
+);
