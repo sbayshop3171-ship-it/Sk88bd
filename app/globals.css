@@ -3679,3 +3679,49 @@ body.cz-light .cz-wallet-row__x{background:#f6f6f6;color:#9a9a9a}
 .rc__tile.is-cyan .rc__ico{color:#12b4c9}
 /* the last tile sits alone on its row, as it does in the reference */
 .rc__grid>.rc__tile:last-child:nth-child(odd){grid-column:1}
+
+/* ---------- Betting Record ----------
+   A tab per product, the filters under them, and the four figures that get
+   read pinned to the bottom of the screen — where they are still reachable
+   after a day's scroll, which is the point of putting them there. */
+.br__excl{
+  padding:6px 11px;border-radius:var(--r-pill);background:#2f6fe0;
+  color:#fff;font-size:10.5px;font-weight:700;line-height:1.3;text-align:center;max-width:96px;
+}
+.br__tabs{display:flex;gap:0;border-bottom:1px solid var(--line);background:rgba(0,0,0,.15)}
+.br__tabs button{
+  flex:1 0 auto;min-width:74px;padding:12px 8px;background:none;
+  font-size:13.5px;font-weight:700;color:var(--muted);border-bottom:2.5px solid transparent;
+}
+.br__tabs button.on{color:var(--mint);border-bottom-color:var(--mint)}
+.br__filters{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;
+  border-bottom:1px solid var(--line);
+}
+.br__range{
+  flex:1;min-width:0;display:flex;align-items:center;gap:6px;padding:7px 10px;
+  border-radius:var(--r-sm);border:1px solid var(--line);background:rgba(0,0,0,.25);
+}
+.br__range input{
+  min-width:0;flex:1;background:none;border:0;color:#fff;font-size:11.5px;font-weight:600;
+  font-family:inherit;
+}
+.br__range input:focus{outline:none}
+.br__range em{font-style:normal;color:var(--muted)}
+.br__pick{
+  flex:0 0 auto;padding:8px 10px;border-radius:var(--r-sm);
+  border:1px solid var(--line);background:rgba(0,0,0,.25);color:#fff;
+  font-size:12.5px;font-weight:700;font-family:inherit;
+}
+.br__pick:focus{outline:none;border-color:var(--mint)}
+.br__list{padding-bottom:96px}
+.br__sum{
+  position:sticky;bottom:calc(var(--nav-h) + 4px);z-index:30;
+  display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;
+  margin:12px;padding:12px 14px;border-radius:var(--r-md);
+  background:rgba(10,60,55,.96);border:1px solid var(--line);box-shadow:var(--shadow);
+}
+.br__sum div{display:flex;align-items:baseline;justify-content:space-between;gap:10px;min-width:0}
+.br__sum span{font-size:11.5px;color:var(--muted);font-weight:600}
+.br__sum b{font-size:13px;font-weight:800;color:#3fd68b;font-variant-numeric:tabular-nums}
+.br__sum b.is-down{color:#ff8f8f}
