@@ -4082,113 +4082,239 @@ body.cz-light .rc__bar{background:rgba(31,36,48,.14)}
   box-shadow:0 6px 18px rgba(244,38,44,.28);
 }
 .ma__submit[disabled]{background:#dfe2e6;color:#9aa1a9;box-shadow:none}
-
+.sc__chev{color:var(--muted);font-size:19px;line-height:1}
 /* ============================================================
    Golden Ace — the house slot (components/mini/SlotBoard.tsx)
 
-   The board is one grid rather than five animated columns: the server
-   settles the whole round and the screen replays it drop by drop, so
-   what moves between drops is which cells are lit, not the reels. A
-   spinning reel that decides nothing is a lie told to the player, and
-   this way the animation cannot get ahead of the wallet.
+   Drawn as a cabinet, the way the genre is: a lacquered head over the
+   reels carrying the multiplier ladder, a felt field, and a control bar
+   with one big button on it. Players arrive from other books already
+   knowing where everything is, and a slot that hides its spin button
+   inside a page layout reads as a web form rather than a game.
+
+   The reels do not spin. The server settles the whole round before the
+   screen sees any of it, so what plays here is a replay — cells light,
+   gilded cards flip to wilds, the board drops again. A spinning reel
+   over a decided outcome would be an animation telling a story the
+   wallet already finished.
    ============================================================ */
 
-.mg-slot{gap:12px}
+.mg-slot{gap:10px}
 
-.sl{display:flex;flex-direction:column;gap:10px}
-
-.sl__free{
-  align-self:center;padding:5px 16px;border-radius:var(--r-pill);
-  background:linear-gradient(90deg,var(--gold-2),var(--gold));
-  color:#3a2200;font-size:11.5px;font-weight:900;letter-spacing:.6px;
+.sa{
+  --sa-wood:#5b1512;
+  --sa-wood-2:#380c0a;
+  --sa-brass:#f0c44a;
+  --sa-felt:#0c3b46;
+  --sa-felt-2:#07222f;
+  display:flex;flex-direction:column;
+  border-radius:16px;overflow:hidden;
+  border:1px solid rgba(240,196,74,.35);
+  box-shadow:0 10px 30px rgba(0,0,0,.45);
 }
-.sl__free b{font-size:13px}
 
-.sl__grid{
+/* ---------- the head ---------- */
+
+.sa__top{
+  padding:8px 10px 10px;
+  background:linear-gradient(180deg,var(--sa-wood),var(--sa-wood-2));
+  border-bottom:1px solid rgba(240,196,74,.28);
+}
+
+.sa__free{
+  text-align:center;font-size:12.5px;font-weight:900;letter-spacing:1.4px;
+  color:var(--sa-brass);font-family:Georgia,'Times New Roman',serif;
+  text-shadow:0 1px 0 rgba(0,0,0,.5);
+}
+.sa__free b{color:#ff5a5a;font-size:16px;margin-left:4px}
+.sa__brand{opacity:.85}
+
+.sa__ladder{
+  margin:6px auto 0;display:flex;justify-content:center;gap:2px;
+  padding:3px;border-radius:var(--r-pill);width:max-content;
+  background:linear-gradient(180deg,#d02b2b,#8e1414);
+  border:2px solid var(--sa-brass);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25);
+}
+.sa__rung{
+  padding:2px 11px;border-radius:var(--r-pill);
+  font-size:15px;font-weight:900;font-family:Georgia,'Times New Roman',serif;
+  color:rgba(255,255,255,.42);
+}
+/* the rung this drop is paying at */
+.sa__rung.on{
+  background:linear-gradient(180deg,#ff4d4d,#c40d0d);
+  color:#fff6d0;
+  box-shadow:0 0 12px rgba(255,90,90,.7),inset 0 1px 0 rgba(255,255,255,.4);
+}
+
+/* the five reel tops, so the reels look seated in the cabinet */
+.sa__caps{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:8px}
+.sa__caps i{
+  display:block;height:9px;border-radius:5px 5px 0 0;
+  background:linear-gradient(180deg,#e9c877,#a97400);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5);
+}
+
+/* ---------- the reels ---------- */
+
+.sa__reels{
   display:grid;grid-template-columns:repeat(5,1fr);gap:4px;
-  padding:8px;border-radius:var(--r-md);
-  background:radial-gradient(120% 120% at 50% 0%,#0b3b37,#04211f);
-  border:1px solid var(--line);
+  padding:6px;
+  background:radial-gradient(120% 90% at 50% 0%,var(--sa-felt),var(--sa-felt-2));
 }
-/* the request is out; nothing is decided yet, so the board just breathes */
-.sl__grid.is-spinning{animation:sl-wait .5s ease-in-out infinite alternate}
-@keyframes sl-wait{from{opacity:.55}to{opacity:.85}}
+/* the request is out and nothing is decided yet — the field just breathes */
+.sa__reels.is-spinning{animation:sa-wait .45s ease-in-out infinite alternate}
+@keyframes sa-wait{from{opacity:.5}to{opacity:.85}}
 
-.sl__cell{
-  position:relative;aspect-ratio:1;display:grid;place-items:center;
-  border-radius:9px;background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.06);
-  transition:background .18s,border-color .18s,transform .18s;
+.sa__cell{
+  position:relative;aspect-ratio:3/4;display:grid;place-items:center;
+  border-radius:7px;
+  transition:transform .16s,filter .16s;
 }
-.sl__cell .sl-sym{width:88%;height:88%;display:block}
+.sa__cell .sl-sym{width:100%;height:100%;display:block}
 
-.sl__cell.is-gold{background:rgba(255,196,46,.10);border-color:rgba(255,196,46,.35)}
-.sl__cell.is-scatter{background:rgba(255,90,90,.12);border-color:rgba(255,90,90,.4)}
+.sa__cell.is-scatter{filter:drop-shadow(0 0 7px rgba(255,196,46,.9))}
 
-.sl__cell.is-win{
-  background:rgba(63,224,189,.18);border-color:var(--mint);
-  transform:scale(1.04);animation:sl-hit .4s ease-out;
+.sa__cell.is-win{
+  transform:scale(1.06);
+  filter:drop-shadow(0 0 9px rgba(120,255,220,.85));
+  animation:sa-hit .38s ease-out;
 }
-@keyframes sl-hit{from{transform:scale(.9)}to{transform:scale(1.04)}}
+@keyframes sa-hit{from{transform:scale(.9)}to{transform:scale(1.06)}}
 
-/* a gilded card that survived the win and is about to become a wild */
-.sl__cell.is-turning{
-  background:rgba(255,196,46,.28);border-color:var(--gold);
-  box-shadow:0 0 0 2px rgba(255,196,46,.35),0 0 18px rgba(255,196,46,.45);
+/* a gilded card that survived the win and is turning wild */
+.sa__cell.is-turning{
+  transform:scale(1.1);
+  filter:drop-shadow(0 0 14px rgba(255,196,46,1));
+  animation:sa-gild .45s ease-out;
 }
-
-.sl__meter{display:flex;gap:8px}
-.sl__mult,.sl__win{
-  flex:1;padding:8px 12px;border-radius:var(--r-md);
-  background:var(--surface);border:1px solid var(--line);
-}
-.sl__mult small,.sl__win small{display:block;font-size:10px;color:var(--muted)}
-.sl__mult b,.sl__win b{
-  font-size:17px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;
-}
-.sl__win.on b{color:var(--gold)}
-.sl__win.on{border-color:rgba(255,196,46,.45);background:rgba(255,196,46,.08)}
-
-.sl__capped{
-  margin:0;font-size:11.5px;color:var(--gold);text-align:center;
+@keyframes sa-gild{
+  0%{transform:scale(1) rotateY(0)}
+  50%{transform:scale(1.14) rotateY(38deg)}
+  100%{transform:scale(1.1) rotateY(0)}
 }
 
-.mg-slot__spin{margin-top:2px}
-
-/* ---------- the paytable ---------- */
-
-.sl-pay__toggle{
-  width:100%;display:flex;align-items:center;justify-content:center;gap:6px;
-  background:none;border:0;color:var(--muted);
-  font-size:12px;font-weight:800;padding:8px 0;cursor:pointer;
+.sa__capped{
+  margin:0;padding:6px 10px 0;text-align:center;
+  font-size:11.5px;color:var(--sa-brass);background:var(--sa-felt-2);
 }
 
-.sl-pay{
+/* ---------- win line and controls ---------- */
+
+.sa__win{
+  display:flex;align-items:baseline;justify-content:center;gap:8px;
+  padding:7px 10px;
+  background:linear-gradient(180deg,var(--sa-felt-2),#04141d);
+}
+.sa__win span{
+  font-size:12px;font-weight:900;letter-spacing:1.6px;color:var(--sa-brass);
+  font-family:Georgia,'Times New Roman',serif;
+}
+.sa__win b{
+  font-size:18px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums;
+}
+.sa__win.on b{color:var(--gold);text-shadow:0 0 12px rgba(255,196,46,.65)}
+
+.sa__bar{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 12px 6px;
+  background:linear-gradient(180deg,var(--sa-wood),var(--sa-wood-2));
+  border-top:1px solid rgba(240,196,74,.28);
+}
+
+.sa__ico{
+  width:34px;height:34px;flex:0 0 auto;border-radius:50%;
+  display:grid;place-items:center;font-size:15px;line-height:1;
+  background:rgba(0,0,0,.32);color:var(--sa-brass);
+  border:1px solid rgba(240,196,74,.4);cursor:pointer;
+}
+.sa__turbo.on{
+  background:linear-gradient(180deg,#ffd35c,#c98600);color:#3a2400;
+  box-shadow:0 0 12px rgba(255,196,46,.6);
+}
+
+.sa__bet{
+  display:flex;align-items:center;gap:6px;min-width:0;
+  padding:5px 10px;border-radius:var(--r-pill);cursor:pointer;
+  background:rgba(0,0,0,.32);border:1px solid rgba(240,196,74,.4);
+  color:var(--sa-brass);font-size:12px;font-weight:800;
+  font-family:Georgia,'Times New Roman',serif;white-space:nowrap;
+}
+.sa__bet i{font-style:normal}
+.sa__bet:disabled{opacity:.55}
+
+.sa__spin{
+  width:66px;height:66px;flex:0 0 auto;padding:0;border:0;background:none;
+  cursor:pointer;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5));
+}
+.sa__spin svg{width:100%;height:100%;display:block}
+.sa__spinring{fill:url(#none);fill:#e9b53a;stroke:#8a5a00;stroke-width:3}
+.sa__spinface{fill:#ffb32e}
+.sa__spinarrow{stroke:#fff8e0;stroke-width:8}
+.sa__spinhead{fill:#fff8e0}
+.sa__spin:disabled{cursor:default;opacity:.75}
+.sa__spin.is-busy svg{animation:sa-turn 1s linear infinite}
+@keyframes sa-turn{to{transform:rotate(360deg)}}
+
+.sa__count{
+  min-width:30px;padding:3px 7px;border-radius:7px;text-align:center;
+  background:rgba(0,0,0,.32);border:1px solid rgba(240,196,74,.4);
+  color:var(--sa-brass);font-size:12px;font-weight:900;
+  font-variant-numeric:tabular-nums;
+}
+
+.sa__balance{
+  padding:0 12px 9px;text-align:center;
+  background:linear-gradient(180deg,var(--sa-wood-2),#2a0806);
+  font-family:Georgia,'Times New Roman',serif;
+}
+.sa__balance span{font-size:11.5px;color:rgba(240,196,74,.75);font-weight:800}
+.sa__balance b{
+  font-size:15px;color:var(--sa-brass);margin-left:5px;
+  font-variant-numeric:tabular-nums;
+}
+
+.sa__err{margin:0;text-align:center}
+
+/* ---------- the bet sheet and the paytable ---------- */
+
+.sa-sheet{
+  padding:12px;border-radius:var(--r-md);display:grid;gap:10px;
+  background:var(--bg-1);border:1px solid var(--line);
+}
+.sa-sheet h3{margin:0;font-size:13px;color:var(--gold);letter-spacing:.3px}
+
+.sa-pay{
   padding:12px;border-radius:var(--r-md);
   background:var(--bg-1);border:1px solid var(--line);
 }
-.sl-pay__note{margin:0 0 10px;font-size:11.5px;color:var(--muted);line-height:1.6}
+.sa-pay__note{margin:0 0 10px;font-size:11.5px;color:var(--muted);line-height:1.6}
 
-.sl-pay__table{width:100%;border-collapse:collapse;font-size:12px}
-.sl-pay__table th{
+.sa-pay__table{width:100%;border-collapse:collapse;font-size:12px}
+.sa-pay__table th{
   text-align:right;font-size:10px;color:var(--muted);font-weight:800;
   padding:0 0 6px;text-transform:uppercase;letter-spacing:.4px;
 }
-.sl-pay__table th:first-child{text-align:left}
-.sl-pay__table td{
-  padding:5px 0;text-align:right;color:#fff;font-variant-numeric:tabular-nums;
+.sa-pay__table th:first-child{text-align:left}
+.sa-pay__table td{
+  padding:4px 0;text-align:right;color:#fff;font-variant-numeric:tabular-nums;
   border-top:1px solid rgba(255,255,255,.06);
 }
-.sl-pay__table td:first-child{
-  text-align:left;display:flex;align-items:center;gap:8px;
-  color:var(--muted);font-weight:800;
-}
-.sl-pay__ico{width:26px;height:26px;flex:0 0 auto}
-.sl-pay__ico .sl-sym{width:100%;height:100%;display:block}
+.sa-pay__table td:first-child{text-align:left}
+.sa-pay__ico{display:block;width:34px;height:45px}
+.sa-pay__ico .sl-sym{width:100%;height:100%;display:block}
 
-.sl-pay__rules{margin:12px 0 0;padding-left:16px;display:grid;gap:7px}
-.sl-pay__rules li{font-size:11.5px;color:var(--muted);line-height:1.65}
-.sl-pay__rules b{color:var(--text)}
+.sa-pay__specials{
+  display:flex;gap:18px;margin-top:12px;padding-top:10px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.sa-pay__specials figure{margin:0;display:flex;align-items:center;gap:8px;flex:1}
+.sa-pay__specials figcaption{font-size:11px;color:var(--muted);line-height:1.5}
+
+.sa-pay__rules{margin:12px 0 0;padding-left:16px;display:grid;gap:7px}
+.sa-pay__rules li{font-size:11.5px;color:var(--muted);line-height:1.65}
+.sa-pay__rules b{color:var(--text)}
 
 /* ---------- Invite Friends ---------- */
 .iv__tabs{display:flex;border-bottom:1px solid var(--line);background:#fff}

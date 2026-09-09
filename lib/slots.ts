@@ -25,16 +25,25 @@ export const ROWS = 4;
 /** 4 rows on each of 5 reels, any position, left to right. */
 export const WAYS = ROWS ** REELS;
 
-export type CardSymbol = 'J' | 'Q' | 'K' | 'A';
-export type PaySymbol = CardSymbol | 'HAT' | 'GEM' | 'BELL' | 'CROWN';
+/** The four suits, which is what most of the deck is. */
+export type SuitSymbol = 'DIAMOND' | 'CLUB' | 'HEART' | 'SPADE';
+/** The court, plus the ace — rarer, and worth the wait. */
+export type CourtSymbol = 'J' | 'Q' | 'K' | 'A';
+export type PaySymbol = SuitSymbol | CourtSymbol;
 export type SlotSymbol = PaySymbol | 'WILD' | 'SCATTER';
 
-export const CARD_SYMBOLS: CardSymbol[] = ['J', 'Q', 'K', 'A'];
+export const SUIT_SYMBOLS: SuitSymbol[] = ['DIAMOND', 'CLUB', 'HEART', 'SPADE'];
+export const COURT_SYMBOLS: CourtSymbol[] = ['J', 'Q', 'K', 'A'];
 
-export const PAY_SYMBOLS: PaySymbol[] = ['J', 'Q', 'K', 'A', 'HAT', 'GEM', 'BELL', 'CROWN'];
+/** Low to high — the order the paytable is read in. */
+export const PAY_SYMBOLS: PaySymbol[] = [
+  'DIAMOND', 'CLUB', 'HEART', 'SPADE', 'J', 'Q', 'K', 'A',
+];
 
-const isCard = (s: SlotSymbol): s is CardSymbol =>
-  s === 'J' || s === 'Q' || s === 'K' || s === 'A';
+/** Every card on the board can land gilded; only the wild and the scatter
+    cannot, because neither is a card. */
+const canGild = (s: SlotSymbol): s is PaySymbol =>
+  s !== 'WILD' && s !== 'SCATTER';
 
 /** One position on the board. `gold` only ever rides on a card. */
 export interface Cell {
@@ -63,16 +72,16 @@ export type Rng = () => number;
  * than a thing players imagine.
  */
 const REEL_WEIGHTS: Record<SlotSymbol, number>[] = [
-  { J: 16, Q: 15, K: 14, A: 13, HAT: 11, GEM: 9, BELL: 7, CROWN: 5, WILD: 0, SCATTER: 3 },
-  { J: 16, Q: 15, K: 14, A: 13, HAT: 11, GEM: 9, BELL: 7, CROWN: 5, WILD: 0, SCATTER: 1 },
-  { J: 16, Q: 15, K: 14, A: 13, HAT: 11, GEM: 9, BELL: 7, CROWN: 5, WILD: 0, SCATTER: 2 },
-  { J: 16, Q: 15, K: 14, A: 13, HAT: 11, GEM: 9, BELL: 7, CROWN: 5, WILD: 0, SCATTER: 1 },
-  { J: 16, Q: 15, K: 14, A: 13, HAT: 11, GEM: 9, BELL: 7, CROWN: 5, WILD: 0, SCATTER: 3 },
+  { DIAMOND: 16, CLUB: 15, HEART: 14, SPADE: 13, J: 11, Q: 9, K: 7, A: 5, WILD: 0, SCATTER: 3 },
+  { DIAMOND: 16, CLUB: 15, HEART: 14, SPADE: 13, J: 11, Q: 9, K: 7, A: 5, WILD: 0, SCATTER: 1 },
+  { DIAMOND: 16, CLUB: 15, HEART: 14, SPADE: 13, J: 11, Q: 9, K: 7, A: 5, WILD: 0, SCATTER: 2 },
+  { DIAMOND: 16, CLUB: 15, HEART: 14, SPADE: 13, J: 11, Q: 9, K: 7, A: 5, WILD: 0, SCATTER: 1 },
+  { DIAMOND: 16, CLUB: 15, HEART: 14, SPADE: 13, J: 11, Q: 9, K: 7, A: 5, WILD: 0, SCATTER: 3 },
 ];
-/** Chance that a drawn card lands gilded. This is the game's temperature:
+/** Chance that any card lands gilded. This is the game's temperature:
     raise it and chains run longer, the variance drops and the return climbs
     — which is why PAY_SCALE has to be re-derived whenever it moves. */
-const GOLD_CHANCE = 0.10;
+const GOLD_CHANCE = 0.075;
 
 const REEL_TOTALS = REEL_WEIGHTS.map((w) =>
   Object.values(w).reduce((sum, n) => sum + n, 0),
@@ -85,7 +94,7 @@ function drawCell(rng: Rng, reel: number): Cell {
   for (const symbol of Object.keys(weights) as SlotSymbol[]) {
     roll -= weights[symbol];
     if (roll < 0) {
-      return { s: symbol, gold: isCard(symbol) && rng() < GOLD_CHANCE };
+      return { s: symbol, gold: canGild(symbol) && rng() < GOLD_CHANCE };
     }
   }
   return { s: 'J', gold: false };
@@ -104,15 +113,15 @@ const drawGrid = (rng: Rng): Grid =>
     written — steep enough at the top that a five-of-a-kind Crown is worth
     chasing — and the scale below is what makes it honest. */
 const BASE_PAYS: Record<PaySymbol, [number, number, number]> = {
-  //        3-of-a-kind, 4, 5
-  J:     [0.005, 0.020, 0.06],
-  Q:     [0.006, 0.025, 0.08],
-  K:     [0.008, 0.030, 0.10],
-  A:     [0.010, 0.040, 0.13],
-  HAT:   [0.020, 0.080, 0.28],
-  GEM:   [0.030, 0.130, 0.50],
-  BELL:  [0.050, 0.220, 1.00],
-  CROWN: [0.100, 0.450, 2.50],
+  //          3-of-a-kind, 4, 5
+  DIAMOND: [0.005, 0.020, 0.06],
+  CLUB:    [0.006, 0.025, 0.08],
+  HEART:   [0.008, 0.030, 0.10],
+  SPADE:   [0.010, 0.040, 0.13],
+  J:       [0.020, 0.080, 0.28],
+  Q:       [0.030, 0.130, 0.50],
+  K:       [0.050, 0.220, 1.00],
+  A:       [0.100, 0.450, 2.50],
 };
 
 /**
@@ -128,7 +137,7 @@ const BASE_PAYS: Record<PaySymbol, [number, number, number]> = {
  * is wrong until the simulator is run again — it prints the one to paste
  * back in.
  */
-export const PAY_SCALE = 1.0055;
+export const PAY_SCALE = 1.0453;
 
 export const PAYTABLE: Record<PaySymbol, [number, number, number]> = Object.fromEntries(
   PAY_SYMBOLS.map((s) => [

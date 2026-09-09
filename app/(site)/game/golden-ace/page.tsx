@@ -7,7 +7,6 @@ import SlotBoard, { SlotPaytable } from '@/components/mini/SlotBoard';
 import StakeBar from '@/components/mini/StakeBar';
 import { useImmersive } from '@/components/mini/useImmersive';
 import { useMiniGame } from '@/components/mini/useMiniGame';
-import { money } from '@/lib/brand';
 import { type FairnessInfo } from '@/lib/mini-games';
 import type { SlotRound } from '@/lib/slots';
 
@@ -20,15 +19,17 @@ function Board() {
   const g = useMiniGame('golden-ace');
 
   const [round, setRound] = useState<SlotRound | null>(null);
-  /** the stake the round on screen was played at — the box can move while a
-      replay is still running, and the win must be read against the old one */
+  /** the stake the round on screen was played at — the bet sheet can move
+      while a replay is still running, and the win has to be read against
+      the stake that actually bought it */
   const [playedFor, setPlayedFor] = useState(0);
   const [fairness, setFairness] = useState<FairnessInfo | null>(null);
   const [replaying, setReplaying] = useState(false);
-  const [payOpen, setPayOpen] = useState(false);
+  const [sheet, setSheet] = useState<'bet' | 'pay' | null>(null);
 
   const spin = async () => {
     if (g.busy || replaying) return;
+    setSheet(null);
     setRound(null);
     const result = await g.play({});
     if (!result?.slot) return;
@@ -54,37 +55,33 @@ function Board() {
           round={round}
           spinning={g.busy}
           stake={playedFor || g.stake}
+          balance={g.balance}
+          busy={busy}
+          rounds={g.history.length}
+          onSpin={spin}
+          onBet={() => setSheet((s) => (s === 'bet' ? null : 'bet'))}
+          onInfo={() => setSheet((s) => (s === 'pay' ? null : 'pay'))}
           onDone={() => setReplaying(false)}
         />
 
-        <StakeBar
-          stake={g.stake}
-          setStake={g.setStake}
-          balance={g.balance}
-          disabled={busy}
-        />
+        {g.err && <p className="field__err sa__err">{g.err}</p>}
 
-        <button
-          type="button"
-          className="btn btn--gold btn--block mg-slot__spin"
-          disabled={busy}
-          onClick={spin}
-        >
-          {g.busy ? 'Dealing…' : replaying ? 'Playing…' : `Spin ${money(g.stake)}`}
-        </button>
+        {sheet === 'bet' && (
+          <div className="sa-sheet">
+            <h3>Bet per spin</h3>
+            <StakeBar
+              stake={g.stake}
+              setStake={g.setStake}
+              balance={g.balance}
+              disabled={busy}
+            />
+            <button type="button" className="btn btn--gold btn--block" onClick={() => setSheet(null)}>
+              Done
+            </button>
+          </div>
+        )}
 
-        {g.err && <p className="field__err">{g.err}</p>}
-
-        <button
-          type="button"
-          className="sl-pay__toggle"
-          onClick={() => setPayOpen((v) => !v)}
-          aria-expanded={payOpen}
-        >
-          Paytable &amp; rules
-          <span className={`cz-chev${payOpen ? ' up' : ''}`} aria-hidden>⌃</span>
-        </button>
-        {payOpen && <SlotPaytable />}
+        {sheet === 'pay' && <SlotPaytable />}
       </div>
     </GameShell>
   );

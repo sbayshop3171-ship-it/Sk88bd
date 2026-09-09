@@ -1,154 +1,225 @@
 /* ============================================================
-   Golden Ace's symbols, drawn here rather than licensed.
+   Golden Ace's deck, drawn here rather than licensed.
 
-   Four cards, four trinkets, a wild and a scatter, all in the same
-   0–100 box so the board can size them off the cell. A gilded card is
-   the same drawing on a gold plate — the player has to be able to tell
-   the two apart at a glance on a phone, because whether a card is
-   gilded is the whole game.
+   Every symbol is a playing card, because the whole game reads off
+   one: four suit cards carrying a single pip, four court cards, and
+   the two that are not cards at all — the wild a gilded card turns
+   into, and the scatter that pays the free games.
+
+   A gilded card is the same face on a gold plate. On a phone that
+   difference has to survive at about 40 px, so it is carried by the
+   whole card body rather than a corner flourish: white stock versus
+   gold, grey edge versus brass.
    ============================================================ */
 
-import type { Cell, SlotSymbol as Sym } from '@/lib/slots';
+import type { Cell, PaySymbol, SlotSymbol as Sym } from '@/lib/slots';
 
-const CARD_INK: Record<string, string> = {
-  J: '#4aa8ff',
-  Q: '#c084fc',
-  K: '#38d9a9',
-  A: '#ff6b6b',
+/** Suit ink, taken off a real deck rather than the brand palette —
+    a blue club and an orange diamond are what the eye expects here. */
+const SUIT_INK: Record<string, string> = {
+  DIAMOND: '#e8542f',
+  HEART: '#d5232b',
+  CLUB: '#2b5fa8',
+  SPADE: '#1e2a38',
+};
+
+/** Which suit sits in a court card's corner, and what colour it is. */
+const COURT_SUIT: Record<string, keyof typeof SUIT_INK> = {
+  J: 'CLUB', Q: 'HEART', K: 'DIAMOND', A: 'SPADE',
 };
 
 export const SYMBOL_LABEL: Record<Sym, string> = {
+  DIAMOND: 'Diamond', CLUB: 'Club', HEART: 'Heart', SPADE: 'Spade',
   J: 'Jack', Q: 'Queen', K: 'King', A: 'Ace',
-  HAT: 'Top Hat', GEM: 'Gem', BELL: 'Bell', CROWN: 'Crown',
   WILD: 'Wild', SCATTER: 'Scatter',
 };
 
 export default function SlotSymbolArt({ cell }: { cell: Cell }) {
   const { s, gold } = cell;
 
+  if (s === 'WILD') return <Frame gold aria="Wild"><Joker /></Frame>;
+  if (s === 'SCATTER') return <Frame scatter aria="Scatter"><Scatter /></Frame>;
+
+  const suit = s in SUIT_INK ? (s as keyof typeof SUIT_INK) : COURT_SUIT[s];
+  const court = !(s in SUIT_INK);
+
   return (
-    <svg viewBox="0 0 100 100" className="sl-sym" role="img" aria-label={SYMBOL_LABEL[s]}>
-      {s === 'J' || s === 'Q' || s === 'K' || s === 'A' ? (
-        <Card letter={s} gold={gold} />
-      ) : s === 'HAT' ? <Hat />
-        : s === 'GEM' ? <Gem />
-        : s === 'BELL' ? <Bell />
-        : s === 'CROWN' ? <Crown />
-        : s === 'WILD' ? <Wild />
-        : <Scatter />}
+    <Frame gold={gold} aria={SYMBOL_LABEL[s]}>
+      {court ? <Court rank={s as 'J' | 'Q' | 'K' | 'A'} gold={gold} />
+             : <Pip suit={suit} />}
+      <Index rank={court ? s : ''} suit={suit} gold={gold} />
+    </Frame>
+  );
+}
+
+/* ---------- the card itself ---------- */
+
+function Frame({
+  gold, scatter, aria, children,
+}: {
+  gold?: boolean;
+  scatter?: boolean;
+  aria: string;
+  children: React.ReactNode;
+}) {
+  const id = gold ? 'sa-gold' : scatter ? 'sa-scat' : 'sa-white';
+  return (
+    <svg viewBox="0 0 100 100" className="sl-sym" role="img" aria-label={aria}>
+      <defs>
+        <linearGradient id="sa-white" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#e6edf5" />
+        </linearGradient>
+        <linearGradient id="sa-gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#fff6d0" />
+          <stop offset="45%" stopColor="#ffd35c" />
+          <stop offset="100%" stopColor="#dfa116" />
+        </linearGradient>
+        <linearGradient id="sa-scat" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#3a1520" />
+          <stop offset="100%" stopColor="#7a1023" />
+        </linearGradient>
+      </defs>
+
+      <rect x="12" y="6" width="76" height="88" rx="9" fill={`url(#${id})`} />
+      <rect
+        x="12" y="6" width="76" height="88" rx="9" fill="none"
+        stroke={gold ? '#a97400' : scatter ? '#ffc42e' : '#c3d0de'}
+        strokeWidth={gold || scatter ? 3 : 2}
+      />
+      {/* the gilded stock catches the light along its top edge */}
+      {gold && <path d="M17 12h66" stroke="#fff8dc" strokeWidth="2.5" opacity=".75" fill="none" />}
+      {children}
     </svg>
   );
 }
 
-/* ---------- the cards ---------- */
-
-function Card({ letter, gold }: { letter: 'J' | 'Q' | 'K' | 'A'; gold: boolean }) {
-  const id = `cg-${letter}${gold ? '-g' : ''}`;
+/** Rank and suit in the corner, the way a real card is read from a fan. */
+function Index({ rank, suit, gold }: { rank: string; suit: string; gold?: boolean }) {
+  const ink = gold ? '#5c3a00' : SUIT_INK[suit];
   return (
     <>
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          {gold ? (
-            <>
-              <stop offset="0%" stopColor="#ffe89a" />
-              <stop offset="55%" stopColor="#ffc42e" />
-              <stop offset="100%" stopColor="#c98600" />
-            </>
-          ) : (
-            <>
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="100%" stopColor="#dfe9f5" />
-            </>
-          )}
-        </linearGradient>
-      </defs>
-      <rect x="20" y="12" width="60" height="76" rx="9" fill={`url(#${id})`} />
-      <rect
-        x="20" y="12" width="60" height="76" rx="9"
-        fill="none" stroke={gold ? '#8a5a00' : '#b9c7d6'} strokeWidth="3"
-      />
-      <text
-        x="50" y="62"
-        textAnchor="middle"
-        fontSize="44"
-        fontWeight="900"
-        fontFamily="Georgia, 'Times New Roman', serif"
-        fill={gold ? '#5c3a00' : CARD_INK[letter]}
-      >
-        {letter}
-      </text>
-      {gold && <circle cx="68" cy="26" r="5" fill="#fff8dc" opacity="0.9" />}
+      {rank && (
+        <text
+          x="21" y="27" fontSize="18" fontWeight="900"
+          fontFamily="Georgia, 'Times New Roman', serif" fill={ink}
+        >
+          {rank}
+        </text>
+      )}
+      <g transform={rank ? 'translate(19 30) scale(0.13)' : 'translate(19 13) scale(0.13)'}>
+        <SuitPath suit={suit} fill={ink} />
+      </g>
     </>
   );
 }
 
-/* ---------- the trinkets ---------- */
-
-const Hat = () => (
-  <>
-    {/* a top hat has to read at 30px on a dark board, so the brim is the
-        widest, lightest shape and the band is the only saturated colour */}
-    <ellipse cx="50" cy="76" rx="40" ry="10" fill="#e8eef7" />
-    <ellipse cx="50" cy="74" rx="40" ry="10" fill="#b9c7d6" />
-    <path d="M31 20h38v54H31Z" fill="#3a4f6b" />
-    <path d="M31 20h14v54H31Z" fill="#4d668a" />
-    <ellipse cx="50" cy="20" rx="19" ry="7" fill="#5a749a" />
-    <rect x="31" y="54" width="38" height="12" fill="#ffc42e" />
-    <rect x="60" y="54" width="9" height="12" fill="#d98800" />
-  </>
+/** The big centred pip on a suit card. */
+const Pip = ({ suit }: { suit: string }) => (
+  <g transform="translate(50 56) scale(0.46)">
+    <g transform="translate(-50 -50)">
+      <SuitPath suit={suit} fill={SUIT_INK[suit]} />
+    </g>
+  </g>
 );
 
-const Gem = () => (
-  <>
-    <defs>
-      <linearGradient id="sl-gem" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#8ef0ff" />
-        <stop offset="100%" stopColor="#1f8ecf" />
-      </linearGradient>
-    </defs>
-    <path d="M50 14 84 40 50 88 16 40Z" fill="url(#sl-gem)" />
-    <path d="M50 14 66 40 50 88 34 40Z" fill="#bff4ff" opacity="0.55" />
-    <path d="M16 40h68" stroke="#0d5c8c" strokeWidth="3" fill="none" />
-  </>
-);
+/* Suit outlines in a 0–100 box, so one path serves the corner index and
+   the centre pip at whatever scale each needs. */
+function SuitPath({ suit, fill }: { suit: string; fill: string }) {
+  if (suit === 'DIAMOND') return <path d="M50 4 88 50 50 96 12 50Z" fill={fill} />;
+  if (suit === 'HEART') {
+    return (
+      <path
+        d="M50 92C22 70 6 54 6 34 6 18 18 8 31 8c8 0 15 4 19 11 4-7 11-11 19-11 13 0 25 10 25 26 0 20-16 36-44 58Z"
+        fill={fill}
+      />
+    );
+  }
+  if (suit === 'CLUB') {
+    return (
+      <>
+        <circle cx="50" cy="28" r="20" fill={fill} />
+        <circle cx="24" cy="58" r="20" fill={fill} />
+        <circle cx="76" cy="58" r="20" fill={fill} />
+        <path d="M44 60h12l8 36H36Z" fill={fill} />
+      </>
+    );
+  }
+  return (
+    <>
+      <path d="M50 6C30 26 8 42 8 60c0 13 10 22 22 22 8 0 14-4 18-10-2 12-6 18-12 22h28c-6-4-10-10-12-22 4 6 10 10 18 10 12 0 22-9 22-22 0-18-22-34-42-54Z" fill={fill} />
+    </>
+  );
+}
 
-const Bell = () => (
-  <>
-    <path
-      d="M50 16c14 0 22 11 22 26 0 14 4 20 8 26H20c4-6 8-12 8-26 0-15 8-26 22-26Z"
-      fill="#ffc42e"
-    />
-    <path d="M50 16c-6 0-9 5-9 12h18c0-7-3-12-9-12Z" fill="#ffe89a" />
-    <circle cx="50" cy="80" r="7" fill="#d98800" />
-  </>
-);
+/* ---------- the court ---------- */
 
-const Crown = () => (
-  <>
-    <path d="M18 72 26 30l16 16 8-22 8 22 16-16 8 42Z" fill="#ffc42e" />
-    <rect x="18" y="72" width="64" height="12" rx="4" fill="#d98800" />
-    <circle cx="26" cy="30" r="5" fill="#ff6b6b" />
-    <circle cx="50" cy="24" r="5" fill="#8ef0ff" />
-    <circle cx="74" cy="30" r="5" fill="#ff6b6b" />
-  </>
-);
+/** J, Q and K carry a figure; the ace carries its suit, big, with a
+    banner — which is the card the game is named for. */
+function Court({ rank, gold }: { rank: 'J' | 'Q' | 'K' | 'A'; gold?: boolean }) {
+  const suit = COURT_SUIT[rank];
+  const ink = SUIT_INK[suit];
 
-const Wild = () => (
+  if (rank === 'A') {
+    return (
+      <>
+        <g transform="translate(50 52) scale(0.42)">
+          <g transform="translate(-50 -50)"><SuitPath suit="SPADE" fill={gold ? '#5c3a00' : '#1e2a38'} /></g>
+        </g>
+        <rect x="26" y="66" width="48" height="17" rx="4" fill="#d9a400" />
+        <rect x="26" y="66" width="48" height="17" rx="4" fill="none" stroke="#8a5a00" strokeWidth="2" />
+        <text
+          x="50" y="79" textAnchor="middle" fontSize="12.5" fontWeight="900"
+          fontFamily="Georgia, 'Times New Roman', serif" fill="#3a2400" letterSpacing="1.5"
+        >
+          ACE
+        </text>
+      </>
+    );
+  }
+
+  /* A crown, a head and shoulders, in the rank's own colour. It is not a
+     portrait — at 40 px on a phone a portrait is mud — but the three read
+     apart from each other, which is all the board needs, and it sits low
+     enough to clear the index in the corner. */
+  const crown = rank === 'K'
+    ? (
+      <>
+        <path d="M31 47 35 27l8 9 6-12 6 12 8-9 4 20Z" fill="#e8b423" stroke="#8a5a00" strokeWidth="1.6" />
+        <circle cx="35" cy="25" r="3.4" fill="#e8b423" stroke="#8a5a00" strokeWidth="1.2" />
+        <circle cx="49" cy="21" r="3.4" fill="#e8b423" stroke="#8a5a00" strokeWidth="1.2" />
+        <circle cx="63" cy="25" r="3.4" fill="#e8b423" stroke="#8a5a00" strokeWidth="1.2" />
+      </>
+    )
+    : rank === 'Q'
+      ? <path d="M33 47 36 30l7 8 6-11 6 11 7-8 3 17Z" fill={ink} stroke="#00000030" strokeWidth="1.2" />
+      : <path d="M33 47q16-15 32 0Z" fill={ink} />;
+
+  return (
+    <>
+      {crown}
+      <circle cx="49" cy="59" r="12" fill="#f6dcc2" stroke={ink} strokeWidth="2" />
+      <path d="M29 92q3-19 20-19t20 19Z" fill={ink} />
+      <path d="M49 73v19" stroke="#f6dcc2" strokeWidth="2.5" />
+    </>
+  );
+}
+
+/* ---------- the two that are not cards ---------- */
+
+/** The wild a gilded card becomes: a jester's cap, the mark the whole
+    genre uses for a card that stands in for any other. */
+const Joker = () => (
   <>
-    <defs>
-      <linearGradient id="sl-wild" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stopColor="#ffe89a" />
-        <stop offset="60%" stopColor="#ffb32e" />
-        <stop offset="100%" stopColor="#b56b00" />
-      </linearGradient>
-    </defs>
-    <rect x="12" y="14" width="76" height="72" rx="10" fill="url(#sl-wild)" />
-    <rect x="12" y="14" width="76" height="72" rx="10" fill="none" stroke="#7a4a00" strokeWidth="3" />
+    <path d="M28 66 33 34l10 11 7-15 7 15 10-11 5 32Z" fill="#c62828" stroke="#7a1023" strokeWidth="2" />
+    <path d="M43 45l7-15 7 15-7 21Z" fill="#f5c518" />
+    <circle cx="33" cy="32" r="6" fill="#f5c518" stroke="#7a1023" strokeWidth="2" />
+    <circle cx="50" cy="26" r="6" fill="#f5c518" stroke="#7a1023" strokeWidth="2" />
+    <circle cx="67" cy="32" r="6" fill="#f5c518" stroke="#7a1023" strokeWidth="2" />
+    <rect x="24" y="66" width="52" height="15" rx="4" fill="#7a1023" />
     <text
-      x="50" y="60"
-      textAnchor="middle" fontSize="26" fontWeight="900"
-      fontFamily="Georgia, 'Times New Roman', serif" fill="#4a2c00"
-      letterSpacing="1"
+      x="50" y="78" textAnchor="middle" fontSize="11.5" fontWeight="900"
+      fontFamily="Georgia, 'Times New Roman', serif" fill="#ffd35c" letterSpacing="1.5"
     >
       WILD
     </text>
@@ -157,18 +228,18 @@ const Wild = () => (
 
 const Scatter = () => (
   <>
-    <defs>
-      <radialGradient id="sl-scat">
-        <stop offset="0%" stopColor="#fff6c9" />
-        <stop offset="100%" stopColor="#ff5a5a" />
-      </radialGradient>
-    </defs>
     <path
-      d="M50 8 60 36 90 38 66 56 74 86 50 68 26 86 34 56 10 38 40 36Z"
-      fill="url(#sl-scat)"
-      stroke="#8a1f1f"
-      strokeWidth="3"
-      strokeLinejoin="round"
+      d="M50 16 59 40 84 42 65 58 71 82 50 68 29 82 35 58 16 42 41 40Z"
+      fill="#ffc42e" stroke="#8a5a00" strokeWidth="2.5" strokeLinejoin="round"
     />
+    <text
+      x="50" y="90" textAnchor="middle" fontSize="10" fontWeight="900"
+      fontFamily="Georgia, 'Times New Roman', serif" fill="#ffd35c" letterSpacing="1"
+    >
+      SCATTER
+    </text>
   </>
 );
+
+/** The paytable needs a swatch per symbol without a Cell to hand. */
+export const swatch = (s: PaySymbol): Cell => ({ s, gold: false });
