@@ -9,7 +9,7 @@ import { panelHref, type PanelBase } from '@/lib/panel-base';
     /agent for an agent. Every tab points back through it, so an agent never
     picks up the operator's URL by clicking around. */
 export default function AdminNav({ role, base }: { role: AdminRole; base: PanelBase }) {
-  const path = usePathname();
+  const path = usePathname() ?? '';
   return (
     <nav className="adm__nav scroll-x">
       {tabsFor(role).map((t) => {

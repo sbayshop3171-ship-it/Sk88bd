@@ -14,7 +14,9 @@ const NAV = [
 ];
 
 export default function BottomNav() {
-  const path = usePathname();
+  /* `usePathname` is typed nullable — it has no value during a static
+     prerender — so the empty string stands in and nothing is active. */
+  const path = usePathname() ?? '';
 
   return (
     <nav className="nav" aria-label="Main menu">

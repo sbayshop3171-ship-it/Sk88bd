@@ -10,7 +10,7 @@ import { useSiteSettings } from './useSiteSettings';
     links, and a back-to-top that appears after scrolling. Collapsed by
     default — on a phone five stacked buttons hid a third of every screen. */
 export default function SideFabs() {
-  const path = usePathname();
+  const path = usePathname() ?? '';
   const [showTop, setShowTop] = useState(false);
   const [open, setOpen] = useState(false);
   const showTopRef = useRef(false);

@@ -17,7 +17,7 @@ const AUTO_DELAY_MS = 4000;
  * page and the download page both do. "Later" hides it for a week.
  */
 export default function InstallPrompt() {
-  const path = usePathname();
+  const path = usePathname() ?? '';
   const { canInstall, installed, needsIosSteps, install } = usePwaInstall();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
