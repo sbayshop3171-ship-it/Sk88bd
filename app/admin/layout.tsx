@@ -6,6 +6,7 @@ import AdminNav from '@/components/admin/AdminNav';
 import { getCurrentAdminSession } from '@/lib/admin-auth-next';
 import { ROLE_LABEL } from '@/lib/admin-roles';
 import { BRAND } from '@/lib/brand';
+import { panelBase } from '@/lib/panel-base-next';
 import { isBackendReady } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
     support buttons, and a wider column than the phone-width site. */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getCurrentAdminSession();
+  const base = await panelBase();
 
   if (!session) {
     return <AdminLogin />;
@@ -28,7 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="adm">
       <header className="adm__hd">
-        <Link href="/admin" className="adm__brand">
+        <Link href={base} className="adm__brand">
           {BRAND.name} <span>অ্যাডমিন</span>
         </Link>
         <div className="adm__hd-actions">
@@ -42,7 +44,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <AdminNav role={session.role} />
+      <AdminNav role={session.role} base={base} />
 
       {!isBackendReady() && (
         <div className="adm__warn">

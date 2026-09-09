@@ -11,6 +11,8 @@ import { activeSorted } from '@/lib/site-content';
 import { getSiteContent } from '@/lib/site-content-store';
 import { toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
+import { panelHref } from '@/lib/panel-base';
+import { panelBase } from '@/lib/panel-base-next';
 import { isBackendReady } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
@@ -31,6 +33,7 @@ type Tile = [string, string, string, AdminPermission];
 export default async function AdminDashboard() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
+  const base = await panelBase();
 
   const [accounts, overrides, content, stats, staff] = await Promise.all([
     listAccounts(),
@@ -84,7 +87,7 @@ export default async function AdminDashboard() {
       {live.length > 0 && (
         <div className="adm__tiles">
           {live.map(([label, value, href]) => (
-            <Link className="adm__tile adm__tile--link" key={label} href={href}>
+            <Link className="adm__tile adm__tile--link" key={label} href={panelHref(base, href)}>
               <b>{value}</b>
               <small>{label}</small>
             </Link>
@@ -102,20 +105,20 @@ export default async function AdminDashboard() {
           </p>
           <div className="adm__tiles">
             {seesEveryAgent && (
-              <Link className="adm__tile adm__tile--link" href="/admin/agents">
+              <Link className="adm__tile adm__tile--link" href={panelHref(base, '/admin/agents')}>
                 <b>{agentScope.filter((s) => s.role === 'agent').length}</b>
                 <small>এজেন্ট</small>
               </Link>
             )}
-            <Link className="adm__tile adm__tile--link" href="/admin/agents">
+            <Link className="adm__tile adm__tile--link" href={panelHref(base, '/admin/agents')}>
               <b>{agents ? agents.reduce((n, a) => n + a.players, 0) : '—'}</b>
               <small>{seesEveryAgent ? 'এজেন্টের আনা ইউজার' : 'আমার আনা ইউজার'}</small>
             </Link>
-            <Link className="adm__tile adm__tile--link" href="/admin/agents">
+            <Link className="adm__tile adm__tile--link" href={panelHref(base, '/admin/agents')}>
               <b>{agents ? agents.reduce((n, a) => n + a.activePlayers, 0) : '—'}</b>
               <small>তার মধ্যে ডিপোজিট করেছে</small>
             </Link>
-            <Link className="adm__tile adm__tile--link" href="/admin/agents">
+            <Link className="adm__tile adm__tile--link" href={panelHref(base, '/admin/agents')}>
               <b>{agents ? money(toTaka(agents.reduce((n, a) => n + a.deposited, 0))) : '—'}</b>
               <small>তাদের মোট ডিপোজিট</small>
             </Link>
@@ -128,7 +131,7 @@ export default async function AdminDashboard() {
       {cashier.length > 0 ? (
         <div className="adm__tiles">
           {cashier.map(([label, value, href]) => (
-            <Link className="adm__tile adm__tile--link" key={label} href={href}>
+            <Link className="adm__tile adm__tile--link" key={label} href={panelHref(base, href)}>
               <b>{value}</b>
               <small>{label}</small>
             </Link>

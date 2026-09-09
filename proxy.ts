@@ -3,34 +3,51 @@ import { NextResponse, type NextRequest } from 'next/server';
 /**
  * Two doors to the same panel.
  *
- * Agents are given ag.sk88bd.com rather than sk88bd.com/admin: the address
- * an agent hands round is not the operator's, and a subdomain keeps the
- * staff entrance off the front page. It is a rewrite, not a second app —
- * the panel, its API and its session cookie are the ones already there.
+ * Agents are given ag.sk88bd.com, or sk88bd.com/agent, rather than
+ * sk88bd.com/admin: the address an agent hands round is not the operator's,
+ * and neither door should teach them the operator's own URL. Both are a
+ * rewrite rather than a redirect, so the address bar keeps saying what was
+ * typed — a redirect put /admin in front of every agent on their first
+ * click, which was the whole thing this was meant to avoid.
  *
- * Only the bare root is rewritten. Everything else on that host — /admin,
- * /api/admin, /_next — is already the right path, and rewriting those would
- * turn every asset request into /admin/_next/... and serve nothing.
+ * It is one app either way: the panel, its API and its session cookie are
+ * the ones already there. The header below tells the layout which door was
+ * used, so the links inside point back through it (lib/panel-base.ts).
  */
 const AGENT_HOSTS = ['ag.'];
+
+const PANEL_BASE_HEADER = 'x-panel-base';
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // a plain, memorable path for anybody who has the domain but not the
-  // subdomain — /agent is easier to say down a phone than /admin
-  if (pathname === '/agent' || pathname === '/agent/') {
-    return NextResponse.redirect(new URL('/admin', request.url));
+  // /agent, and everything under it, is the panel
+  if (pathname === '/agent' || pathname.startsWith('/agent/')) {
+    const rest = pathname.slice('/agent'.length).replace(/\/$/, '');
+    return panel(request, rest ? `/admin${rest}` : '/admin');
   }
 
+  /* The subdomain's root only. Everything else on that host — /agent/…,
+     /api/admin, /_next — is already the right path, and rewriting those
+     would turn every asset request into /admin/_next/… and serve nothing. */
   const host = request.headers.get('host')?.toLowerCase() ?? '';
   if (pathname === '/' && AGENT_HOSTS.some((prefix) => host.startsWith(prefix))) {
-    return NextResponse.rewrite(new URL('/admin', request.url));
+    return panel(request, '/admin');
   }
 
   return NextResponse.next();
 }
 
+/** Serve an /admin route while the browser keeps the address it asked for. */
+function panel(request: NextRequest, destination: string) {
+  const url = new URL(destination, request.url);
+  url.search = request.nextUrl.search;
+
+  const headers = new Headers(request.headers);
+  headers.set(PANEL_BASE_HEADER, '/agent');
+  return NextResponse.rewrite(url, { request: { headers } });
+}
+
 export const config = {
-  matcher: ['/', '/agent'],
+  matcher: ['/', '/agent', '/agent/:path*'],
 };

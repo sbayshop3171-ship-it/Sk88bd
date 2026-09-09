@@ -3,15 +3,20 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { tabsFor, type AdminRole } from '@/lib/admin-roles';
+import { panelHref, type PanelBase } from '@/lib/panel-base';
 
-export default function AdminNav({ role }: { role: AdminRole }) {
+/** `base` is the door the panel was entered by — /admin for the operator,
+    /agent for an agent. Every tab points back through it, so an agent never
+    picks up the operator's URL by clicking around. */
+export default function AdminNav({ role, base }: { role: AdminRole; base: PanelBase }) {
   const path = usePathname();
   return (
     <nav className="adm__nav scroll-x">
       {tabsFor(role).map((t) => {
-        const on = t.href === '/admin' ? path === '/admin' : path.startsWith(t.href);
+        const href = panelHref(base, t.href);
+        const on = href === base ? path === base : path.startsWith(href);
         return (
-          <Link key={t.href} href={t.href} className={on ? 'on' : ''}>{t.label}</Link>
+          <Link key={t.href} href={href} className={on ? 'on' : ''}>{t.label}</Link>
         );
       })}
     </nav>
