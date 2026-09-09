@@ -43,11 +43,15 @@ export type AdminPermission =
 const AGENT: AdminPermission[] = ['cashier.review', 'players.read', 'agents.self'];
 
 /* An admin runs the day: the cashier, the players, the games, the front
-   page. Still not the wallet numbers — see below. */
+   page — and, since 2026-09-10, the wallet numbers a deposit lands in. That
+   last one was the super admin's alone until the operator asked for it here;
+   it is still kept from agents, who see the cashier but never decide where
+   the money goes. */
 const ADMIN: AdminPermission[] = [
   ...AGENT,
   'players.write',
   'payments.read',
+  'payments.write',
   'agents.read',
   'cashier.config',
   'games.write',
@@ -55,14 +59,12 @@ const ADMIN: AdminPermission[] = [
   'signal.write',
 ];
 
-/* The super admin is the operator. The payment numbers are the one thing
-   that decides whose bKash a player's deposit lands in, so writing them
-   stops here — as do the app keys, the site settings, and the staff list
-   itself. Moving 'payments.write' up to ADMIN is a one-line change if the
-   operator later wants their admins editing numbers too. */
+/* The super admin is the operator. The app keys, the site settings and the
+   staff list itself stop here — an admin who could create staff could make
+   themselves a super admin, and one who could rewrite the settings could
+   point the site somewhere else. */
 const SUPER_ADMIN: AdminPermission[] = [
   ...ADMIN,
-  'payments.write',
   'settings.write',
   'app-keys.write',
   'staff.manage',
@@ -82,7 +84,7 @@ export const ROLE_LABEL: Record<AdminRole, string> = {
 
 export const ROLE_HELP: Record<AdminRole, string> = {
   super_admin: 'Everything — payment numbers, settings and staff accounts included.',
-  admin: 'Cashier, users, games and site content. Cannot change payment numbers.',
+  admin: 'Cashier, payment numbers, users, games and site content. Cannot change settings, app keys or staff accounts.',
   agent: 'Only deposit/withdraw approvals, viewing users and their own referral link. Cannot change payment numbers.',
 };
 
