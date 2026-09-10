@@ -140,8 +140,10 @@ export default function DepositPage() {
 
     // The player raises the request; RLS only lets them insert their own row.
     // An admin approves it at /admin/deposits, and only then does the money
-    // reach the wallet. The method/bonus columns arrive with migration 005;
-    // until it is applied the row is raised without them.
+    // reach the wallet — with the method's bonus, which the server works out
+    // from the cashier config at approval. The browser names the method and
+    // nothing more (since 012 it cannot write the bonus column at all). The
+    // method column arrives with migration 005; before it the row goes without.
     setBusy(true);
     const row = {
       user_id: session.user.id,
@@ -150,8 +152,7 @@ export default function DepositPage() {
       sender_no: null,
       txn_id: trxClean || null,
     };
-    const bonus = { method_id: method.id, bonus_amount: toPaisa(Math.round((n * method.bonusPercent) / 100)) };
-    let { error } = await supabase.from('deposits').insert({ ...row, ...bonus });
+    let { error } = await supabase.from('deposits').insert({ ...row, method_id: method.id });
     if (error && /column|schema cache/i.test(error.message)) {
       ({ error } = await supabase.from('deposits').insert(row));
     }

@@ -64,7 +64,7 @@ export function useBonus() {
       if (data.ok) load();
       return data;
     } catch {
-      return { ok: false, reason: 'network', message: 'সার্ভারে পৌঁছানো গেল না' };
+      return { ok: false, reason: 'network', message: 'Could not reach the server — try again' };
     } finally {
       setBusy(null);
     }

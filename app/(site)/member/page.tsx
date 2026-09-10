@@ -53,8 +53,10 @@ export default function MemberPage() {
   const [spinning, setSpinning] = useState(false);
 
   const signedIn = ready && Boolean(session);
-  const userId = profile?.phone ?? '';
-  const nickname = profile?.display_name || userId || 'Player';
+  /* the player ID (migration 012) is the number support asks for; before it
+     exists the phone number stands in, as it always did */
+  const userId = profile?.player_no ? String(profile.player_no) : profile?.phone ?? '';
+  const nickname = profile?.display_name || profile?.phone || 'Player';
 
   /* Supabase stamps the auth row, and that is the account's real birthday —
      `profiles` has its own created_at but the provider does not load it. */

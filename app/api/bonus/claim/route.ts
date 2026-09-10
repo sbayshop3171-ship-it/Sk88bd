@@ -6,7 +6,7 @@ import { CLAIM_MESSAGE, type BonusKind } from '@/lib/bonus-config';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const KINDS: BonusKind[] = ['signin', 'rescue', 'rebate', 'promo'];
+const KINDS: BonusKind[] = ['signin', 'rescue', 'rebate', 'promo', 'spin', 'mission'];
 
 /** What each offer would pay this player right now. */
 export async function GET() {

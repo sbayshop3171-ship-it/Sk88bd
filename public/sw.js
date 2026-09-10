@@ -11,7 +11,7 @@
  * Bump CACHE when this file changes; older caches are dropped on activate.
  */
 
-const CACHE = 'sk88bd-shell-v1';
+const CACHE = 'sk88bd-shell-v2';
 const OFFLINE_URL = '/offline.html';
 
 self.addEventListener('install', (event) => {
@@ -39,13 +39,11 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET' || request.mode !== 'navigate') return;
 
   event.respondWith(
+    // The offline page is cached once, at install, and never overwritten.
+    // Storing every page under its name used to keep whatever came last —
+    // a 500, or an admin screen with other players on it — and replay it
+    // offline with script files a deploy had since removed: a blank screen.
     fetch(request)
-      .then((response) => {
-        // keep the last good page around purely as an offline fallback
-        const copy = response.clone();
-        caches.open(CACHE).then((cache) => cache.put(OFFLINE_URL, copy)).catch(() => undefined);
-        return response;
-      })
       .catch(async () => {
         const cached = await caches.match(OFFLINE_URL);
         return (

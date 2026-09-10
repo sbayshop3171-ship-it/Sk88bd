@@ -24,17 +24,20 @@ const STATE_LABEL: Record<RequestState, string> = {
 export default function CashierControl({
   table,
   initialRows,
+  initialError = '',
   backendReady,
 }: {
   table: Table;
   initialRows: CashierRow[];
+  /** the first load failed: say so, rather than "no requests" while players wait */
+  initialError?: string;
   backendReady: boolean;
 }) {
   const [rows, setRows] = useState(initialRows);
   const [state, setState] = useState<RequestState | 'all'>('pending');
   const [notes, setNotes] = useState<Record<number, string>>({});
   const [busyId, setBusyId] = useState(0);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(initialError);
   const [notice, setNotice] = useState('');
 
   const isDeposit = table === 'deposits';

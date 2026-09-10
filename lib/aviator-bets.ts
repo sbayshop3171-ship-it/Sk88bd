@@ -37,6 +37,9 @@ export type BetReason =
   | 'already-placed'
   | 'invalid-stake'
   | 'below-minimum'
+  | 'above-maximum'
+  | 'account-banned'
+  | 'account-held'
   | 'insufficient-balance'
   | 'no-open-bet'
   | 'round-crashed'
@@ -66,6 +69,9 @@ export const BET_ERROR: Record<BetReason, string> = {
   'already-placed': 'This seat already has a bet',
   'invalid-stake': 'That bet amount is not valid',
   'below-minimum': 'Minimum bet is ৳10',
+  'above-maximum': 'Maximum bet is ৳5,000',
+  'account-banned': 'This account has been banned. Contact support.',
+  'account-held': 'This account is on hold. Contact support.',
   'insufficient-balance': 'Not enough balance',
   'no-open-bet': 'No open bet on this seat',
   'round-crashed': 'The round flew away',

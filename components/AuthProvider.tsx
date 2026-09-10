@@ -6,7 +6,7 @@ import {
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { browserClient, isBackendReady } from '@/lib/supabase';
 import { normalizeAgentCode } from '@/lib/agent-links';
-import { emailToPhone, phoneToEmail } from '@/lib/auth';
+import { emailToPhone, normalizePhone, phoneToEmail } from '@/lib/auth';
 
 export interface Profile {
   id: string;
@@ -19,6 +19,11 @@ export interface Profile {
      optional so a deployment without that migration still loads a profile —
      the select below drops them and every screen reads them as null. */
   real_name?: string | null;
+  /** the player ID support asks for (migration 012) */
+  player_no?: number | null;
+  is_blocked?: boolean;
+  /** on hold: can look, cannot move money (migration 012) */
+  is_held?: boolean;
   facebook_id?: string | null;
   google_id?: string | null;
   whatsapp?: string | null;
@@ -72,21 +77,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const load = useCallback(async (uid: string | undefined) => {
     if (!supabase || !uid) { setProfile(null); setWallet(null); return; }
-    const FULL = 'id, phone, display_name, role, vip_level, referral_code, '
-      + 'real_name, facebook_id, google_id, whatsapp, email, contact_phone';
-    const BASE = 'id, phone, display_name, role, vip_level, referral_code';
-    const [p, w] = await Promise.all([
-      supabase.from('profiles').select(FULL).eq('id', uid).maybeSingle(),
-      supabase.from('wallets')
-        .select('balance, bonus_balance, turnover_need, turnover_done')
-        .eq('user_id', uid).maybeSingle(),
-    ]);
-    // migration 011 not applied yet: ask again for the columns that do exist
-    const row = p.error
-      ? (await supabase.from('profiles').select(BASE).eq('id', uid).maybeSingle()).data
-      : p.data;
-    setProfile((row as Profile) ?? null);
-    setWallet((w.data as Wallet) ?? null);
+    const BASE = 'id, phone, display_name, role, vip_level, referral_code, is_blocked';
+    const CONTACT = 'real_name, facebook_id, google_id, whatsapp, email, contact_phone';
+    // widest first; a database missing a migration answers the next one down
+    // (012 adds the ID and the hold switch, 011 the contact fields)
+    const TIERS = [`${BASE}, ${CONTACT}, player_no, is_held`, `${BASE}, ${CONTACT}`, BASE];
+
+    const walletRead = supabase.from('wallets')
+      .select('balance, bonus_balance, turnover_need, turnover_done')
+      .eq('user_id', uid).maybeSingle();
+    let row: Profile | null = null;
+    for (const cols of TIERS) {
+      const p = await supabase.from('profiles').select(cols).eq('id', uid).maybeSingle();
+      if (!p.error) { row = (p.data as Profile | null) ?? null; break; }
+    }
+
+    // A banned account is signed out here as well as at the auth server: an
+    // access token issued before the ban is good for up to an hour, and the
+    // screens should not keep offering a wallet that no longer works.
+    if (row?.is_blocked) {
+      await supabase.auth.signOut();
+      setProfile(null);
+      setWallet(null);
+      return;
+    }
+    setProfile(row);
+    setWallet(((await walletRead).data as Wallet) ?? null);
   }, [supabase]);
 
   useEffect(() => {
@@ -119,19 +135,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: {
         data: {
-          phone,
-          referral_code: referral || null,
+          phone: normalizePhone(phone),
+          // codes are lowercase hex; a phone keyboard capitalises what is typed
+          referral_code: referral?.trim().toLowerCase() || null,
           agent_code: normalizeAgentCode(agentCode) ?? null,
         },
       },
     });
     if (error) return translate(error.message);
-    // the signup trigger seeds profiles.phone from the synthetic email —
-    // replace it with the real number now that we are authenticated
-    if (data.user) {
-      await supabase.from('profiles').update({ phone }).eq('id', data.user.id);
-      await load(data.user.id);
-    }
+    // The signup trigger reads the phone from the metadata above (migration
+    // 008). It is no longer rewritten from here: since 012 a player cannot
+    // update their own phone column, which is what stops them rewriting it.
+    if (data.user) await load(data.user.id);
     return null;
   }, [supabase, load]);
 
@@ -166,6 +181,10 @@ function translate(msg: string): string {
   const m = msg.toLowerCase();
   if (m.includes('invalid login credentials')) return 'Wrong number or password';
   if (m.includes('already registered')) return 'An account already exists for this number';
+  if (m.includes('banned')) return 'This account has been banned. Contact support.';
+  if (m.includes('weak') || m.includes('pwned') || m.includes('leaked')) {
+    return 'That password is too easy to guess — choose another';
+  }
   if (m.includes('password')) return 'The password must be at least 6 characters';
   if (m.includes('email') && m.includes('confirm')) {
     return 'Email confirmation is on — turn it off in the Supabase dashboard';

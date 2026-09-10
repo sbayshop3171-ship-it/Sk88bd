@@ -28,9 +28,9 @@ import { PROMOTIONS } from '@/lib/promotions';
    ============================================================ */
 
 const PERIOD_LABEL: Record<string, string> = {
-  daily: 'আজকের মধ্যে',
-  weekly: 'এই সপ্তাহে',
-  once: 'একবারের জন্য',
+  daily: 'Today',
+  weekly: 'This week',
+  once: 'One-time',
 };
 
 export default function MissionPage() {
@@ -61,7 +61,7 @@ export default function MissionPage() {
         shown.length === 0 ? (
           <p className="ml__empty">
             No data
-            <small>{tab === 'live' ? 'সব মিশন শেষ — নতুনটির অপেক্ষায় থাকুন।' : 'এখনো কোনো মিশন শেষ হয়নি।'}</small>
+            <small>{tab === 'live' ? 'All missions done — new ones are on the way.' : 'No missions finished yet.'}</small>
           </p>
         ) : (
           <div className="ms">
@@ -73,13 +73,13 @@ export default function MissionPage() {
                   <div className="ms__b">
                     <h3>{m.title}<i>{PERIOD_LABEL[m.period]}</i></h3>
                     <p>
-                      {m.measure === 'deposit' ? 'ডিপোজিট' : 'বাজি'}{' '}
+                      {m.measure === 'deposit' ? 'Deposit' : 'Bet'}{' '}
                       {money(toTaka(Math.min(m.progress, m.target)))} / {money(toTaka(m.target))}
-                      {' · '}বোনাস <b className="ms__rw">{money(toTaka(m.reward))}</b>
+                      {' · '}Bonus <b className="ms__rw">{money(toTaka(m.reward))}</b>
                     </p>
                     <div className="ms__bar"><i style={{ width: `${pct}%` }} /></div>
                     {m.claimed ? (
-                      <span className="ms__got">নেওয়া হয়েছে</span>
+                      <span className="ms__got">Claimed</span>
                     ) : m.done ? (
                       <button
                         type="button"
@@ -88,15 +88,15 @@ export default function MissionPage() {
                         onClick={async () => {
                           const reply = await claim('mission', m.id);
                           toast(reply.ok
-                            ? `${money(toTaka(reply.amount))} যোগ হয়েছে`
-                            : reply.message ?? 'নেওয়া গেল না');
+                            ? `${money(toTaka(reply.amount))} added`
+                            : reply.message ?? 'Could not claim — try again');
                         }}
                       >
-                        {money(toTaka(m.reward))} নিন
+                        Claim {money(toTaka(m.reward))}
                       </button>
                     ) : (
                       <span className="ms__left">
-                        আর {money(toTaka(m.target - m.progress))} বাকি
+                        {money(toTaka(m.target - m.progress))} to go
                       </span>
                     )}
                   </div>
@@ -113,7 +113,7 @@ export default function MissionPage() {
               <div className="ms__b">
                 <h3>{p.title}{p.badge && <i>{p.badge}</i>}</h3>
                 <p>{p.body}</p>
-                <Link className="ms__go" href="/deposit">অংশ নিন</Link>
+                <Link className="ms__go" href="/deposit">Join</Link>
               </div>
             </article>
           ))}

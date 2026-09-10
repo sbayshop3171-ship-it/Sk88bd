@@ -23,12 +23,12 @@ import { useLightSheet } from '@/components/useLightSheet';
    ============================================================ */
 
 const ISSUES = [
-  'ডিপোজিট',
-  'উইথড্র',
-  'বোনাস ও প্রমোশন',
-  'গেম বা বাজি',
-  'অ্যাকাউন্ট ও লগইন',
-  'অন্য কিছু',
+  'Deposit',
+  'Withdrawal',
+  'Bonus & promotions',
+  'Games & bets',
+  'Account & login',
+  'Something else',
 ];
 
 const MAX = 500;
@@ -45,11 +45,24 @@ export default function SuggestionPage() {
   const body = text.trim();
   const ready = Boolean(issue) && body.length > 0;
 
-  /** WhatsApp first, Telegram if that is the one the operator set. */
+  /* WhatsApp first, Telegram if that is the one the operator set. The
+     settings hold either a bare number/handle or a full link, and the admin
+     screen insists on full https links for Telegram — so a link is taken
+     apart rather than glued onto another t.me/ in front of it. */
   const channel = () => {
-    const wa = support.whatsapp?.replace(/[^\d]/g, '');
-    if (wa) return (msg: string) => `https://wa.me/${wa}?text=${encodeURIComponent(msg)}`;
-    const tg = support.telegram?.replace(/^@/, '');
+    const wa = (support.whatsapp ?? '').trim();
+    if (wa) {
+      const number = /^\+?[\d\s()-]+$/.test(wa)
+        ? wa.replace(/\D/g, '')
+        : /wa\.me\/(\d+)/i.exec(wa)?.[1] ?? '';
+      if (number) return (msg: string) => `https://wa.me/${number}?text=${encodeURIComponent(msg)}`;
+      // a group or business link cannot carry a message; open it as it is
+      if (/^https?:\/\//i.test(wa)) return () => wa;
+    }
+    const tg = (support.telegram ?? '').trim()
+      .replace(/^https?:\/\/(www\.)?(t|telegram)\.me\//i, '')
+      .replace(/^@/, '')
+      .split(/[/?#]/)[0];
     if (tg) return (msg: string) => `https://t.me/${tg}?text=${encodeURIComponent(msg)}`;
     return null;
   };
@@ -58,14 +71,17 @@ export default function SuggestionPage() {
     if (!ready) return;
     const build = channel();
     const msg = [
-      `ধরন: ${issue}`,
-      profile?.phone ? `আইডি: ${profile.phone}` : null,
+      `Topic: ${issue}`,
+      // the player ID is what support searches by in the admin panel
+      profile?.player_no
+        ? `ID: ${profile.player_no} (${profile.phone})`
+        : profile?.phone ? `ID: ${profile.phone}` : null,
       '',
       body,
     ].filter(Boolean).join('\n');
 
     if (!build) {
-      toast('সাপোর্ট চ্যানেল এখনো যুক্ত হয়নি — সাপোর্ট পেজ থেকে যোগাযোগ করুন');
+      toast('Support chat isn’t set up yet — reach us from the Support page');
       return;
     }
     window.open(build(msg), '_blank', 'noopener,noreferrer');
@@ -78,15 +94,15 @@ export default function SuggestionPage() {
       <div className="sg">
         <label className="sg__field">
           <select value={issue} onChange={(e) => setIssue(e.target.value)}>
-            <option value="">* সমস্যার ধরন বেছে নিন</option>
+            <option value="">* Choose a topic</option>
             {ISSUES.map((i) => <option key={i} value={i}>{i}</option>)}
           </select>
         </label>
 
         <div className="sg__box">
-          <b>* কী আরও ভালো করা যায়?</b>
+          <b>* What could we do better?</b>
           <textarea
-            placeholder="এখানে লিখুন"
+            placeholder="Write here"
             maxLength={MAX}
             rows={6}
             value={text}
@@ -96,12 +112,12 @@ export default function SuggestionPage() {
         </div>
 
         <p className="sg__note">
-          লেখাটি আপনার আইডি সহ আমাদের সাপোর্টে চলে যাবে। ছবি পাঠাতে চাইলে সাপোর্ট
-          চ্যাটে সরাসরি পাঠিয়ে দিন।
+          Your message goes to our support team along with your ID. To send a
+          picture, send it straight to the support chat.
         </p>
 
         <button type="button" className="btn btn--gold btn--block sg__send" disabled={!ready} onClick={submit}>
-          জমা
+          Submit
         </button>
       </div>
     </>

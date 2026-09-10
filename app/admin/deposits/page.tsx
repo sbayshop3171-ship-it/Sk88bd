@@ -26,6 +26,7 @@ export default async function AdminDeposits() {
       <CashierControl
         table="deposits"
         initialRows={rows.ok ? rows.data : []}
+        initialError={rows.ok ? '' : rows.message ?? `Could not load the requests (${rows.reason})`}
         backendReady={isBackendReady()}
       />
     </>

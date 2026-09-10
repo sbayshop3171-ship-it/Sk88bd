@@ -20,11 +20,21 @@ const IDENTITY_DOMAIN = 'id.sk88bd.live';
 
 export const BD_PHONE = /^01\d{9}$/;
 
-export const isValidPhone = (phone: string) => BD_PHONE.test(phone.trim());
+/** What players actually type — "+880 1712-345678", "8801712345678", or
+    Bengali digits from a Bangla keyboard — all mean 01712345678. */
+export function normalizePhone(raw: string): string {
+  const latin = raw.replace(/[০-৯]/g, (d) => String(d.charCodeAt(0) - 0x09e6));
+  const digits = latin.replace(/[\s().-]/g, '').replace(/^\+/, '');
+  if (/^8801\d{9}$/.test(digits)) return digits.slice(2);
+  if (/^008801\d{9}$/.test(digits)) return digits.slice(4);
+  return digits;
+}
 
-/** 01712345678 → 01712345678@sk88bd.local */
+export const isValidPhone = (phone: string) => BD_PHONE.test(normalizePhone(phone.trim()));
+
+/** 01712345678 → 01712345678@id.sk88bd.live */
 export function phoneToEmail(phone: string): string {
-  const p = phone.trim();
+  const p = normalizePhone(phone.trim());
   if (!isValidPhone(p)) throw new Error('invalid phone');
   return `${p}@${IDENTITY_DOMAIN}`;
 }

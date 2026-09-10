@@ -47,7 +47,14 @@ export type PlayerRow = {
   referralCode: string;
   /** the agent whose invite link this player signed up through, if any */
   agentCode: string | null;
+  /** the number players and support quote (migration 012); null before it */
+  playerNo: number | null;
+  /** banned: signed out, cannot log in or move money */
   isBlocked: boolean;
+  /** on hold: can log in and look, cannot bet, claim or withdraw */
+  isHeld: boolean;
+  blockReason: string | null;
+  holdReason: string | null;
   createdAt: string;
   /** paisa */
   balance: number;
@@ -120,37 +127,53 @@ export async function listPlayers(
   const db = adminClient();
   if (!db) return NO_BACKEND;
 
-  // agent_code arrives with migration 008. A server that has not run it yet
-  // drops back to the narrower select rather than losing the player list.
-  const run = async (withAgent: boolean) => {
+  // Newer columns arrive with migrations: player_no and the hold switch with
+  // 012, agent_code with 008. A database that has not run one yet drops back
+  // to the next narrower select rather than losing the player list.
+  const TIERS = [
+    ', agent_code, player_no, is_held, hold_reason, block_reason',
+    ', agent_code',
+    '',
+  ];
+
+  // The term goes inside a PostgREST `or=(…)` filter, where a comma or a
+  // bracket would end one condition and start another — "x%,phone.neq.0"
+  // used to widen a search to every player. Keep what a phone, a name or an
+  // ID can actually contain.
+  const term = search.trim().replace(/[^\p{L}\p{N} ._@+-]/gu, '').slice(0, 40);
+  const asId = /^\d{1,9}$/.test(term) ? Number(term) : null;
+
+  const run = (extra: string) => {
     let query = db
       .from('profiles')
       .select(
-        `id, phone, display_name, role, vip_level, referral_code, is_blocked, created_at${
-          withAgent ? ', agent_code' : ''
-        },
+        `id, phone, display_name, role, vip_level, referral_code, is_blocked, created_at${extra},
          wallets (balance, bonus_balance, turnover_need, turnover_done)`,
       )
       .order('created_at', { ascending: false })
       .limit(limit);
 
-    const term = search.trim();
-    if (term) query = query.or(`phone.ilike.%${term}%,display_name.ilike.%${term}%`);
-    if (withAgent && agentCode) query = query.eq('agent_code', agentCode);
+    if (term) {
+      const match = [`phone.ilike.%${term}%`, `display_name.ilike.%${term}%`];
+      if (asId !== null && extra.includes('player_no')) match.unshift(`player_no.eq.${asId}`);
+      query = query.or(match.join(','));
+    }
+    if (agentCode) query = query.eq('agent_code', agentCode);
 
     return query.returns<Record<string, unknown>[]>();
   };
 
-  let { data, error } = await run(true);
-  if (error && isMissingColumn(error.message)) {
+  for (const extra of TIERS) {
     // asked to filter by a column this database does not have: an empty list
     // is the honest answer, not every player on the site
-    if (agentCode) return { ok: true, data: [] };
-    ({ data, error } = await run(false));
-  }
-  if (error) return { ok: false, reason: 'db-error', message: error.message };
+    if (agentCode && !extra.includes('agent_code')) return { ok: true, data: [] };
 
-  return { ok: true, data: (data ?? []).map(toPlayerRow) };
+    const { data, error } = await run(extra);
+    if (error && isMissingColumn(error.message)) continue;
+    if (error) return { ok: false, reason: 'db-error', message: error.message };
+    return { ok: true, data: (data ?? []).map(toPlayerRow) };
+  }
+  return { ok: false, reason: 'db-error', message: 'The player list could not be read' };
 }
 
 /** Postgres has no column by that name, or PostgREST has not reloaded its
@@ -164,9 +187,13 @@ export async function cashierStats(): Promise<CashierResult<CashierStats>> {
   const db = adminClient();
   if (!db) return NO_BACKEND;
 
-  const dayStart = new Date();
-  dayStart.setHours(0, 0, 0, 0);
-  const since = dayStart.toISOString();
+  // "Today" is the Bangladesh day (UTC+6), the one the operator is counting —
+  // the server's own clock is UTC and would roll over at 6am local.
+  const BD_OFFSET_MS = 6 * 60 * 60 * 1000;
+  const bd = new Date(Date.now() + BD_OFFSET_MS);
+  const since = new Date(
+    Date.UTC(bd.getUTCFullYear(), bd.getUTCMonth(), bd.getUTCDate()) - BD_OFFSET_MS,
+  ).toISOString();
 
   const [pendD, pendW, todayD, todayW, players] = await Promise.all([
     db.from('deposits').select('id', { count: 'exact', head: true }).eq('state', 'pending'),
@@ -211,7 +238,63 @@ export async function reviewRequest(
   const { error } = await db.rpc(fn, { p_id: id, p_note: note || null });
   if (error) return { ok: false, reason: 'db-error', message: error.message };
 
+  if (table === 'deposits' && action === 'approve') {
+    const bonus = await payDepositBonus(db, id);
+    if (!bonus.ok) {
+      return {
+        ok: false,
+        reason: 'db-error',
+        message: `The deposit was approved, but its bonus was not paid: ${bonus.message}`,
+      };
+    }
+  }
+
   return { ok: true, data: null };
+}
+
+/** The method bonus on an approved deposit ("+5% on bKash").
+
+    The deposit screen has always promised it, and nothing ever paid it: the
+    browser wrote a figure into the row and approve_deposit credited the
+    deposit alone. The percent is read here, at approval, from the cashier
+    config — the operator's number, not one the browser sent. The ledger ref
+    names the deposit, and migration 012 makes that ref unique, so approving
+    twice cannot pay twice. */
+async function payDepositBonus(
+  db: NonNullable<ReturnType<typeof adminClient>>,
+  id: number,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  const { data: row, error } = await db
+    .from('deposits')
+    .select('user_id, amount, method_id')
+    .eq('id', id)
+    .maybeSingle();
+  if (error) return isMissingColumn(error.message) ? { ok: true } : { ok: false, message: error.message };
+
+  const deposit = row as { user_id: string; amount: number; method_id: string | null } | null;
+  if (!deposit?.method_id) return { ok: true };
+
+  // loaded here rather than at the top: this module's types are imported by
+  // client components, and the store reads the disk
+  const { getCashierConfig } = await import('./cashier-config-store');
+  const method = (await getCashierConfig()).deposit.methods.find((m) => m.id === deposit.method_id);
+  const percent = Math.min(Math.max(Number(method?.bonusPercent ?? 0), 0), 100);
+  const bonus = Math.floor((Number(deposit.amount) * percent) / 100);
+  if (bonus <= 0) return { ok: true };
+
+  const credit = await db.rpc('wallet_apply', {
+    p_user: deposit.user_id,
+    p_kind: 'bonus',
+    p_amount: bonus,
+    p_ref: `deposit-bonus:${id}`,
+  });
+  if (credit.error) {
+    if (credit.error.code === '23505') return { ok: true }; // paid already
+    return { ok: false, message: credit.error.message };
+  }
+
+  await db.from('deposits').update({ bonus_amount: bonus }).eq('id', id);
+  return { ok: true };
 }
 
 /** Hand-adjust a balance. `amount` is paisa and may be negative. */
@@ -233,13 +316,77 @@ export async function adjustBalance(
   return { ok: true, data: Number(data ?? 0) };
 }
 
-export async function setBlocked(userId: string, blocked: boolean): Promise<CashierResult<null>> {
+/** Ban or unban. `is_blocked` has been on profiles since the first schema
+    but nothing ever read it — a blocked player went on playing. Now the game,
+    bonus and withdraw paths refuse a banned account (lib/player-status.ts and
+    migration 012), and the auth user is banned as well, so their session
+    cannot be refreshed and a fresh login is refused. */
+export async function setBlocked(
+  userId: string,
+  blocked: boolean,
+  reason = '',
+  by = '',
+): Promise<CashierResult<null>> {
   const db = adminClient();
   if (!db) return NO_BACKEND;
 
-  const { error } = await db.from('profiles').update({ is_blocked: blocked }).eq('id', userId);
+  const full = {
+    is_blocked: blocked,
+    block_reason: blocked ? reason || null : null,
+    status_changed_at: new Date().toISOString(),
+    status_changed_by: by || null,
+  };
+  let { error } = await db.from('profiles').update(full).eq('id', userId);
+  // before migration 012 there is only the flag itself to write
+  if (error && isMissingColumn(error.message)) {
+    ({ error } = await db.from('profiles').update({ is_blocked: blocked }).eq('id', userId));
+  }
   if (error) return { ok: false, reason: 'db-error', message: error.message };
 
+  const { error: authError } = await db.auth.admin.updateUserById(userId, {
+    ban_duration: blocked ? '876000h' : 'none',
+  });
+  if (authError) {
+    return {
+      ok: false,
+      reason: 'db-error',
+      message: `Saved, but the login ban could not be set: ${authError.message}`,
+    };
+  }
+
+  return { ok: true, data: null };
+}
+
+/** Put an account on hold, or release it. On hold the player can still sign
+    in and see their balance; nothing moves until it is released. */
+export async function setHeld(
+  userId: string,
+  held: boolean,
+  reason = '',
+  by = '',
+): Promise<CashierResult<null>> {
+  const db = adminClient();
+  if (!db) return NO_BACKEND;
+
+  const { error } = await db
+    .from('profiles')
+    .update({
+      is_held: held,
+      hold_reason: held ? reason || null : null,
+      status_changed_at: new Date().toISOString(),
+      status_changed_by: by || null,
+    })
+    .eq('id', userId);
+
+  if (error) {
+    return {
+      ok: false,
+      reason: 'db-error',
+      message: isMissingColumn(error.message)
+        ? 'Hold needs migration 012 — run supabase/012_player_ids_hold_ban.sql in Supabase first.'
+        : error.message,
+    };
+  }
   return { ok: true, data: null };
 }
 
@@ -286,7 +433,11 @@ function toPlayerRow(row: Record<string, unknown>): PlayerRow {
     vipLevel: Number(row.vip_level ?? 0),
     referralCode: String(row.referral_code ?? ''),
     agentCode: (row.agent_code as string) || null,
+    playerNo: row.player_no == null ? null : Number(row.player_no),
     isBlocked: Boolean(row.is_blocked),
+    isHeld: Boolean(row.is_held),
+    blockReason: (row.block_reason as string) || null,
+    holdReason: (row.hold_reason as string) || null,
     createdAt: String(row.created_at),
     balance: Number(wallet?.balance ?? 0),
     bonusBalance: Number(wallet?.bonus_balance ?? 0),

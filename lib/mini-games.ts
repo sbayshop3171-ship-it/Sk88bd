@@ -293,7 +293,8 @@ export interface FlightSettled {
 export type MiniReason =
   | 'no-backend' | 'unauthorized' | 'unknown-game' | 'invalid-stake'
   | 'below-minimum' | 'above-maximum' | 'invalid-bet' | 'insufficient-balance'
-  | 'round-open' | 'no-round' | 'already-crashed' | 'db-error';
+  | 'round-open' | 'no-round' | 'already-crashed' | 'db-error'
+  | 'account-banned' | 'account-held';
 
 export const MINI_ERROR: Record<MiniReason, string> = {
   'no-backend': 'The game server is not connected yet',
@@ -308,6 +309,8 @@ export const MINI_ERROR: Record<MiniReason, string> = {
   'no-round': 'No round is running',
   'already-crashed': 'The round has already ended',
   'db-error': 'Something went wrong — try again',
+  'account-banned': 'This account has been banned. Contact support.',
+  'account-held': 'This account is on hold. Contact support.',
 };
 
 export const fmtX = (m: number) => `${m.toFixed(2)}x`;

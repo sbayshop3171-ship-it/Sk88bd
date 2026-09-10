@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth-next';
-import { adjustBalance, listPlayers, setBlocked } from '@/lib/cashier';
+import { adjustBalance, listPlayers, setBlocked, setHeld } from '@/lib/cashier';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -48,15 +48,23 @@ export async function POST(req: Request) {
     const typed = String(record.note ?? '').trim().slice(0, 200);
     const result = await adjustBalance(userId, amount, `${session.username}: ${typed || 'adjust'}`);
     if (!result.ok) return json(result, result.reason === 'no-backend' ? 503 : 400);
-  } else if (record.action === 'block') {
-    const result = await setBlocked(userId, Boolean(record.blocked));
+  } else if (record.action === 'block' || record.action === 'hold') {
+    // why, and who — kept on the profile so the next person to open the
+    // account sees it rather than having to ask around
+    const reason = String(record.reason ?? '').trim().slice(0, 200);
+    const result = record.action === 'block'
+      ? await setBlocked(userId, Boolean(record.blocked), reason, session.username)
+      : await setHeld(userId, Boolean(record.held), reason, session.username);
     if (!result.ok) return json(result, result.reason === 'no-backend' ? 503 : 400);
   } else {
     return json({ ok: false, reason: 'invalid-action' }, 400);
   }
 
   const players = await listPlayers(String(record.search ?? ''));
-  return json({ ok: true, players: players.ok ? players.data : [] });
+  // saved either way; an empty list would look like the player vanished
+  return players.ok
+    ? json({ ok: true, players: players.data })
+    : json({ ok: false, reason: 'db-error', message: 'Saved — but the list could not be reloaded. Refresh the page.' });
 }
 
 function json(data: unknown, status = 200) {

@@ -58,8 +58,17 @@ export async function POST(req: Request) {
   const result = await reviewRequest(table, id, decision, note);
   if (!result.ok) return json(result, result.reason === 'no-backend' ? 503 : 400);
 
-  const rows = await listCashier(table, (record.state as RequestState) ?? 'pending');
-  return json({ ok: true, rows: rows.ok ? rows.data : [] });
+  // The screen sends back whichever filter it is showing. An unknown value
+  // used to reach the database as an enum and come back as an empty queue.
+  const listState = STATES.includes(String(record.state))
+    ? (record.state as RequestState | 'all')
+    : 'pending';
+  const rows = await listCashier(table, listState);
+  // The decision is saved either way; an empty list here would read as
+  // "nothing waiting", so say plainly that only the reload failed.
+  return rows.ok
+    ? json({ ok: true, rows: rows.data })
+    : json({ ok: false, reason: 'db-error', message: 'Saved — but the list could not be reloaded. Refresh the page.' });
 }
 
 function isTable(value: unknown): value is (typeof TABLES)[number] {

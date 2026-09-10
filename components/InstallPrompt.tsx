@@ -34,7 +34,9 @@ export default function InstallPrompt() {
     return () => window.clearTimeout(id);
   }, []);
 
-  const onGameScreen = path.startsWith('/play/') || path.startsWith('/game/');
+  // …and never over the staff panel, which sits under the same root layout
+  const onGameScreen = path.startsWith('/play/') || path.startsWith('/game/')
+    || path.startsWith('/admin') || path.startsWith('/agent');
 
   const snoozed = useCallback(() => {
     try {

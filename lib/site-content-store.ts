@@ -107,6 +107,13 @@ export async function saveSlideImage(
   ext: string,
   bytes: Buffer,
 ): Promise<ContentMutationResult> {
+  // The id becomes part of a file path. Slide ids are 12 hex characters, and
+  // anything else — `x/../../public/logo`, say — is refused before the disk
+  // is touched, as is an id no slide answers to.
+  if (!/^[a-f0-9]{12}$/.test(id)) return { ok: false, reason: 'not-found' };
+  const known = await mutateStore((store) => listOf(store, kind).some((s) => s.id === id));
+  if (!known) return { ok: false, reason: 'not-found' };
+
   await mkdir(IMAGE_DIR, { recursive: true });
   await removeImageFiles(kind, id);
   await writeFile(path.join(IMAGE_DIR, `${kind}-${id}.${ext}`), bytes);

@@ -98,6 +98,7 @@ export default function RegisterPage() {
         </Field>
         <Field label="Referral code (optional)">
           <input type="text" placeholder={`${BRAND.name.toUpperCase()}XX`}
+                 autoCapitalize="none" autoCorrect="off" spellCheck={false}
                  value={f.ref} onChange={set('ref')} disabled={busy} />
         </Field>
 

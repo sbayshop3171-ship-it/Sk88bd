@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: BRAND.name,
     description:
       'Bangladesh’s online gaming platform — live casino, slots, cricket exchange, fishing and lottery.',
-    lang: 'bn',
+    lang: 'en',
     dir: 'ltr',
     start_url: '/?src=pwa',
     scope: '/',

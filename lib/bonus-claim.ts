@@ -22,6 +22,7 @@ import {
   type BonusKind,
   type ClaimReason,
 } from './bonus-config';
+import { accountBlock } from './player-status';
 import { adminClient, serverClient } from './supabase';
 
 type CookieStore = Parameters<typeof serverClient>[0];
@@ -279,6 +280,9 @@ export async function claimBonus(
 ): Promise<ClaimResult> {
   const who = await signedInUser(cookies);
   if (!who.ok) return { ok: false, reason: who.reason };
+
+  const blocked = await accountBlock(who.db, who.uid);
+  if (blocked) return { ok: false, reason: blocked === 'banned' ? 'account-banned' : 'account-held' };
 
   const cfg = await getBonusConfig();
   const rows = await ledger(who.db, who.uid);

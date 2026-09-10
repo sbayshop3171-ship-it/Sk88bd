@@ -19,11 +19,13 @@ export default async function AdminUsers() {
     <>
       <h1 className="adm__h1">Users</h1>
       <p className="adm__sub">
-        Balance adjustments, block/unblock, VIP level and referral code. Every balance
-        change is written to the ledger, so who did what stays visible afterwards.
+        Find a player by their ID, phone or name. Adjust a balance, put an account on hold, or
+        ban it. Every balance change is written to the ledger, and every hold or ban keeps its
+        reason and who set it.
       </p>
       <PlayerControl
         initialPlayers={players.ok ? players.data : []}
+        initialError={players.ok ? '' : players.message ?? `Could not load the players (${players.reason})`}
         backendReady={isBackendReady()}
         canWrite={can(session.role, 'players.write')}
       />

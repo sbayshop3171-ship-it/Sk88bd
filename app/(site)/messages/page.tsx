@@ -141,7 +141,7 @@ export default function MessagesPage() {
         ) : (
           <p className="ml__empty">
             No data
-            <small>বার্তা পাঠাতে চাইলে অভিযোগ / পরামর্শ পাতাটি ব্যবহার করুন।</small>
+            <small>To send us a message, use the Complaint / suggestion page.</small>
           </p>
         )}
       </div>

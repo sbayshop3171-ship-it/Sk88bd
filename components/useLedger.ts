@@ -34,8 +34,11 @@ export function useLedger(limit = 200) {
   const [rows, setRows] = useState<LedgerRow[] | null>(null);
 
   useEffect(() => {
-    if (!supabase || !session) return;
+    // signed out (or switched account): drop the last player's rows rather
+    // than leave their figures on /refer and /vip for whoever is next
+    if (!supabase || !session) { setRows(null); return; }
     let live = true;
+    setRows(null);
 
     void supabase
       .from('transactions')

@@ -46,6 +46,7 @@ import {
 } from './mini-games';
 import { MAX_ROUND_X, slotRoundFromHash } from './slots';
 import { endRound, mutateRounds, openRound, startRound } from './mini-rounds-store';
+import { accountBlock } from './player-status';
 import { adminClient, serverClient } from './supabase';
 
 type CookieStore = {
@@ -86,6 +87,9 @@ export interface InstantBet {
 export async function playInstant(cookies: CookieStore, bet: InstantBet): Promise<InstantReply> {
   const who = await signedInUser(cookies);
   if (!who.ok) return who.error;
+
+  const blocked = await accountBlock(who.db, who.uid);
+  if (blocked) return { ok: false, reason: blocked === 'banned' ? 'account-banned' : 'account-held' };
 
   if (!isMiniGame(bet.game)) return { ok: false, reason: 'unknown-game' };
   const stake = stakeOf(bet.stake);
@@ -158,51 +162,74 @@ export async function takeOff(
   const who = await signedInUser(cookies);
   if (!who.ok) return who.error;
 
+  const blocked = await accountBlock(who.db, who.uid);
+  if (blocked) return { ok: false, reason: blocked === 'banned' ? 'account-banned' : 'account-held' };
+
   const amount = stakeOf(stake);
   if (typeof amount !== 'number') return amount;
 
-  // A round that is still in the air blocks another take-off; one that has
-  // already busted is just a loss and gets cleared out of the way.
-  const existing = await openRound(who.uid, game);
-  if (existing && Date.now() < burstAt(existing.startedAt, game, existing.crashAt)) {
-    return { ok: false, reason: 'round-open' };
-  }
+  // One take-off at a time per player and game. Two sent together used to
+  // both pass the "anything in the air?" check below, both be charged, and
+  // the second round overwrote the first — whose stake was never settled.
+  return oneAtATime(`${who.uid}:${game}`, async (): Promise<FlightReply> => {
+    // A round that is still in the air blocks another take-off; one that has
+    // already busted is just a loss and gets cleared out of the way.
+    const existing = await openRound(who.uid, game);
+    if (existing && Date.now() < burstAt(existing.startedAt, game, existing.crashAt)) {
+      return { ok: false, reason: 'round-open' };
+    }
 
-  const nonce = Date.now();
-  const clientSeed = cleanSeed(clientSeedRaw);
-  const serverSeed = randomHex();
-  const serverSeedHash = await sha256Hex(serverSeed);
-  const hash = await sha256Hex(roundHashInput(serverSeed, clientSeed, nonce));
-  const crashAt = crashPoint(hash);
+    const nonce = Date.now();
+    const clientSeed = cleanSeed(clientSeedRaw);
+    const serverSeed = randomHex();
+    const serverSeedHash = await sha256Hex(serverSeed);
+    const hash = await sha256Hex(roundHashInput(serverSeed, clientSeed, nonce));
+    const crashAt = crashPoint(hash);
 
-  const debit = await who.db.rpc('wallet_apply', {
-    p_user: who.uid,
-    p_kind: 'bet',
-    p_amount: -amount,
-    p_ref: `${game}:${nonce}`,
-  });
-  if (debit.error) {
-    return /balance|check/i.test(debit.error.message)
-      ? { ok: false, reason: 'insufficient-balance' }
-      : { ok: false, reason: 'db-error', message: debit.error.message };
-  }
-
-  const startedAt = Date.now();
-  await mutateRounds((rounds) => {
-    startRound(rounds, {
-      userId: who.uid, game, stake: amount, startedAt, crashAt,
-      serverSeed, serverSeedHash, clientSeed, nonce,
+    const debit = await who.db.rpc('wallet_apply', {
+      p_user: who.uid,
+      p_kind: 'bet',
+      p_amount: -amount,
+      p_ref: `${game}:${nonce}`,
     });
-  });
+    if (debit.error) {
+      if (/account (banned|held)/i.test(debit.error.message)) {
+        return { ok: false, reason: /banned/i.test(debit.error.message) ? 'account-banned' : 'account-held' };
+      }
+      return /balance|check/i.test(debit.error.message)
+        ? { ok: false, reason: 'insufficient-balance' }
+        : { ok: false, reason: 'db-error', message: debit.error.message };
+    }
 
-  return {
-    ok: true,
-    round: {
-      game, stake: amount, startedAt, serverNow: Date.now(),
-      // the seed stays committed but hidden until the round is settled
-      fairness: { serverSeedHash, clientSeed, nonce },
-    },
-  };
+    const startedAt = Date.now();
+    await mutateRounds((rounds) => {
+      startRound(rounds, {
+        userId: who.uid, game, stake: amount, startedAt, crashAt,
+        serverSeed, serverSeedHash, clientSeed, nonce,
+      });
+    });
+
+    return {
+      ok: true,
+      round: {
+        game, stake: amount, startedAt, serverNow: Date.now(),
+        // the seed stays committed but hidden until the round is settled
+        fairness: { serverSeedHash, clientSeed, nonce },
+      },
+    };
+  });
+}
+
+/* Runs one task at a time per key, in arrival order. The site is a single
+   Node process, so a map of promise chains is all the locking this needs. */
+const lanes = new Map<string, Promise<unknown>>();
+
+function oneAtATime<T>(key: string, task: () => Promise<T>): Promise<T> {
+  const run = (lanes.get(key) ?? Promise.resolve()).then(task, task);
+  const done = run.then(() => undefined, () => undefined);
+  lanes.set(key, done);
+  void done.then(() => { if (lanes.get(key) === done) lanes.delete(key); });
+  return run;
 }
 
 export async function cashOutFlight(

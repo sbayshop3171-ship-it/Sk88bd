@@ -167,22 +167,26 @@ export type ClaimReason =
   | 'no-spin-left'
   | 'unknown-mission'
   | 'not-finished'
+  | 'account-banned'
+  | 'account-held'
   | 'db-error';
 
 export const CLAIM_MESSAGE: Record<ClaimReason, string> = {
-  'no-backend': 'সার্ভার এখনো যুক্ত হয়নি',
-  unauthorized: 'আগে লগইন করুন',
-  inactive: 'এই অফারটি এখন বন্ধ আছে',
-  'already-claimed': 'এটি আগেই নেওয়া হয়েছে',
-  'needs-deposit': 'প্রথমে ডিপোজিট করতে হবে',
-  'nothing-to-claim': 'এখন নেওয়ার মতো কিছু নেই',
-  'below-minimum': 'পরিমাণ ন্যূনতমের চেয়ে কম',
-  'unknown-code': 'কোডটি ঠিক নেই',
-  'code-used-up': 'কোডটির সীমা শেষ',
-  'no-spin-left': 'আপনার ফ্রি স্পিন শেষ',
-  'unknown-mission': 'মিশনটি আর নেই',
-  'not-finished': 'মিশনটি এখনো শেষ হয়নি',
-  'db-error': 'সমস্যা হয়েছে — আবার চেষ্টা করুন',
+  'no-backend': 'The server is not connected yet',
+  unauthorized: 'Log in first',
+  inactive: 'This offer is switched off right now',
+  'already-claimed': 'Already claimed',
+  'needs-deposit': 'Make a deposit first',
+  'nothing-to-claim': 'Nothing to claim right now',
+  'below-minimum': 'The amount is below the minimum',
+  'unknown-code': 'That code is not valid',
+  'code-used-up': 'That code has been used up',
+  'no-spin-left': 'Your free spin has been used',
+  'unknown-mission': 'That mission is no longer running',
+  'not-finished': 'That mission is not finished yet',
+  'account-banned': 'This account has been banned. Contact support.',
+  'account-held': 'This account is on hold. Contact support.',
+  'db-error': 'Something went wrong — try again',
 };
 
 /** The ledger ref a claim is written under. It is the idempotency key: one
@@ -192,4 +196,6 @@ export const claimRef = (kind: BonusKind, key: string) => `${kind}:${key}`;
 
 /** taka the operator typed → paisa the wallet stores. Rounds down, so a
     fraction of a paisa is never invented. */
-export const toPaisaFloor = (taka: number) => Math.floor(taka * 100);
+/* Rounded to 1/100 paisa before the floor: 1.15 * 100 is 114.999… in
+   floating point, and a bare floor would pay 114. */
+export const toPaisaFloor = (taka: number) => Math.floor(Math.round(taka * 10_000) / 100);

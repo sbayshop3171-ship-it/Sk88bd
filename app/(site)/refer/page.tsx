@@ -77,14 +77,14 @@ export default function ReferPage() {
   const copy = async (text: string, what: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast(`${what} কপি হয়েছে`);
+      toast(`${what} copied`);
     } catch {
-      toast('কপি করা গেল না — হাতে কপি করুন');
+      toast('Could not copy — copy it by hand');
     }
   };
 
   const share = (url: string) => window.open(url, '_blank', 'noopener,noreferrer');
-  const msg = encodeURIComponent(`${BRAND.name} এ খেলুন — আমার লিংক দিয়ে রেজিস্টার করুন: ${link}`);
+  const msg = encodeURIComponent(`Play on ${BRAND.name} — sign up with my link: ${link}`);
 
   return (
     <>
@@ -109,13 +109,13 @@ export default function ReferPage() {
               <b>Share with your friends</b>
               <div className="iv__link">
                 <input readOnly value={link} onFocus={(e) => e.currentTarget.select()} />
-                <button type="button" onClick={() => copy(link, 'লিংক')} aria-label="Copy link"><CopyIcon /></button>
+                <button type="button" onClick={() => copy(link, 'Link')} aria-label="Copy link"><CopyIcon /></button>
               </div>
               <div className="iv__btns">
                 <button type="button" className="is-fb" onClick={() => share(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`)} aria-label="Facebook"><FacebookIcon /></button>
                 <button type="button" className="is-tg" onClick={() => share(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${msg}`)} aria-label="Telegram"><TelegramIcon /></button>
                 <button type="button" className="is-wa" onClick={() => share(`https://wa.me/?text=${msg}`)} aria-label="WhatsApp"><WhatsAppIcon /></button>
-                <button type="button" className="is-code" onClick={() => copy(code, 'কোড')}>{code || '—'}</button>
+                <button type="button" className="is-code" onClick={() => copy(code, 'Code')}>{code || '—'}</button>
               </div>
             </div>
           ) : ready && (
@@ -125,9 +125,9 @@ export default function ReferPage() {
             </div>
           )}
 
-          <p className="iv__head">একজনকে আনলে <b>৳{VIP_TIERS.length * 200}</b> পর্যন্ত আয়</p>
-          <p className="iv__line">নিচের স্তরের ডিপোজিটে <b>2.2%</b> আয়</p>
-          <p className="iv__line">নিচের স্তরের প্রতিটি বাজিতে <b>1%</b> আয়</p>
+          <p className="iv__head">Earn up to <b>৳{VIP_TIERS.length * 200}</b> for each friend you bring</p>
+          <p className="iv__line">Earn <b>2.2%</b> on your downline&apos;s deposits</p>
+          <p className="iv__line">Earn <b>1%</b> on every bet your downline places</p>
         </div>
       ) : (
         <div className="iv">
@@ -143,19 +143,19 @@ export default function ReferPage() {
               <tr>
                 <td>VIP0</td>
                 <td>৳100</td>
-                <td>ডিপোজিট ৳100 ও বাজি ৳2,000</td>
+                <td>Deposit ৳100 and bet ৳2,000</td>
               </tr>
               {VIP_TIERS.map((v, i) => (
                 <tr key={v.level}>
                   <td>{v.level.replace(' ', '')}</td>
                   <td>৳{(150 + i * 50).toLocaleString('en-IN')}</td>
-                  <td>ডিপোজিট ৳100 ও বাজি ৳2,000</td>
+                  <td>Deposit ৳100 and bet ৳2,000</td>
                 </tr>
               ))}
             </tbody>
           </table>
           <p className="iv__note">
-            বন্ধু রেজিস্টার করার পর উপরের শর্ত পূরণ করলে বোনাসটি আপনার ওয়ালেটে যোগ হবে।
+            Once your friend signs up and meets the terms above, the bonus goes into your wallet.
           </p>
         </div>
       )}

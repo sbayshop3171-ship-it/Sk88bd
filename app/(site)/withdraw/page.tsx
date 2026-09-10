@@ -266,17 +266,27 @@ export default function WithdrawPage() {
     /* request_withdrawal debits the wallet inside the same statement that
        raises the request, so the amount cannot be gambled away while it waits
        in the queue. A rejection puts it back. */
-    const { data, error } = await supabase.rpc('request_withdrawal', {
+    // The password goes to the database too (migration 012), which checks it
+    // again — a check made only on this screen could be skipped by calling
+    // the function directly. Before 012 there is only the older version.
+    const args = {
       p_channel: method.channelId,
       p_amount: toPaisa(raised.amount),
       p_account_no: raised.account,
-    });
+    };
+    let { data, error } = await supabase.rpc('request_withdrawal', { ...args, p_password: password });
+    if (error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message))) {
+      ({ data, error } = await supabase.rpc('request_withdrawal', args));
+    }
     setBusy(false);
 
     if (error) {
+      const m = error.message;
       setErr({
-        apply: /balance|check/i.test(error.message)
-          ? 'Not enough balance'
+        apply: /account banned/i.test(m) ? 'This account has been banned. Contact support.'
+          : /account held/i.test(m) ? 'This account is on hold. Contact support.'
+          : /wrong password/i.test(m) ? 'Wrong password — go back and enter it again'
+          : /balance|check/i.test(m) ? 'Not enough balance'
           : 'Could not send the request — try again',
       });
       return;
@@ -331,8 +341,9 @@ export default function WithdrawPage() {
     if (!trx) { setErr({ trx: 'The TrxID is required!' }); return; }
 
     setBusy(true);
+    // no id, nowhere to attach the TrxID — say so rather than show "done"
     const saved = raised.id === null
-      ? true
+      ? false
       : await quoteCharge(raised.id, {
         channelId: chargeMethod?.channelId,
         trxId: trx,

@@ -80,7 +80,7 @@ const installPromptCatcher = `
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="bn" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Script
           id="extension-error-guard"

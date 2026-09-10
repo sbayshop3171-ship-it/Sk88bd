@@ -148,15 +148,15 @@ export default function RewardPage() {
               <>
                 <span className="rc__ico"><tile.icon /></span>
                 <b>{tile.label}</b>
-                {live && !live.active && <small>বন্ধ</small>}
-                {live?.active && taken && <small>নেওয়া হয়েছে</small>}
+                {live && !live.active && <small>Off</small>}
+                {live?.active && taken && <small>Claimed</small>}
                 {live?.active && !taken && tile.key === 'signin' && (
-                  <small>দিন {state?.signIn.day} · {money(toTaka(amount ?? 0))}</small>
+                  <small>Day {state?.signIn.day} · {money(toTaka(amount ?? 0))}</small>
                 )}
                 {live?.active && !taken && tile.key === 'rescue' && (
-                  <small>{(amount ?? 0) > 0 ? money(toTaka(amount ?? 0)) : 'কিছু নেই'}</small>
+                  <small>{(amount ?? 0) > 0 ? money(toTaka(amount ?? 0)) : 'Nothing yet'}</small>
                 )}
-                {live?.active && tile.key === 'promo' && <small>কোড দিন</small>}
+                {live?.active && tile.key === 'promo' && <small>Enter code</small>}
               </>
             );
 
@@ -165,13 +165,13 @@ export default function RewardPage() {
             }
 
             const take = async () => {
-              if (!signedIn) { toast('আগে লগইন করুন'); return; }
+              if (!signedIn) { toast('Log in first'); return; }
               if (tile.key === 'promo') { setAsking(true); return; }
               const kind = tile.key === 'signin' ? 'signin' : 'rescue';
               const reply = await claim(kind);
               toast(reply.ok
-                ? `${money(toTaka(reply.amount))} যোগ হয়েছে`
-                : reply.message ?? 'নেওয়া গেল না');
+                ? `${money(toTaka(reply.amount))} added`
+                : reply.message ?? 'Could not claim — try again');
               if (reply.ok) void reload();
             };
 
@@ -193,10 +193,10 @@ export default function RewardPage() {
           <>
             <div className="scrim on" onClick={() => setAsking(false)} />
             <div className="modal cz-modal" role="dialog" aria-modal="true">
-              <h3>প্রোমো কোড</h3>
-              <p>যে কোডটি পেয়েছেন সেটি লিখুন।</p>
+              <h3>Promo code</h3>
+              <p>Enter the code you received.</p>
               <label className="cz-field">
-                <span>কোড</span>
+                <span>Code</span>
                 <input
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -206,7 +206,7 @@ export default function RewardPage() {
                 />
               </label>
               <div className="cz-modal__acts">
-                <button type="button" className="btn btn--ghost" onClick={() => setAsking(false)}>বাতিল</button>
+                <button type="button" className="btn btn--ghost" onClick={() => setAsking(false)}>Cancel</button>
                 <button
                   type="button"
                   className="btn btn--gold"
@@ -214,12 +214,12 @@ export default function RewardPage() {
                   onClick={async () => {
                     const reply = await claim('promo', code.trim());
                     toast(reply.ok
-                      ? `${money(toTaka(reply.amount))} যোগ হয়েছে`
-                      : reply.message ?? 'কোডটি নেওয়া গেল না');
+                      ? `${money(toTaka(reply.amount))} added`
+                      : reply.message ?? 'Could not use that code — try again');
                     if (reply.ok) { setAsking(false); setCode(''); void reload(); }
                   }}
                 >
-                  নিন
+                  Claim
                 </button>
               </div>
             </div>

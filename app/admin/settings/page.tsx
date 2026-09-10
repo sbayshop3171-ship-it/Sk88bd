@@ -31,8 +31,8 @@ export default async function AdminSettings() {
       <p className="adm__sub">
         Admin and agent logins are managed in the <b>“Staff”</b> tab — create them there,
         change roles, reset passwords or disable them. An agent can only approve deposits
-        and withdrawals and view players; <b>only the super admin</b>{' '}
-        can change payment numbers.
+        and withdrawals and view players — <b>agents can never change payment numbers</b>.
+        Admins can.
       </p>
 
       <h2 className="adm__h2">Limits, support &amp; notice</h2>

@@ -105,6 +105,9 @@ export default function MyProfilePage() {
 
       <div className="msheet ms--white">
         <p className="ms-user">Username:<b>{signedIn ? profile?.phone ?? '—' : 'Guest'}</b></p>
+        {signedIn && profile?.player_no ? (
+          <p className="ms-user">Player ID:<b>{profile.player_no}</b></p>
+        ) : null}
 
         {!signedIn && ready && (
           <div className="wallet-bar" style={{ margin: '16px 20px 0' }}>

@@ -22,8 +22,8 @@ export default async function AdminStaff() {
       <p className="adm__sub">
         Logins for admins and agents. An agent can only approve deposits and withdrawals
         and view players — <b>they cannot change payment numbers</b>. An admin also handles
-        games, banners and balances, but payment numbers stay with the super admin
-        alone.
+        games, banners, balances and the payment numbers; settings, app keys and staff
+        accounts stay with the super admin alone.
       </p>
       <p className="adm__sub">
         Every account gets its own <b>link code</b>. When somebody registers through that
