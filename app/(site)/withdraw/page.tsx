@@ -82,6 +82,10 @@ export default function WithdrawPage() {
   const [amount, setAmount] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
+  // Whether the player has set a fund password in the Security Center
+  // (migration 010). Until they do, this box keeps asking for the login
+  // password exactly as it always has, so nobody is locked out by the change.
+  const [hasTxnPassword, setHasTxnPassword] = useState(false);
   const [err, setErr] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
@@ -135,6 +139,14 @@ export default function WithdrawPage() {
     void loadWallets();
     void loadToday();
   }, [loadWallets, loadToday]);
+
+  useEffect(() => {
+    if (!supabase || !session) return;
+    let live = true;
+    void supabase.rpc('has_transaction_password')
+      .then(({ data }) => { if (live) setHasTxnPassword(data === true); });
+    return () => { live = false; };
+  }, [supabase, session]);
 
   // One agent number per visit to the charge screen, from the numbers the
   // admin marked "Withdraw" for that channel.
@@ -221,12 +233,16 @@ export default function WithdrawPage() {
       return;
     }
 
-    // the "transaction password" is the login password, re-checked here so a
-    // borrowed phone cannot empty the wallet
+    // Re-checked here so a borrowed phone cannot empty the wallet. If the
+    // player has set a transaction password in the Security Center it is that
+    // one; otherwise it falls back to the login password, which is what this
+    // box asked for before migration 010.
     setBusy(true);
-    const check = await supabase.auth.signInWithPassword({ email: session.user.email ?? '', password });
+    const ok = hasTxnPassword
+      ? (await supabase.rpc('verify_transaction_password', { p_password: password })).data === true
+      : !(await supabase.auth.signInWithPassword({ email: session.user.email ?? '', password })).error;
     setBusy(false);
-    if (check.error) {
+    if (!ok) {
       setErr({ password: 'Wrong password' });
       return;
     }
@@ -713,7 +729,11 @@ export default function WithdrawPage() {
             </button>
           </label>
           {err.password && <p className="cz-err">{err.password}</p>}
-          {cfg.passwordHint && !err.password && <p className="cz-limit">{cfg.passwordHint}</p>}
+          {/* the admin's hint names the login password; once a fund password
+              exists it is the one being asked for, so say so instead */}
+          {!err.password && (hasTxnPassword
+            ? <p className="cz-limit">Enter your transaction password</p>
+            : cfg.passwordHint ? <p className="cz-limit">{cfg.passwordHint}</p> : null)}
         </section>
 
         {/* The charge is not shown here. On this screen the player is still

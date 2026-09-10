@@ -4165,53 +4165,220 @@ body.cz-light .rc__bar{background:rgba(31,36,48,.14)}
 }
 
 /* ---------- Security Center ----------
-   A score the player can move, and the five things that move it. */
-.sc__score{
-  display:flex;align-items:center;gap:14px;
-  margin:12px;padding:16px 15px;border-radius:var(--r-md);
-  background:#fff;border:1px solid var(--line);box-shadow:var(--shadow);
+   CK44's member-centre `securityCenter` screen, ported.
+
+   Everything down to the "phone" block below is the reference's own CSS,
+   filtered to the rules this page's markup actually matches and with its
+   image paths repointed at /security/. Class names are the reference's, so
+   app/(site)/security/page.tsx reads against it line for line. Do not
+   hand-tidy these — re-derive them from the reference instead.
+
+   The reference draws three 330px cards side by side in a 1110px drawer;
+   we are a phone, so the block after it stacks the same three cards and
+   turns the right-hand slide-in form into a full-screen sheet. Nothing
+   else is changed: the card art is 330x540, and any other width breaks it. */
+#mc_container{height: 100%; width: 1110px; text-align: left;}
+#mc_container{height: 620px; position: relative; width: 1110px; color: rgb(102, 102, 102); font-size: 14px; background-color: rgb(255, 255, 255); font-family: Avenir, "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", "serif\9 ";}
+@keyframes rotate-full { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+#mc_container button,#mc_container input{appearance: none; background: 0px 0px; outline: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none;}
+#mc_container *{box-sizing: border-box; line-height: 1;}
+#mc_container a,#mc_container input,#mc_container label{margin: 0px; padding: 0px; text-decoration: none; list-style: none;}
+#mc_container ::-webkit-scrollbar{width: 6px; background-color: transparent !important;}
+#mc_container ::-webkit-scrollbar-button{display: block; height: 4px;}
+#mc_container ::-webkit-scrollbar-thumb{border-radius: 10px; box-shadow: rgba(139, 139, 137, 0.5) 0px 0px 6px inset; background-color: rgb(139, 138, 138);}
+#mc_container .fr{float: right;}
+#mc_container .overflow{overflow: hidden; position: relative;}
+#mc_container .colon::after{content: "：" !important; display: inline !important;}
+#mc_container .ellipsis{white-space: nowrap; overflow: hidden; line-height: normal; text-overflow: ellipsis; display: block;}
+#mc_container .clear-float::after{content: ""; display: block; clear: both;}
+#mc_container .close-info{position: absolute; z-index: 11; box-shadow: rgba(0, 0, 0, 0.1) -5px 0px 20px; top: 0px; left: -30px; padding: 29px 5px 0px; width: 30px; line-height: 1.2; font-size: 0px; background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsSAAALEgHS3X78AAABhklEQVQ4y53SPWiUQRSF4WfWtdHeIYUWIyIKYrCwEQuVQFAQtbCxC0hMZSUoRPEXS60MBMFaBCNYKbiFWAgKplKwGAlEzdindSzcLOHzy7LmdHPuue9wZ27QohrTSZzDYezs28v4gIVQ8stmT2gA9mIOxwzXW8yEkj//A6oxHUUPXaPpNyZCyb0BqMa0C0sjApraHUrOnf7h+SYh8AJCjek43jSKF7ADDxr+XWzBtYY/2cFUyy3bQ8kPMbvOuxNKvo6fLfnprr9f3NR8jWkslHy7xpTQDSXfqDFdxf2W/HioMa1i2wbzPwklT0GN6RFmNsitdgzX+lXYOiQXuviOPS3Fe6Hk2RrTXH+0izWmZdxsyf7q4mMLaDqUPF9juoJL/dGWQsm3akw/MN/IL4Ya0wReNwr7cASPG/5lrOBpwz+1ttmLOGhz+hJK3r/22Gc3CYEz0IFQ8jecQP1PyGQo+esA1If1cADvRgC8x3go+dWgvy1VYzqN8ziEsb69gk94FkpeaPb8ASG+cPprxWvbAAAAAElFTkSuQmCC") center 7px no-repeat rgb(254, 254, 254); text-align: center; cursor: pointer;}
+#mc_container .close-info::after{content: ""; width: 0px; height: 0px; right: 0px; position: absolute; top: 100%; border-width: 0px 30px 13px; border-style: solid; border-color: transparent rgb(254, 254, 254) transparent transparent; border-image: none;}
+#mc_container .button{position: relative; display: inline-block; height: 34px; line-height: 34px; padding: 0px 10px; background-color: rgb(253, 47, 47); color: rgb(255, 255, 255); vertical-align: middle; text-align: center; border-radius: 20px; cursor: pointer; min-width: 98px; width: fit-content; transition: 0.2s ease-in-out;}
+#mc_container .button.btn-submit{box-shadow: rgb(255, 211, 211) 0px 0px 10px;}
+#mc_container .button.btn-submit:hover{background-color: rgb(242, 82, 82);}
+#mc_container .button.btn-submit:active{background-color: rgb(228, 42, 42) !important;}
+#mc_container .input-control{display: inline-block; vertical-align: middle; height: 34px; border-radius: 5px; width: 118px; border: 1px solid rgb(229, 229, 229); background-color: rgb(245, 245, 245); color: rgb(100, 100, 100); outline: 0px; padding-left: 5px; font-size: 12px; box-shadow: rgba(0, 0, 0, 0.08) 0px 1px 5px inset;}
+#mc_container .input-control::placeholder{color: rgb(181, 181, 181);}
+#mc_container .input-control[type]:hover{border-color: rgb(160, 219, 255) !important;}
+#mc_container .input-control[type]:focus{border-color: rgb(160, 219, 255) !important;}
+#mc_container .form-group{word-spacing: -2px; margin-bottom: 16px; white-space: nowrap;}
+#mc_container .form-group .input-case{display: inline-block; position: relative; vertical-align: middle;}
+#mc_container .form-group .input-case .icon-eyes,#mc_container .form-group .input-case .icon-eyes-close{position: absolute; top: 50%; transform: translateY(-50%); right: 14px; cursor: pointer;}
+#mc_container .form-group .fr{float: right;}
+#mc_container .form-group .form-label{line-height: 34px; display: inline-block; vertical-align: middle; width: auto;}
+#mc_container .form-group .input-control{width: 210px;}
+#mc_container .form-group .error-tips{display: none;}
+#mc_container .mcac-icon{display: inline-block; vertical-align: middle; background: url(/security/mcac-icon.png) no-repeat;}
+#mc_container .mcac-icon.icon-optimal{flex: 0 0 40px; width: 40px; height: 40px; background-position: 0px -92px; border-radius: 50%; box-shadow: rgba(92, 188, 42, 0.35) 6px 6px 13px;}
+#mc_container .mcac-icon.icon-eyes{width: 24px; height: 14px; background-position: -94px 0px;}
+#mc_container .mcac-icon.icon-eyes-close{width: 24px; height: 18px; background-position: -135px 1px;}
+#mc_container .model-case{position: absolute; z-index: 11; left: 0px; top: 47px; height: calc(100% - 47px); display: none; width: 100%; overflow: hidden;}
+#mc_container .model-case.all-h{top: 0px; height: 100%;}
+#mc_container .model-case .model-mask{position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);}
+#mc_container .model-case .model-content{position: relative; z-index: 2;}
+#mc_container .caption-text{border-left: 4px solid rgb(253, 47, 47); font-weight: 400; line-height: 15px; padding-left: 9px; margin: 17px 0px 15px;}
+#mc_container .caption-text.border-blue{border-color: rgb(35, 230, 58);}
+#mc_container.security-center .setting-modal{position: relative; height: 100%; float: right; box-shadow: rgba(0, 0, 0, 0.2) -18px 0px 40px -18px;}
+#mc_container.security-center .setting-modal .setting-item{padding: 0px 30px; float: right; background-color: rgb(255, 255, 255); height: 100%; position: relative;}
+#mc_container.security-center .setting-modal .setting-item .setting-item-footer{position: absolute; bottom: 0px; left: 0px; padding-left: 30px; line-height: 44px; height: 47px; border-top: 1px solid rgb(239, 239, 239); width: 100%;}
+#mc_container.security-center{background-color: rgb(255, 255, 255);}
+#mc_container.security-center::after{content: ""; height: 60px; box-shadow: rgba(255, 255, 255, 0.8) 0px -50px 50px; position: absolute; bottom: -60px; right: 0px; width: 360px;}
+#mc_container.security-center .personal-information{box-shadow: rgba(170, 106, 226, 0.19) 0px 7px 62px 0px;}
+#mc_container.security-center .information-wrap{float: left; margin: 40px 0px 0px 30px; border-radius: 10px; height: 539px; width: 330px; position: relative; line-height: 1;}
+#mc_container.security-center .security-information{color: rgb(255, 255, 255); position: relative;}
+#mc_container.security-center .security-information .grade-view{margin: 88px auto 0px; max-width: 168px; min-height: 168px; text-align: center; font-size: 44px; display: flex; flex-direction: column; justify-content: center;}
+#mc_container.security-center .security-information .grade-view div{line-height: 1;}
+#mc_container.security-center .security-information .grade-view .small-view{margin-top: 12px; line-height: 1; font-size: 15px; padding: 0px 5px;}
+#mc_container.security-center .security-information .more-gradeInfo{text-align: center; margin-top: 15px; line-height: 25px;}
+#mc_container.security-center .security-information .more-gradeInfo div{line-height: 25px;}
+#mc_container.security-center .security-information .more-gradeInfo strong{font-size: 22px; font-family: Arial, serif, "Microsoft YaHei"; vertical-align: text-bottom; font-weight: 400;}
+#mc_container.security-center .security-information .more-gradeInfo .js_scorelevel{margin-left: 5px;}
+#mc_container.security-center .security-information .setting-optimal{display: none; margin: 40px 20px 0px; height: 118px; font-size: 16px; color: rgb(94, 94, 94); font-weight: 700; text-align: center;}
+#mc_container.security-center .security-information .setting-text{color: rgb(94, 94, 94); text-align: center; font-size: 15px; font-weight: 700; position: absolute; width: 100%; bottom: 24%;}
+#mc_container.security-center .security-information .setting-options{margin-top: 19px; overflow: hidden; white-space: nowrap; height: 104px; position: absolute; width: 100%; bottom: 0px;}
+#mc_container.security-center .security-information .setting-options .setting-item{width: 33.33%; text-align: center; display: inline-block; font-size: 16px; float: left; height: 104px;}
+#mc_container.security-center .security-information .setting-options .setting-item .item-text{margin-top: 12px; color: rgb(102, 102, 102); white-space: normal; overflow-wrap: break-word;}
+#mc_container.security-center .security-information.grade-low{background: url(/security/grade-low-bg.png) no-repeat; box-shadow: rgba(218, 81, 97, 0.19) 0px 7px 62px;}
+#mc_container.security-center .security-information.grade-low .grade-view{color: rgb(187, 60, 85);}
+#mc_container.security-center .security-information.grade-mid{background: url(/security/grade-mid-bg.png) no-repeat; box-shadow: rgba(56, 124, 248, 0.19) 0px 7px 62px;}
+#mc_container.security-center .security-information.grade-mid .grade-view{color: rgb(54, 120, 196);}
+#mc_container.security-center .security-information.grade-optimal .setting-optimal{display: flex; align-items: center; justify-content: center;}
+#mc_container.security-center .security-information.grade-optimal .setting-optimal span{line-height: 1.5;}
+#mc_container.security-center .security-information.grade-optimal .setting-options,#mc_container.security-center .security-information.grade-optimal .setting-text{display: none;}
+#mc_container.security-center .security-information.grade-high{background: url(/security/grade-high-bg.png) no-repeat; box-shadow: rgba(29, 162, 29, 0.19) 0px 7px 62px;}
+#mc_container.security-center .security-information.grade-high .grade-view{color: rgb(67, 150, 86);}
+#mc_container.security-center .account-information{box-shadow: none; height: 580px; padding-left: 20px; width: 340px; padding-right: 25px;}
+#mc_container.security-center .account-information .account-bind-item .item-text{display: flex; align-items: center; gap: 5px;}
+#mc_container.security-center .account-information .account-bind-item .item-text-info{flex: 1 1 0%; display: flex; align-items: center; gap: 5px;}
+#mc_container.security-center .account-information .account-bind-item{min-height: 61px; margin-bottom: 24px; padding-left: 74px; position: relative;}
+#mc_container.security-center .account-information .account-bind-item .iconinfo{position: absolute; left: 0px; top: 2px;}
+#mc_container.security-center .account-information .account-bind-item .item-text{color: rgb(102, 102, 102); font-size: 16px; line-height: 18px; margin-bottom: 8px;}
+#mc_container.security-center .account-information .account-bind-item .item-detail{line-height: 18px; font-size: 13px; color: rgb(151, 151, 151); text-align: start;}
+#mc_container.security-center .iconinfo{display: inline-block; width: 55px; height: 55px; border-radius: 50%; vertical-align: middle; background-repeat: no-repeat; cursor: pointer; background-image: url(/security/iconinfo.png); box-shadow: rgba(194, 194, 192, 0.35) 9px 9px 21px;}
+#mc_container.security-center .iconinfo.icon-info{background-position: -11px -7px;}
+#mc_container.security-center .iconinfo.icon-info.active{background-position: -245px -7px; box-shadow: rgba(254, 235, 107, 0.35) 9px 9px 21px;}
+#mc_container.security-center .iconinfo.icon-info.active:hover{background-position: -474px -7px;}
+#mc_container.security-center .iconinfo.icon-info.active:active{background-position: -713px -7px !important;}
+#mc_container.security-center .iconinfo.icon-pwd{background-position: -11px -95px;}
+#mc_container.security-center .iconinfo.icon-pwd.active{background-position: -245px -95px; box-shadow: rgba(87, 239, 235, 0.35) 9px 9px 21px;}
+#mc_container.security-center .iconinfo.icon-pwd.active:hover{background-position: -474px -95px;}
+#mc_container.security-center .iconinfo.icon-pwd.active:active{background-position: -713px -95px !important;}
+#mc_container.security-center .iconinfo.icon-moneypwd{background-position: -11px -356px;}
+#mc_container.security-center .iconinfo.icon-moneypwd.active{background-position: -245px -356px; box-shadow: rgba(221, 205, 120, 0.35) 9px 9px 21px;}
+#mc_container.security-center .iconinfo.icon-moneypwd.active:hover{background-position: -474px -356px;}
+#mc_container.security-center .iconinfo.icon-moneypwd.active:active{background-position: -713px -356px !important;}
+#mc_container.security-center .iconinfo.icon-eWallet{background-position: -11px -961px;}
+#mc_container.security-center .iconinfo.icon-eWallet.active{background-position: -245px -961px; box-shadow: rgba(254, 235, 107, 0.35) 9px 9px 21px;}
+#mc_container.security-center .iconinfo.icon-eWallet.active:hover{background-position: -474px -961px;}
+#mc_container.security-center .iconinfo.icon-eWallet.active:active{background-position: -713px -961px !important;}
+#mc_container.security-center .iconinfo.icon-logout{background-image: url(/security/icon-logout.png); background-size: 55px 55px;}
+#mc_container.security-center .iconinfo.icon-logout.active{box-shadow: rgba(255, 109, 124, 0.35) 9px 9px 21px;}
+#mc_container.security-center .icons-danger{flex: 0 0 18px; display: inline-block; width: 18px; vertical-align: sub; height: 18px; background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAABWElEQVQ4y42UPUsDQRCGn10C2lsoiIgGHPwKiF+dWETwA4QU2lhYqfiTJFgIlikERREUG0GIgiKoTJtGSGElgiiuxd3J5bzb3FvNLc+8O7sze4YUOZElYA2YAXrD5VegDtSM6kkyxyQMBoE9oIxfV8CuUdV/Rk5kDjgHOsmnb2DRqF7+GTmRnrD0pJrAAvAVbtKXwvQb1YYNP44ydj00qo9G9QXYz2COAawTmQdmcxzFZqyXnMiyBXY8yUOxWDzctiVocZYmYvGUj7NAtwfodSIdYVz0cF2FHHcz7ETe20EFghYPeJgD4KeNz1sBuG1jVMpR9YMFqh7gE9gCNoEPD1eNJvsOmEwBnozqWMjUgekU5tmojkaXXQEaKVDRiWwQPJGRjGpWofXRloEzggbk1YpRPYXY2BvVC2AcuM5hcAOUIpOWiuJyIhVgnWCyo4FtAvcEP7ZaMucXChNXCqnhyzUAAAAASUVORK5CYII=") no-repeat;}
+#mc_container.security-center .icons-checked-green{flex: 0 0 18px; display: inline-block; width: 18px; vertical-align: sub; height: 18px; background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAABbklEQVQ4y53Uv2sVQRTF8c8ulraCIKQYG0HQwl9sI4qDIgFjoRZiYZHGv0Ft1NLeRguxkggRYhXHNAanUAQLrXREEBVsLQUtdt/jsVlf3vN0e87cLzN37mxlQLE0i7iAo9jT2d/wGk9SyGv9mqoH2Id7OGG6XuJaCvn9FlAszXG8wA6z6Q9iCnljDIqlWcCXGQF97U0hl7r7WP1PCDyFKpYm4vkchWt4hLtY6LyzNZbngLxJIZ9LIa9gc8JfrrVXPCvkCMTS3Mbliexwjd29gof4OgVyBzd6+a66Z6ykkK9q5+j3AOQWrg9tt8aPyS3G0pxMIX/CIp71IDf/ceyfVSzNY1zqBadTyOOb3AYCqzUeDATrsTTHJho7DQL3R5P9Dgd64S/tsF3ZBvIhhbx/1OzzAwt2zgCBpVGzpZA/45T2Ic6jMynkj2NQB9vojrc5A+AVDqaQ10dGNbQqlmYJF3FIO7AVvuOt9se25ZH/BQLRbx5LyZ6wAAAAAElFTkSuQmCC") no-repeat;}
+@keyframes rotate-full { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+#mc_container.security-center .setting-modal .form-group{direction: ltr;}
+#mc_container.security-center .personal-information{border-radius: 10px; overflow: hidden; box-shadow: rgba(170, 106, 226, 0.19) 0px 7px 62px 0px;}
+#mc_container.security-center .personal-information .information-top{padding: 0px 16px; display: flex; justify-content: space-between; align-items: center; position: relative; background: linear-gradient(0deg, rgba(241, 249, 255, 0) 0px, rgba(179, 188, 200, 0.5) 100%);}
+#mc_container.security-center .personal-information .information-top::before{left: 0px; position: absolute; content: ""; width: 100%; height: 100%; background-image: url(/security/level-bg.png); background-position: center bottom; background-size: cover; background-repeat: no-repeat; mask-image: linear-gradient(rgb(0, 0, 0), rgba(0, 0, 0, 0));}
+#mc_container.security-center .personal-information .information-top .upper-right{z-index: 1; padding-top: 12px; color: rgb(248, 255, 255); font-size: 16px; flex: 1 1 0%; display: flex; align-items: center; gap: 8px; width: 0px; margin-bottom: 8px;}
+#mc_container.security-center .personal-information .information-top .upper-right .info-img{display: flex; flex-direction: column; align-items: center; gap: 7px;}
+#mc_container.security-center .personal-information .information-top .upper-right .info-left{flex: 1 1 0%; display: flex; flex-direction: column; align-items: flex-end; margin-right: 10px; width: 0px;}
+#mc_container.security-center .personal-information .information-top .upper-right .info-left .nickname-wrap{color: rgb(102, 102, 102); font-size: 15px; display: flex; margin-top: 4px; font-weight: 600; flex: 1 1 0%; width: 100%; text-align: right; margin-bottom: 8px;}
+#mc_container.security-center .personal-information .information-top .upper-right .info-left .nickname-wrap .information-nickname{height: 18px; font-size: 16px; font-weight: 900;}
+#mc_container.security-center .personal-information .information-top .upper-right .info-left .nickname-wrap .edit-icon{cursor: pointer; display: flex; align-items: center; justify-content: center; background-size: contain; background-repeat: no-repeat; background-image: url(/security/edit-icon.svg); width: 12px; height: 12px; min-width: 12px; min-height: 12px; margin-left: 8px;}
+#mc_container.security-center .personal-information .information-top .upper-right .info-left .regdate-wrap{width: 100%; color: rgb(178, 178, 178); font-size: 10px; font-weight: 500; text-align: left; display: flex; justify-content: flex-start;}
+#mc_container.security-center .personal-information .information-top .upper-right .info-left .regdate-wrap .join-title{margin-right: 3px; text-align: center; display: flex; align-items: center;}
+#mc_container.security-center .personal-information .information-top .upper-right .info-left .regdate-wrap .regdate-icon{background-image: url(/security/icon-date.svg); background-repeat: no-repeat; background-size: contain; margin-right: 2px; display: block; min-width: 12px; width: 12px; height: 12px;}
+#mc_container.security-center .personal-information .information-top .upper-right .info-left .info-level-wrap{display: flex; width: 100%; align-items: center; flex: 1 1 0%;}
+#mc_container.security-center .personal-information .information-top .upper-right .info-left .info-level-wrap .vip-label{cursor: pointer; padding: 4px 8px; display: flex; max-width: 173px; border-radius: 60px; border: 1px solid rgba(255, 255, 255, 0.2); background: linear-gradient(rgba(102, 102, 102, 0.7) 0px, rgba(67, 72, 81, 0.7) 100%); backdrop-filter: blur(10px); margin-right: 5px;}
+#mc_container.security-center .personal-information .information-top .upper-right .info-left .info-level-wrap .vip-label:hover{filter: brightness(120%);}
+#mc_container.security-center .personal-information .information-top .upper-right .info-left .info-level-wrap .vip-label .vipicon{position: static; width: 16px; height: 18px; margin-right: 8px; display: block; mask-image: none; filter: initial; opacity: 1;}
+#mc_container.security-center .personal-information .information-top .upper-right .info-left .info-level-wrap .vip-label .level-name{align-items: center; display: flex; max-width: 173px; text-align: left; padding: 0px 8px; color: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.25) 0px 1px 0px; font-family: Inter; font-size: 12px; font-weight: 700;}
+#mc_container.security-center .personal-information .information-top .upper-right .information-nickname{display: inline-block; line-height: 16px; text-align: left;}
+#mc_container.security-center .personal-information .information-top .upper-right .first-name{display: inline-block; background:  0% 0% / 100% 100% rgb(177, 184, 182); width: 80px; height: 80px; text-align: center; color: transparent; border-radius: 50%; line-height: 40px; font-weight: 700; font-size: 22px; position: relative;}
+#mc_container.security-center .personal-information .information-top .vipicon{background-image: url(/security/spe-icon.png); mask-image: linear-gradient(rgb(0, 0, 0), rgba(0, 0, 0, 0)); filter: blur(0.5px); opacity: 0.5; width: 81px; height: 90px; position: absolute; background-size: 100% 100%; right: 23px; top: 5px; z-index: 0;}
+#mc_container.security-center .personal-information .copy-wrap{padding-left: 16px; display: flex; align-items: center; justify-content: flex-start; margin-top: 12px; width: 100%;}
+#mc_container.security-center .personal-information .copy-wrap .copy-btn{margin-right: 6px; height: 24px; border-radius: 35px; color: rgb(151, 151, 151); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center;}
+#mc_container.security-center .personal-information .copy-wrap .copy-btn .username-copy{overflow: hidden; text-overflow: ellipsis; white-space: nowrap; word-break: break-all; min-width: 0px; max-width: 110px;}
+#mc_container.security-center .personal-information .copy-wrap .copy-btn .copy-icon{cursor: pointer; align-items: center; justify-content: center; width: 12px; min-width: 12px; height: 12px; display: block; background-size: contain; background-repeat: no-repeat; background-image: url(/security/icon-copy.png); margin-left: 5px;}
+#mc_container.security-center .personal-information .information-money{color: rgb(67, 72, 81); text-align: center; font-size: 24px; font-weight: 600; margin-top: 8px; padding: 0px 9px;}
+#mc_container.security-center .personal-information .information-money .money-view{width: fit-content; align-items: center; flex: 1 1 0%; display: flex; font-size: 24px; font-weight: 600; font-family: Arial, Helvetica, sans-serif;}
+#mc_container.security-center .personal-information .information-money .eyes-icon{aspect-ratio: 1 / 1; cursor: pointer; display: block; width: 18px; height: 18px; background: url(/security/eyes-icon-open.svg) center center / contain no-repeat;}
+#mc_container.security-center .personal-information .information-money .eyes-icon.icon-eyes-close{background: url(/security/eyes-icon-close.svg) center center / contain no-repeat;}
+#mc_container.security-center .personal-information .information-money .amount-wrap{display: flex; justify-content: flex-start; align-items: center;}
+#mc_container.security-center .personal-information .information-money .amount-wrap .refresh{aspect-ratio: 1 / 1; width: 15px; height: 15px; background: url(/security/refresh-icon.svg) 0% 0% / 100% 100% no-repeat; cursor: pointer; margin: 0px 5px;}
+#mc_container.security-center .personal-information .information-money .amount-wrap .processing{animation: 0.5s linear 0s infinite normal none running rotate-full;}
+#mc_container.security-center .personal-information .money-plan{margin-top: 0px; color: rgb(102, 102, 102); font-size: 14px; padding-left: 30px;}
+#mc_container.security-center .personal-information .money-plan .plan-wrap{width: 210px;}
+#mc_container.security-center .personal-information .money-plan .plan-item{margin-top: 20px; background: url(/security/security-deposit.png) left center no-repeat; height: 38px; padding-left: 55px; position: relative; font-size: 14px;}
+#mc_container.security-center .personal-information .money-plan .plan-item:nth-child(2){background-image: url(/security/security-withdrawal.png);}
+#mc_container.security-center .personal-information .money-plan .plan-item .now{padding-top: 8px; font-size: 12px; color: rgb(170, 170, 170);}
+#mc_container.security-center .personal-information .money-plan .plan-item::after{right: 20px; content: ""; width: 210px; position: absolute; border-top: 1px dashed rgb(239, 239, 241); bottom: -18px;}
+#mc_container.security-center .personal-information .money-plan .plan-item #pendingDepositCount,#mc_container.security-center .personal-information .money-plan .plan-item #pendingWithdrawCount{margin-right: 5px;}
+#mc_container.security-center .personal-information::after{content: ""; bottom: 0px; left: 0px; width: 100%; height: 90px; position: absolute; background: linear-gradient(rgba(241, 249, 255, 0) 0px, rgba(179, 188, 200, 0.2) 100%); backdrop-filter: blur(2px); border-radius: 0px 0px 10px 10px;}
+
+/* ---------- the same three cards, stacked for a phone ---------- */
+#mc_container.security-center{width:100%;height:auto;padding:0 0 18px}
+#mc_container.security-center::after{display:none}
+#mc_container.security-center .outer-casing{overflow:visible}
+/* the reference floats these three, which is also what stops the score
+   ring's 88px top margin escaping the card; stacked, they need a block
+   formatting context of their own or the margin pushes the card down */
+#mc_container.security-center .information-wrap{
+  float:none;display:flow-root;width:330px;max-width:calc(100% - 24px);margin:14px auto 0;
 }
-.sc__ring{
-  flex:0 0 66px;width:66px;height:66px;border-radius:50%;
-  display:grid;place-items:center;
+#mc_container.security-center .account-information{
+  width:330px;max-width:calc(100% - 24px);height:auto;padding:6px 25px 0 20px;
 }
-.sc__ring i{
-  width:52px;height:52px;border-radius:50%;background:#fff;
-  display:grid;place-items:center;font-style:normal;
-  font-size:19px;font-weight:800;color:#7b5cf0;
+/* the reference gives all three cards one height so its three columns line
+   up. Stacked, that leaves 200px of nothing under the pending rows — the
+   score card keeps 539px because its art is drawn at that size, this one
+   does not need to. The padding is the height of the frosted strip the
+   reference floats at the card's foot, so the strip still lands on empty
+   card rather than over the last row. */
+#mc_container.security-center .personal-information{height:auto;padding-bottom:90px}
+/* we have no avatar art, so the initial has to be legible */
+#mc_container.security-center .personal-information .information-top .upper-right .first-name{
+  color:#fff;line-height:80px;font-size:30px;
 }
-.sc__ring small{font-size:10px;font-weight:700;margin-left:1px}
-.sc__score>b{flex:1;min-width:0;font-size:14.5px;font-weight:800;color:var(--text)}
-.sc__bolts{display:flex;gap:1px}
-.sc__bolts em{font-style:normal;font-size:14px;filter:grayscale(1);opacity:.35}
-.sc__bolts em.on{filter:none;opacity:1}
-.sc__warn{
-  margin:0 12px 12px;text-align:center;font-size:13px;line-height:1.7;
-  color:#c02626;font-weight:600;
+/* the reference's rows are div/a; ours are buttons too */
+#mc_container.security-center .account-information .account-bind-item{
+  display:block;width:100%;text-align:left;background:none;
 }
-.sc__rows{margin:0 12px 12px;border-radius:var(--r-md);border:1px solid var(--line);overflow:hidden;background:#fff}
-.sc__row{
-  display:flex;width:100%;align-items:center;gap:12px;padding:14px;
-  background:none;text-align:left;
+#mc_container.security-center .security-information .setting-options .setting-item{
+  background:none;padding:0;
 }
-.sc__row+.sc__row{border-top:1px solid var(--line)}
-.sc__ico{
-  flex:0 0 38px;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
-  background:#f1ecff;color:#7b5cf0;font-size:17px;font-weight:900;
+
+/* ---------- the slide-in form, as a full-screen sheet ---------- */
+#mc_container.security-center .model-case{
+  position:fixed;left:0;top:0;width:100%;height:100%;display:block;z-index:70;
 }
-.sc__text{flex:1;min-width:0;display:grid;gap:3px}
-.sc__text b{
-  display:flex;align-items:center;gap:7px;
-  font-size:13.5px;font-weight:800;color:var(--text);
+#mc_container.security-center .setting-modal{float:none;width:100%;height:100%;box-shadow:none}
+#mc_container.security-center .setting-modal .setting-item{
+  float:none;width:100%;height:100%;padding:0 18px;overflow-y:auto;
 }
-.sc__text b i{
-  font-style:normal;width:16px;height:16px;border-radius:50%;
-  display:grid;place-items:center;font-size:10px;font-weight:900;color:#fff;
+#mc_container.security-center .setting-modal .setting-item .setting-item-footer{
+  padding-left:18px;display:flex;align-items:center;
 }
-.sc__text b i.is-ok{background:#12855b}
-.sc__text b i.is-todo{background:#e5484d}
-.sc__text small{font-size:11.5px;line-height:1.6;color:var(--muted)}
-.sc__chev{color:var(--muted);font-size:19px;line-height:1}
+#mc_container .close-info{
+  left:auto;right:0;top:0;width:auto;padding:16px 14px;
+  box-shadow:none;background:none;color:#979797;font-size:13px;line-height:1;
+}
+#mc_container .close-info::after{display:none}
+/* the reference floats an error tooltip; a phone has no room, so it reads
+   under the field it belongs to */
+#mc_container.security-center .form-group .error-tips{
+  display:block;clear:both;margin:0;padding:6px 0 0;word-spacing:normal;
+  color:#ed5650;font-size:12px;line-height:1.5;text-align:right;white-space:normal;
+}
+#mc_container.security-center .form-group .error-tips.is-form,
+#mc_container.security-center .error-tips.is-form{
+  text-align:left;padding:0 0 10px;color:#ed5650;font-size:12px;
+}
+#mc_container.security-center .button.btn-submit[disabled]{
+  background-color:#d5d5d5;box-shadow:none;
+}
+
 /* ============================================================
    Golden Ace — the house slot (components/mini/SlotBoard.tsx)
 
