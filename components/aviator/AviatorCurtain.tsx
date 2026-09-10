@@ -1,24 +1,26 @@
 'use client';
 
-import { BRAND } from '@/lib/brand';
-
 /**
- * Aviator opens on its own title card instead of the house curtain, in three
- * beats — the shape a crash game is expected to open with:
+ * Aviator opens on its own curtain instead of the house one, in three beats:
  *
- *   1. the lockup and a bar that fills
+ *   1. the partners card, with a bar that fills
  *   2. the maker's stamp, with the pair of dots ticking under it
  *   3. a short "connecting", and the board takes the screen
  *
- * All timing lives in GameLoading, which hands this `t` — how far through the
- * curtain we are, 0→1 and linear. The beats below are cut from it, so the
- * three always add up to exactly one curtain however long that is set to be.
+ * Both title frames are the reference artwork itself, lifted off its
+ * background so the curtain's own rays run behind it. The bar was taken out
+ * of the card image and is drawn live over the gap it left, which is why the
+ * percentages below are so exact — they are that gap, measured.
+ *
+ * All timing lives in GameLoading, which hands this `t`: how far through the
+ * curtain we are, 0→1 and linear. The beats are cut from it, so the three
+ * always add up to exactly one curtain however long that is set to be.
  */
 
-/** where the lockup gives way to the stamp, and the stamp to the connect */
+/** where the card gives way to the stamp, and the stamp to the connect */
 const CARD_END = 0.58;
 const STAMP_END = 0.86;
-/** the bar reaches full a shade before the lockup leaves, never on the way out */
+/** the bar reaches full a shade before the card leaves, never on the way out */
 const BAR_SPAN = CARD_END - 0.06;
 
 export default function AviatorCurtain({ t, out }: { t: number; out: boolean }) {
@@ -36,36 +38,16 @@ export default function AviatorCurtain({ t, out }: { t: number; out: boolean }) 
       <span className="avld__rays" aria-hidden><i /></span>
 
       <div className="avld__card">
-        <div className="avld__lock">
-          <span className="avld__brand">{BRAND.light}<i>{BRAND.accent}</i></span>
-          <span className="avld__rule" aria-hidden />
-          <span className="avld__game">
-            <img className="avld__plane" src="/games/aviator/plane.png" alt="" aria-hidden />
-            <img className="avld__word" src="/games/aviator/wordmark.png" alt="Aviator" />
-          </span>
-        </div>
-
-        <p className="avld__tag">House Original</p>
-
+        <img
+          className="avld__art"
+          src="/games/aviator/splash-partners.png"
+          alt="UFC and Aviator — official partners"
+        />
         <span className="avld__bar" aria-hidden><i style={{ width: `${pct}%` }} /></span>
-
-        <span className="avld__seal">
-          <b>{BRAND.name.toUpperCase()}</b>
-          <em>Provably fair <i aria-hidden>✓</i></em>
-          <small>Since 2026</small>
-        </span>
       </div>
 
-      {/* the maker's stamp: a halftone disc, the name, and the ticking pair */}
       <div className="avld__stamp">
-        <p className="avld__by">Powered by</p>
-        <span className="avld__maker">
-          <span className="avld__mark" aria-hidden><i /><b>{BRAND.light[0]}</b></span>
-          <span className="avld__made">
-            <b>{BRAND.name.toUpperCase()}</b>
-            <small>Original casino games</small>
-          </span>
-        </span>
+        <img className="avld__made" src="/games/aviator/splash-powered.png" alt="Powered by Spribe" />
         <span className="avld__pair" aria-hidden><i /><i /></span>
       </div>
 

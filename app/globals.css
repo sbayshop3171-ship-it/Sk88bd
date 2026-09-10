@@ -2007,13 +2007,14 @@ body.game-immersive .app{padding-bottom:0}
 @media (prefers-reduced-motion:reduce){.gload__glow,.gload__ring i{animation:none}}
 @media (prefers-reduced-motion:reduce){.gate__spin{animation-duration:2s}}
 
-/* ---------- Aviator's own opening card ----------------------------------
-   The house lockup on black, a bar that fills, then a short "connecting"
-   beat before the board takes over. GameLoading owns the clock; everything
-   here is drawing. */
+/* ---------- Aviator's own opening curtain --------------------------------
+   Three beats over the board's rays: the partners card with a bar that
+   fills, the maker's stamp with its pair of dots, then "connecting". Both
+   title frames are the reference artwork lifted off its own background, so
+   the rays here run behind them. GameLoading owns the clock. */
 .avld{
   position:fixed;inset:0;z-index:1200;overflow:hidden;
-  display:grid;place-items:center;background:#080808;
+  display:grid;place-items:center;background:#000;
   transition:opacity .45s ease;
 }
 .avld--out{opacity:0;pointer-events:none}
@@ -2029,130 +2030,54 @@ body.game-immersive .app{padding-bottom:0}
 /* all three beats share the one centred cell, so each fades into the next
    without the layout moving */
 .avld__card,.avld__stamp,.avld__link{grid-area:1/1;position:relative}
+
+/* ---- beat one: the partners card ---- */
 .avld__card{
-  width:min(90vw,460px);text-align:center;
+  width:min(80vw,430px);
   animation:avld-in .75s cubic-bezier(.2,.75,.3,1) both;
 }
 .avld:not(.avld--card) .avld__card{animation:avld-off .4s ease forwards}
 @keyframes avld-in{from{opacity:0;transform:translateY(16px) scale(.93)}to{opacity:1;transform:none}}
 @keyframes avld-off{to{opacity:0;transform:translateY(-12px) scale(.97)}}
+.avld__art{display:block;width:100%;height:auto}
 
-/* the lockup: house wordmark, a hairline rule, the plane riding over Aviator */
-.avld__lock{display:flex;align-items:center;justify-content:center;gap:clamp(15px,5vw,28px)}
-.avld__brand{
-  font-size:clamp(30px,10vw,50px);font-weight:900;font-style:italic;
-  letter-spacing:-1.5px;line-height:1;color:#fff;
-}
-.avld__brand i{font-style:inherit;color:#E10512}
-.avld__rule{
-  width:2px;height:clamp(42px,13vw,64px);
-  background:linear-gradient(180deg,transparent,#4b4b4b 22%,#4b4b4b 78%,transparent);
-  animation:avld-rule .55s .3s ease both;
-}
-@keyframes avld-rule{from{opacity:0;transform:scaleY(.2)}to{opacity:1;transform:none}}
-.avld__game{position:relative;display:block;padding-top:clamp(30px,10vw,50px)}
-.avld__word{display:block;height:clamp(30px,10vw,46px);width:auto}
-/* the plane clears the wordmark's cap height and banks away from it */
-.avld__plane{
-  position:absolute;top:0;right:-9%;width:clamp(62px,21vw,100px);height:auto;
-  filter:drop-shadow(0 8px 16px rgba(225,5,18,.4));
-  animation:avld-fly 3.8s ease-in-out infinite;
-}
-@keyframes avld-fly{
-  0%,100%{transform:rotate(-5deg)}
-  50%{transform:translate(5px,-6px) rotate(-9deg)}
-}
-
-.avld__tag{
-  margin:clamp(15px,4.5vw,22px) 0 0;
-  font-size:clamp(15px,5vw,23px);font-weight:900;letter-spacing:2.5px;
-  text-transform:uppercase;color:#fff;
-  animation:avld-up .6s .35s ease both;
-}
-@keyframes avld-up{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
-
+/* the bar was cut out of the artwork; this fills the gap it left, and the
+   numbers are that gap measured against the image, not a guess */
 .avld__bar{
-  display:block;width:min(64%,250px);height:5px;margin:clamp(12px,3.5vw,16px) auto 0;
-  border-radius:var(--r-pill);overflow:hidden;background:#3a3a3a;
-  animation:avld-up .6s .45s ease both;
+  position:absolute;left:17.26%;top:58.19%;width:65.15%;height:2.16%;
+  border-radius:var(--r-pill);overflow:hidden;background:#2A2C33;
 }
 .avld__bar i{
   display:block;height:100%;border-radius:inherit;
-  background:linear-gradient(90deg,#9d060f,#E10512);transition:width .12s linear;
+  background:#E40D3C;transition:width .12s linear;
 }
-
-/* the fairness seal, the way a provider stamps its own game */
-.avld__seal{
-  display:inline-flex;flex-direction:column;align-items:center;gap:5px;
-  margin-top:clamp(20px,6vw,32px);padding:9px 17px 8px;border-radius:10px;
-  background:#16200f;border:1px solid #3d6a26;
-  animation:avld-up .6s .6s ease both;
-}
-.avld__seal b{font-size:13px;font-weight:900;letter-spacing:3px;color:#e6e6e6}
-.avld__seal em{
-  display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:5px;
-  border:1px solid #4f8b31;color:#8fd46a;font-size:11px;font-weight:700;font-style:normal;
-}
-.avld__seal em i{
-  width:13px;height:13px;border-radius:50%;background:#3fae2a;color:#0b160a;
-  display:grid;place-items:center;font-size:9px;font-weight:900;font-style:normal;
-}
-.avld__seal small{font-size:9.5px;letter-spacing:1.5px;color:#6e7d63}
 
 /* ---- beat two: the maker's stamp ---- */
 .avld__stamp{
-  display:flex;flex-direction:column;align-items:center;
+  --w:min(74vw,380px);
   opacity:0;visibility:hidden;transition:opacity .35s ease;
 }
 .avld--stamp .avld__stamp{opacity:1;visibility:visible;transition-delay:.18s}
-.avld__by{
-  margin:0 0 12px;font-size:clamp(12px,3.6vw,15px);font-weight:700;
-  letter-spacing:4px;text-transform:uppercase;color:#8b8b8b;
-}
-.avld--stamp .avld__by{animation:avld-up .5s .24s ease both}
-.avld__maker{display:flex;align-items:center;gap:clamp(12px,4vw,18px)}
-.avld--stamp .avld__maker{animation:avld-up .55s .3s ease both}
+.avld__made{display:block;width:var(--w);height:auto}
+.avld--stamp .avld__made{animation:avld-up .55s .26s ease both}
+@keyframes avld-up{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
 
-/* the disc: a halftone dot field, fat in the middle and fading at the rim,
-   with the initial punched over it */
-.avld__mark{
-  position:relative;flex:0 0 auto;display:grid;place-items:center;
-  width:clamp(54px,17vw,78px);height:clamp(54px,17vw,78px);
+/* the pair of dots ticking under the stamp, sized and placed off the
+   artwork's own width so they sit where the reference puts them */
+.avld__pair{
+  position:absolute;left:50%;top:100%;transform:translateX(-50%);
+  margin-top:calc(var(--w) * .174);
+  display:flex;align-items:center;
+  gap:calc(var(--w) * .028);height:calc(var(--w) * .0855);
 }
-.avld__mark i{
-  position:absolute;inset:0;border-radius:50%;
-  background-image:radial-gradient(circle,#fff 1.4px,transparent 1.6px);
-  background-size:6px 6px;
-  -webkit-mask-image:radial-gradient(circle,#000 56%,transparent 80%);
-  mask-image:radial-gradient(circle,#000 56%,transparent 80%);
-  animation:avld-mark 9s linear infinite;
-}
-@keyframes avld-mark{to{transform:rotate(360deg)}}
-.avld__mark b{
-  position:relative;font-size:clamp(30px,9.5vw,44px);font-weight:900;
-  font-style:italic;line-height:1;color:#fff;
-  /* the gap the dots leave around the glyph */
-  text-shadow:0 0 6px #000,0 0 6px #000,0 0 5px #000,0 0 4px #000;
-}
-.avld__made{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
-.avld__made b{
-  font-size:clamp(26px,8.5vw,40px);font-weight:900;letter-spacing:.5px;
-  line-height:1;color:#fff;
-}
-.avld__made small{
-  font-size:clamp(8px,2.4vw,10.5px);font-weight:700;letter-spacing:2.2px;
-  text-transform:uppercase;color:#9b9b9b;
-}
-
-/* the pair of dots ticking under the stamp */
-.avld__pair{display:flex;align-items:center;gap:11px;margin-top:clamp(22px,7vw,34px);height:14px}
 .avld__pair i{
-  width:14px;height:14px;border-radius:50%;background:#E10512;
+  width:calc(var(--w) * .0855);height:calc(var(--w) * .0855);
+  border-radius:50%;background:#E32410;
   animation:avld-pair 1.15s ease-in-out infinite;
 }
 .avld__pair i:nth-of-type(2){animation-delay:.575s}
 @keyframes avld-pair{
-  0%,100%{transform:scale(.4);opacity:.5}
+  0%,100%{transform:scale(.5);opacity:.55}
   50%{transform:scale(1);opacity:1}
 }
 
@@ -2173,10 +2098,9 @@ body.game-immersive .app{padding-bottom:0}
 @keyframes avld-dot{0%,100%{opacity:.2;transform:scale(.75)}50%{opacity:1;transform:none}}
 
 @media (prefers-reduced-motion:reduce){
-  .avld__rays i,.avld__plane,.avld__link i,.avld__mark i{animation:none}
+  .avld__rays i,.avld__link i{animation:none}
   .avld__pair i{animation-duration:3s}
-  .avld__card,.avld__tag,.avld__bar,.avld__seal,.avld__rule,
-  .avld--stamp .avld__by,.avld--stamp .avld__maker{animation-duration:.01s}
+  .avld__card,.avld--stamp .avld__made{animation-duration:.01s}
 }
 
 /* aviator carries two figures: the real wallet and the demo credit it bets */
