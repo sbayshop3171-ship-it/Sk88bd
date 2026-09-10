@@ -4401,12 +4401,23 @@ body.cz-light .rc__bar{background:rgba(31,36,48,.14)}
 #mc_container.security-center .personal-information .information-top .upper-right .first-name{
   color:#fff;line-height:80px;font-size:30px;
 }
-/* the reference's rows are div/a; ours are buttons too */
-#mc_container.security-center .account-information .account-bind-item{
-  display:block;width:100%;text-align:left;background:none;
+/* the reference's rows and suggestion tiles are divs; ours are buttons, and a
+   button keeps its own font and its UA padding unless it is told not to —
+   which is enough to re-wrap "Recommended password with combination of…" */
+#mc_container button{
+  font-family:inherit;font-weight:inherit;letter-spacing:inherit;
+  color:inherit;padding:0;
 }
+#mc_container.security-center .account-information .account-bind-item{
+  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
+  width:100%;text-align:left;background:none;
+}
+/* Chrome centres a button's content vertically whatever its display is, which
+   drops these tiles ~4px below the reference's divs; a real flex container is
+   the one display value that turns that off */
 #mc_container.security-center .security-information .setting-options .setting-item{
-  background:none;padding:0;
+  background:none;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-start;
 }
 
 /* ---------- the slide-in form, as a full-screen sheet ---------- */

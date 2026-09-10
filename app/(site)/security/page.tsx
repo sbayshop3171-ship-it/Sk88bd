@@ -259,8 +259,9 @@ export default function SecurityPage() {
 
           {/* ---------- who you are, and what the wallet is doing ---------- */}
           <div className="information-wrap personal-information js_personal">
+            {/* the reference carries a big blurred crest here too, but it
+                ships `hide` and its JS never lifts it, so we do not draw it */}
             <div className="information-top">
-              <div className="vipicon" aria-hidden />
               <div className="upper-right">
                 <div className="info-img">
                   <div className="first-name active">{initial}</div>
@@ -397,11 +398,12 @@ export default function SecurityPage() {
               );
             })}
 
+            {/* the reference puts its translate= on .item-text here, which
+                means the label replaces .item-text-info rather than sitting
+                inside it — so this row's text is bare, like theirs */}
             <button type="button" className="account-bind-item js-logout" onClick={() => void signOut()}>
               <div className="iconinfo icon-logout active" aria-hidden />
-              <div className="item-text">
-                <div className="item-text-info"><label>Logout</label></div>
-              </div>
+              <div className="item-text">Logout</div>
               <div className="item-detail">Logout Safely</div>
             </button>
           </div>
