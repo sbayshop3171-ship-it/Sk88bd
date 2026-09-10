@@ -4788,3 +4788,149 @@ body.cz-light .msheet.ms--white{background:#fefefe}
   background:#e3f5ef;color:#0d6a58;font-size:12px;font-weight:800;
 }
 .ms__b h3 i{background:#eef1f6;color:#5c6270}
+
+/* ============================================================
+   Aviator — measured off the reference board on a 384px phone
+   (OnePlus, DPR 2.8125, 2026-09-11). Every figure below is that
+   board's, in CSS px: 4px page gutter, #1B1C1D cards at 16px
+   corners, a 140px stepper column beside a 206×83 action button,
+   and a 374×283 stage. These come after the older skin rules on
+   purpose, so they win.
+   ============================================================ */
+.av-skin{background:#0E0E0E;padding-bottom:0}
+body.aviator-immersive{background:#0E0E0E}
+
+/* header: 47px, card grey, no rule under it */
+body.aviator-immersive .page-hd{
+  height:47px;background:#1B1C1D;border-bottom:0;padding:0 8px 0 4px;gap:4px;
+}
+body.aviator-immersive .page-hd .icon-btn{width:32px;height:32px;flex:0 0 32px}
+body.aviator-immersive .av-wordmark{height:17px}
+.av-bal{display:flex;align-items:baseline;gap:5px;padding:0 6px;text-decoration:none}
+.av-bal b{font-size:17px;font-weight:700;color:#28A909;font-variant-numeric:tabular-nums}
+.av-bal span{font-size:14px;color:#9A9A9E}
+.av-menu{color:#9A9A9E}
+.av-menu svg{width:22px;height:22px}
+
+/* history: a 40px row, 13px numerals 14px apart, the "…" pill on the right */
+.av-history-wrap{position:relative;display:flex;align-items:center;height:40px}
+.av-history-wrap .av-history{flex:1;min-width:0;padding:0 40px 0 18px;gap:14px;align-items:center;height:100%}
+.av-history-wrap.is-open .av-history{flex-wrap:wrap;overflow:visible;height:auto;padding:10px 40px 10px 18px;row-gap:8px}
+.av-history-wrap.is-open{height:auto;align-items:flex-start}
+.av-skin .av-chip{font-size:13px;font-weight:700}
+.av-history__more{
+  position:absolute;right:12px;top:12px;width:24px;height:16px;border-radius:8px;
+  background:#2A2B2E;display:flex;align-items:center;justify-content:center;gap:2.5px;
+}
+.av-history__more i{width:3px;height:3px;border-radius:50%;background:#C8C8CC}
+
+/* stage: 4px in from the edges, 374×283, 18px corners, hairline edge */
+.av-skin .av-stage{
+  margin:0 4px;aspect-ratio:374/283;border-radius:18px;border:1px solid #2A2B2E;
+}
+.av-skin .av-hud__mult{font-size:18vw;font-weight:800;letter-spacing:-1.5px}
+.av-skin .av-hud__flew{font-size:19.5px;font-weight:400;letter-spacing:.3px}
+.av-skin .av-stage__hud{gap:18px}
+.av-skin .av-stage__fair{display:none}
+/* the head count sits in the bottom-right corner, sharing the board's curve */
+.av-skin .av-stage__crowd{
+  right:5px;bottom:5px;height:31px;padding:0 14px 0 6px;border-radius:16px;
+  background:#1E1E1E;
+}
+.av-skin .av-stage__crowd i{width:24px;height:24px;border:1.5px solid #3FE03F;margin-right:-8px}
+.av-skin .av-stage__crowd b{margin-left:14px;font-size:12px;font-weight:600}
+
+/* seats: 4px gutter and gap, 8px inner padding, 16px corners */
+.av-skin .av-slots{margin:4px 4px 0;gap:4px}
+.av-skin .av-slot{
+  grid-template-columns:140px 1fr;gap:8px 11px;
+  padding:8px 13px 6px 8px;border-radius:16px;background:#1B1C1D;border:0;
+}
+/* Bet / Auto: the board keeps a 33px pill for it at the top of the seat */
+.av-skin .av-slot__tabs{width:190px;height:33px;padding:3px;background:#141516;border-radius:17px}
+.av-skin .av-slot__tabs button{font-size:14px;font-weight:400;color:#9A9A9E;padding:0;border-radius:14px}
+.av-skin .av-slot__tabs button.on{background:#2A2B2E;color:#fff}
+.av-skin .av-slot__ctl{gap:6px}
+/* stepper: 140×31 sunk pill, 26px circles, 17px bold figure */
+.av-skin .av-stepper{height:31px;padding:0 3px;background:#141516;border:0;border-radius:16px}
+.av-skin .av-stepper button{
+  width:26px;height:26px;flex:0 0 26px;margin:0;background:#2A2B2E;color:#717273;
+  font-size:17px;font-weight:400;
+}
+.av-skin .av-stepper button:disabled{opacity:.5}
+.av-skin .av-stepper input{height:26px;font-size:17px;font-weight:700;color:#fff}
+/* presets: 26px pills, 6px apart across and 4px down, 14px grey figures */
+.av-skin .av-quick{gap:4px 6px}
+.av-skin .av-quick button{
+  height:26px;padding:0;border-radius:13px;background:#141516;border:0;
+  color:#8A8A8B;font-size:14px;font-weight:400;
+}
+/* the action button: 206×83 with a 2px light edge and 14px corners;
+   the word at 22px over the figure at 24px with "BDT" at 17px */
+.av-skin .av-act{
+  min-height:83px;padding:6px 4px;border-radius:14px;gap:3px;
+  font-size:22px;font-weight:400;line-height:1.15;
+}
+.av-skin .av-act small{font-size:24px;font-weight:400;line-height:1.1;opacity:1}
+.av-skin .av-act small i{font-style:normal;font-size:17px}
+.av-skin .av-act--bet{background:#28A909;border:2px solid #B2F2A3;box-shadow:none;color:#fff}
+.av-skin .av-act--bet:disabled{opacity:.5}
+.av-skin .av-act--out{background:#D07206;border:2px solid #FFBD71;box-shadow:none;color:#fff;animation:none}
+.av-skin .av-act--cancel{background:#CB011A;border:2px solid #FF7171;box-shadow:none;color:#fff}
+.av-skin .av-act .av-act__wait{font-size:12px;font-weight:700;opacity:.8;margin-top:2px}
+.av-skin .av-slot__err{font-size:11px;margin-top:-4px}
+
+/* live bets: a card of its own, 4px under the seats */
+.av-skin .av-live{margin:4px 4px 0;padding:8px;border-radius:16px;background:#1B1C1D;contain-intrinsic-size:auto}
+.av-skin .av-live__tabs{margin:0;padding:0;height:26px;background:#141516;border-radius:13px;gap:0}
+.av-skin .av-live__tabs button{padding:0;font-size:15px;font-weight:400;color:#9A9A9E;border-radius:13px}
+.av-skin .av-live__tabs button.on{background:#2A2B2E;color:#fff}
+.av-skin .av-live__meta{
+  position:relative;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;
+  align-items:end;gap:2px 8px;margin:8px 0 6px;padding:9px 10px 11px;
+  border-radius:10px;background:#141516;
+}
+.av-live__heads{display:flex;grid-row:1}
+.av-live__heads i{
+  width:24px;height:24px;border-radius:50%;border:1.5px solid #3FE03F;margin-right:-8px;
+  background:radial-gradient(circle at 35% 35%,#7be26f,#1f7a2a);
+}
+.av-live__heads i:nth-child(2){background:radial-gradient(circle at 35% 35%,#8fa4c9,#33415c)}
+.av-live__heads i:nth-child(3){background:radial-gradient(circle at 35% 35%,#b58ad6,#5a3b7e)}
+.av-skin .av-live__meta .av-live__count{grid-row:2;grid-column:1;font-size:15px;color:#9A9A9E}
+.av-skin .av-live__meta .av-live__count b{color:#fff;font-weight:400;font-variant-numeric:tabular-nums}
+.av-skin .av-live__total{grid-row:1 / span 2;grid-column:2}
+.av-skin .av-live__total b{font-size:20px;font-weight:700}
+.av-skin .av-live__total small{font-size:14px;color:#9A9A9E}
+.av-skin .av-live__fill{
+  position:absolute;left:10px;right:10px;bottom:3px;width:auto;height:3px;margin:0;
+  background:#2A2B2E;border-radius:2px;
+}
+.av-skin .av-live__fill i{background:#28A909}
+.av-skin .av-bets{background:none;border:0;border-radius:0}
+.av-skin .av-bets__head,
+.av-skin .av-bets__row{grid-template-columns:1fr 78px 54px 70px;gap:6px;padding:6px 8px}
+.av-skin .av-bets__head{font-size:12px;font-weight:400;letter-spacing:0;text-transform:none;color:#9A9A9E;border:0}
+.av-skin .av-bets__head span:nth-child(2){text-align:center}
+.av-skin .av-bets__row{font-size:13px;border:0;border-radius:8px;margin-top:2px;background:#141516;padding:5px 8px}
+.av-skin .av-bets__row.is-out{background:#0F2B10;box-shadow:inset 0 0 0 1px #1F5C21}
+.av-skin .av-bets__u{display:flex;align-items:center;gap:6px;color:#9A9A9E}
+.av-skin .av-bets__u i{width:22px;height:22px;border-radius:50%;flex:0 0 22px;background:radial-gradient(circle at 35% 35%,#7fc8ff,#1f5a9a)}
+.av-skin .av-bets__s{text-align:center;color:#fff;font-weight:400}
+.av-skin .av-bets__x{text-align:center}
+.av-skin .av-bets__x em{
+  display:inline-block;padding:1px 7px;border-radius:9px;font-style:normal;font-size:12px;
+  background:#000;color:#34B4FF;
+}
+.av-skin .av-bets__w{color:#fff;font-weight:400}
+.av-skin .av-bets__row:not(.is-out) .av-bets__x,
+.av-skin .av-bets__row:not(.is-out) .av-bets__w{color:#9A9A9E}
+
+/* the foot of the board */
+.av-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  margin:0 4px;padding:18px 16px 14px;font-size:14px;color:#9A9A9E;
+}
+.av-foot a{display:flex;align-items:center;gap:8px;color:#C8C8CC;text-decoration:none}
+.av-foot a svg{width:16px;height:16px}
+.av-foot b{color:#C8C8CC;font-weight:900;letter-spacing:.5px}

@@ -1,10 +1,16 @@
 'use client';
 
-import { fmtX, type Phase } from '@/lib/aviator';
-import { money } from '@/lib/brand';
+import { useState } from 'react';
+import { type Phase } from '@/lib/aviator';
 
 const QUICK = [100, 200, 500, 10000];
 export const MIN_STAKE = 10;
+/** the reference stepper moves the stake by this per tap */
+const STEP = 10;
+
+/** "10.00" / "1,234.50" — the board's money figure, currency written after it */
+export const fmtAmt = (n: number) =>
+  n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /** One betting seat. A round can carry two of these, independently. */
 export interface Slot {
@@ -38,50 +44,48 @@ export default function BetPanel({
   onCancel: () => void;
   onCashOut: () => void;
 }) {
-  const live = slot.staked !== null;
-  const locked = live || slot.queued;
+  const riding = slot.staked !== null && slot.cashedAt === null;
+  const locked = riding || slot.queued;
   const tooPoor = slot.stake > balance;
   const invalid = slot.stake < MIN_STAKE || tooPoor;
 
+  /* The reference button has four faces: green Bet; red Cancel while the
+     stake waits for the next round ("Waiting for next round" under it) or
+     while the round is still taking bets; orange Cash Out with the running
+     payout once the plane is up. After a cash-out the seat is simply free
+     again, so it goes straight back to green. */
   const action = (() => {
-    if (live && phase === 'flying' && slot.cashedAt === null) {
+    if (riding && phase === 'flying') {
       return (
         <button className="av-act av-act--out" type="button" onClick={onCashOut}>
           Cash Out
-          <small>{money(Math.floor(slot.staked! * multiplier))}</small>
-        </button>
-      );
-    }
-    if (slot.cashedAt !== null) {
-      return (
-        <button className="av-act av-act--done" type="button" disabled>
-          Cash Out<small>{fmtX(slot.cashedAt)}</small>
-        </button>
-      );
-    }
-    if (live) {
-      return (
-        <button className="av-act av-act--live" type="button" disabled>
-          Bet running<small>{money(slot.staked!)}</small>
+          <small>{fmtAmt(Math.floor(slot.staked! * multiplier * 100) / 100)} <i>BDT</i></small>
         </button>
       );
     }
     if (slot.queued) {
       return (
-        <button className="av-act av-act--queued" type="button" onClick={onCancel}>
-          Cancel<small>next round</small>
+        <button className="av-act av-act--cancel" type="button" onClick={onCancel}>
+          Cancel<small className="av-act__wait">Waiting for next round</small>
+        </button>
+      );
+    }
+    if (riding) {
+      return (
+        <button className="av-act av-act--cancel" type="button" onClick={onCancel}>
+          Cancel
         </button>
       );
     }
     return (
       <button className="av-act av-act--bet" type="button" onClick={onPlace} disabled={invalid}>
-        Bet<small>{money(slot.stake)}</small>
+        Bet<small>{fmtAmt(slot.stake)} <i>BDT</i></small>
       </button>
     );
   })();
 
   return (
-    <div className={`av-slot${live ? ' is-live' : ''}`}>
+    <div className={`av-slot${riding ? ' is-live' : ''}`}>
       {/* tabs span the top; below them the controls sit left and the big
           action button right — the compact two-column seat the board uses. */}
       <div className="av-slot__tabs" role="tablist">
@@ -104,19 +108,16 @@ export default function BetPanel({
       <div className="av-slot__ctl">
         <div className="av-stepper">
           <button type="button" aria-label="Decrease" disabled={locked}
-                  onClick={() => onPatch({ stake: Math.max(MIN_STAKE, slot.stake - 100) })}>−</button>
-          <input
-            type="number" inputMode="numeric" value={slot.stake} disabled={locked}
-            onChange={(e) => onPatch({ stake: Math.max(0, Number(e.target.value) || 0) })}
-          />
+                  onClick={() => onPatch({ stake: Math.max(MIN_STAKE, slot.stake - STEP) })}>−</button>
+          <StakeField value={slot.stake} disabled={locked} onChange={(v) => onPatch({ stake: v })} />
           <button type="button" aria-label="Increase" disabled={locked}
-                  onClick={() => onPatch({ stake: slot.stake + 100 })}>+</button>
+                  onClick={() => onPatch({ stake: slot.stake + STEP })}>+</button>
         </div>
 
         <div className="av-quick">
           {QUICK.map((q) => (
             <button key={q} type="button" disabled={locked} onClick={() => onPatch({ stake: q })}>
-              {money(q)}
+              {q.toLocaleString('en-US')}
             </button>
           ))}
         </div>
@@ -137,5 +138,27 @@ export default function BetPanel({
 
       {tooPoor && <div className="field__err av-slot__err">Low balance</div>}
     </div>
+  );
+}
+
+/** The stake reads "10.00" like the board's, but while it is being typed the
+    raw text stands, so the two decimals do not fight the keyboard. */
+function StakeField({ value, disabled, onChange }: {
+  value: number; disabled: boolean; onChange: (v: number) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <input
+      type="text" inputMode="decimal"
+      value={draft ?? fmtAmt(value)} disabled={disabled}
+      onFocus={() => setDraft(String(value))}
+      onBlur={() => setDraft(null)}
+      onChange={(e) => {
+        const raw = e.target.value.replace(/[^\d.]/g, '');
+        setDraft(raw);
+        const n = Number(raw);
+        if (Number.isFinite(n)) onChange(Math.max(0, Math.floor(n * 100) / 100));
+      }}
+    />
   );
 }

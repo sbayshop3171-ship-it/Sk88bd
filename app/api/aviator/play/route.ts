@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { cashOut, openBets, placeBet } from '@/lib/aviator-play';
+import { cancelBet, cashOut, openBets, placeBet } from '@/lib/aviator-play';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,7 +10,7 @@ export async function GET() {
   return json(await openBets(await cookieAdapter()));
 }
 
-/** { action: 'bet', slot, stake } | { action: 'cashout', slot } */
+/** { action: 'bet', slot, stake } | { action: 'cancel', slot } | { action: 'cashout', slot } */
 export async function POST(req: Request) {
   let body: unknown;
   try {
@@ -29,9 +29,11 @@ export async function POST(req: Request) {
   const result =
     record.action === 'bet'
       ? await placeBet(store, slot, Number(record.stake))
-      : record.action === 'cashout'
-        ? await cashOut(store, slot)
-        : null;
+      : record.action === 'cancel'
+        ? await cancelBet(store, slot)
+        : record.action === 'cashout'
+          ? await cashOut(store, slot)
+          : null;
 
   if (!result) return json({ ok: false, reason: 'invalid-action' }, 400);
   return result.ok ? json(result) : json(result, result.reason === 'unauthorized' ? 401 : 400);

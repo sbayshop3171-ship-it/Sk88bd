@@ -73,6 +73,43 @@ export async function placeBet(
   return { ok: true, balance: Number(debit.data ?? 0), bets };
 }
 
+/** Take a bet back while the betting window is still open: the stake goes
+    straight back to the wallet and the seat is freed for a new bet. The
+    reference board offers this as the red "Cancel" on a placed seat. */
+export async function cancelBet(cookies: CookieStore, slot: 0 | 1): Promise<BetResult> {
+  const who = await signedInUser(cookies);
+  if (!who.ok) return who.error;
+
+  const round = (await getAviatorSignalState()).currentRound;
+  const now = Date.now();
+  const flies = Date.parse(round.fly_at);
+
+  const open = (await betsFor(who.uid, round.round_id)).find(
+    (b) => b.slot === slot && b.settledAt === null,
+  );
+  if (!open) return { ok: false, reason: 'no-open-bet' };
+  // once the plane is up the stake is riding; only a cash-out ends it
+  if (now >= flies) return { ok: false, reason: 'betting-closed' };
+
+  const refund = await who.db.rpc('wallet_apply', {
+    p_user: who.uid,
+    p_kind: 'adjust',
+    p_amount: open.stake,
+    p_ref: `aviator:${round.round_id}:${slot}:cancel`,
+  });
+  if (refund.error) return { ok: false, reason: 'db-error', message: refund.error.message };
+
+  const bets = await mutateBets((all) => {
+    const at = all.findIndex((b) => b.id === open.id);
+    if (at >= 0) all.splice(at, 1);
+    return all
+      .filter((b) => b.userId === who.uid && b.roundId === round.round_id)
+      .map(publicBet);
+  });
+
+  return { ok: true, balance: Number(refund.data ?? 0), bets };
+}
+
 export async function cashOut(cookies: CookieStore, slot: 0 | 1): Promise<BetResult> {
   const who = await signedInUser(cookies);
   if (!who.ok) return who.error;

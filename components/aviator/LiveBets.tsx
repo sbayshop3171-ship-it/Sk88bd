@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { money } from '@/lib/brand';
 import { fmtX, type Phase } from '@/lib/aviator';
+import { fmtAmt } from './BetPanel';
 
 /** Rows drawn on screen. The board's head count (1,000+) is the crowd;
     the table is the slice of it that fits, scrolled. */
@@ -79,33 +79,33 @@ export default function LiveBets({
         ))}
       </div>
 
-      {/* cashed out / seats on the board, a fill bar, and the round's total win */}
+      {/* the board's sunk summary card: three heads, cashed-out / seats, the
+          round's total win on the right, and a fill bar along the foot */}
       <div className="av-live__meta">
-        <div>
-          <div className="av-live__count">
-            <b>{(settled ? cashed : players).toLocaleString('en-IN')}</b>/{players.toLocaleString('en-IN')} bets
-          </div>
-          <div className="av-live__fill"><i style={{ width: `${Math.round(share * 100)}%` }} /></div>
+        <div className="av-live__heads" aria-hidden><i /><i /><i /></div>
+        <div className="av-live__count">
+          <b>{(settled ? cashed : players).toLocaleString('en-US')}/{players.toLocaleString('en-US')}</b> Bets
         </div>
         <div className="av-live__total">
-          <b>{money(totalWin)}</b>
-          <small>Total won</small>
+          <b>{fmtAmt(totalWin)}</b>
+          <small>Total win BDT</small>
         </div>
+        <div className="av-live__fill"><i style={{ width: `${Math.round(share * 100)}%` }} /></div>
       </div>
 
       <div className="av-bets">
         <div className="av-bets__head">
-          <span>Player</span><span>Bet</span><span>x</span><span>Won</span>
+          <span>Player</span><span>Bet BDT</span><span>X</span><span>Win BDT</span>
         </div>
         <div className="av-bets__scroll">
           {rows.map((s, i) => {
             const out = settled && multiplier >= s.target;
             return (
               <div className={`av-bets__row${out ? ' is-out' : ''}`} key={`${s.user}-${i}`}>
-                <span className="av-bets__u">{s.user}</span>
-                <span className="av-bets__s">{money(s.stake)}</span>
-                <span className="av-bets__x">{out ? fmtX(s.target) : '—'}</span>
-                <span className="av-bets__w">{out ? money(Math.round(s.stake * s.target)) : '—'}</span>
+                <span className="av-bets__u"><i aria-hidden />{s.user}</span>
+                <span className="av-bets__s">{fmtAmt(s.stake)}</span>
+                <span className="av-bets__x">{out ? <em>{fmtX(s.target)}</em> : ''}</span>
+                <span className="av-bets__w">{out ? fmtAmt(Math.round(s.stake * s.target)) : ''}</span>
               </div>
             );
           })}

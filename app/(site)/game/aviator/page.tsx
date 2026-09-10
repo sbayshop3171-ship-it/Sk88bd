@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import AviatorCanvas from '@/components/aviator/AviatorCanvas';
-import BetPanel, { MIN_STAKE, emptySlot, type Slot } from '@/components/aviator/BetPanel';
+import BetPanel, { MIN_STAKE, emptySlot, fmtAmt, type Slot } from '@/components/aviator/BetPanel';
 import HistoryStrip from '@/components/aviator/HistoryStrip';
 import LiveBets from '@/components/aviator/LiveBets';
 import { useCrowdCount } from '@/components/aviator/useCrowdCount';
 import { useAviatorRound } from '@/components/aviator/useAviatorRound';
 import { useAuth } from '@/components/AuthProvider';
 import GameGate, { useGameGate } from '@/components/GameGate';
+import { MenuIcon, ShieldIcon } from '@/components/Icons';
 import PageHeader from '@/components/PageHeader';
 import { useUI } from '@/components/UIProvider';
 import { BETTING_MS, fmtX, randomHex } from '@/lib/aviator';
@@ -35,8 +36,9 @@ function Board() {
   const balance = toTaka(wallet?.balance ?? 0);
   const [busySlot, setBusySlot] = useState<number | null>(null);
   const [clientSeed, setClientSeed] = useState('');
-  /** two independent seats, exactly like the reference game */
-  const [slots, setSlots] = useState<[Slot, Slot]>([emptySlot(100), emptySlot(500)]);
+  /** two independent seats, exactly like the reference game — both open at
+      its 10.00 default */
+  const [slots, setSlots] = useState<[Slot, Slot]>([emptySlot(10), emptySlot(10)]);
 
   // storage and crypto only exist on the client
   useEffect(() => {
@@ -89,7 +91,7 @@ function Board() {
      alone decides what multiplier was actually reached. The screen just asks,
      then refetches the balance from the answer. */
   const send = useCallback(async (
-    action: 'bet' | 'cashout',
+    action: 'bet' | 'cancel' | 'cashout',
     i: 0 | 1,
     stake?: number,
   ) => {
@@ -154,8 +156,22 @@ function Board() {
 
     const m = res.cashedAt ?? 0;
     patch(i, { cashedAt: m });
-    if (m > 0) toast(`${fmtX(m)} — you won ${money(toTaka(res.payout ?? 0))}`);
+    if (m > 0) toast(`You have cashed out! ${fmtX(m)} — ${money(toTaka(res.payout ?? 0))}`);
   }, [patch, send, toast]);
+
+  /* The red Cancel: a seat waiting for the next round just stops waiting; a
+     stake already placed on the open round goes back through the server,
+     which refunds it while the betting window is still open. */
+  const cancel = useCallback(async (i: 0 | 1) => {
+    const slot = slotsRef.current[i];
+    if (slot.staked === null) {
+      patch(i, { queued: false, auto: false });
+      return;
+    }
+    if (busySlot !== null) return;
+    const res = await send('cancel', i);
+    if (res) patch(i, { staked: null, cashedAt: null, queued: false, auto: false });
+  }, [busySlot, patch, send]);
 
   // auto cash-out, checked per seat
   useEffect(() => {
@@ -191,9 +207,16 @@ function Board() {
       <PageHeader
         title={<img className="av-wordmark" src="/games/aviator/wordmark.png" alt="Aviator" />}
         action={
-          <Link href="/deposit" className="bal-pill bal-pill--av" title="Deposit">
-            <b>{money(balance)}</b><i className="av" aria-hidden>＋</i>
-          </Link>
+          <>
+            {/* the board's header: green figure, "BDT" after it, a menu glyph
+                on the far right — the balance is a link into the cashier */}
+            <Link href="/deposit" className="av-bal" title="Deposit">
+              <b>{fmtAmt(balance)}</b><span>BDT</span>
+            </Link>
+            <Link href="/game/aviator/fairness" className="icon-btn av-menu" aria-label="Game menu">
+              <MenuIcon />
+            </Link>
+          </>
         }
       />
 
@@ -218,13 +241,19 @@ function Board() {
             balance={balance}
             onPatch={(p) => patch(i, p)}
             onPlace={() => place(i)}
-            onCancel={() => patch(i, { queued: false, auto: false })}
+            onCancel={() => cancel(i)}
             onCashOut={() => cashOut(i)}
           />
         ))}
       </div>
 
       <LiveBets phase={phase} multiplier={multiplier} players={crowd} roundId={round?.id} />
+
+      {/* the board's foot: the fairness link on the left, the maker on the right */}
+      <footer className="av-foot">
+        <Link href="/game/aviator/fairness"><ShieldIcon /> Provably Fair Game</Link>
+        <span>Powered by <b>SPRIBE</b></span>
+      </footer>
       </div>
     </>
   );

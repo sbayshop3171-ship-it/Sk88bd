@@ -1,17 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fmtX, multiplierAt, timeToReach, type Phase } from '@/lib/aviator';
+import { bandFor, fmtX, multiplierAt, timeToReach, type Phase } from '@/lib/aviator';
 import PlaneSprite from './PlaneSprite';
 
-const W = 100, H = 62;
+/* 100×76 sits on the reference board's 374×283, so the stage's
+   `aspect-ratio` and this box agree and nothing drawn here is stretched. */
+const W = 100, H = 76;
 /** where the nose settles once it has climbed into frame */
-const TIP_X = 76, TIP_Y = 12, FLOOR = 55;
+const TIP_X = 78, TIP_Y = 13, FLOOR = 71;
 const STEPS = 34;
 
-/** Multiplier by which the aircraft has finished climbing into frame. The
-    reference board's plane is parked top-right by roughly 2.5x. */
-const CRUISE_AT = 2.4;
+/** Multiplier by which the aircraft has finished climbing into frame. On
+    the reference board the plane is still low at 1.16x and parked top-right
+    by 1.5x — the climb is quick. */
+const CRUISE_AT = 1.6;
 
 /** the cruise ride: how far the plane (and the line's tip) swell, how fast,
     and how much the nose pitches with it */
@@ -19,12 +22,13 @@ const BOB_AMPLITUDE = 2.2;
 const BOB_PERIOD_MS = 3400;
 const BOB_PITCH_DEG = 0.8;
 
-/** 0 on the runway, 1 once the nose reaches cruise — eased out, so the
-    plane leaps off the corner and settles rather than crawling up. */
+/** 0 on the runway, 1 once the nose reaches cruise — eased both ends: the
+    reference plane rolls along the bottom until about 1.2x, then climbs
+    hard and settles. */
 function travelOf(multiplier: number) {
   if (multiplier <= 1) return 0;
   const t = Math.min(1, Math.log(multiplier) / Math.log(CRUISE_AT));
-  return 1 - (1 - t) * (1 - t);
+  return t * t * (3 - 2 * t);
 }
 
 /**
@@ -113,6 +117,8 @@ export default function AviatorCanvas({
   // climbing away from the viewer: further along the climb, slightly smaller
   const scale = (1.05 - travel * 0.25).toFixed(3);
 
+  const bloom = { low: '#2C8FD6', mid: '#8E33D6', high: '#C017B4' }[bandFor(multiplier)];
+
   const d = `M ${pts.map(([x, y]) => `${x} ${y}`).join(' L ')}`;
   // the fill drops straight down at the nose, giving the hard right edge
   const area = `${d} L ${tx} ${FLOOR} L 0 ${FLOOR} Z`;
@@ -126,16 +132,19 @@ export default function AviatorCanvas({
 
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="av-stage__sky" aria-hidden>
         <defs>
+          {/* the glow behind the figure takes the colour of the multiplier's
+              band — blue under 2x, violet to 10x, magenta past it — the
+              same three the history strip uses */}
           <radialGradient id="av-bloom" cx="46%" cy="40%" r="55%">
-            <stop offset="0%" stopColor="#8e33d6" stopOpacity=".62" />
-            <stop offset="45%" stopColor="#c017b4" stopOpacity=".3" />
-            <stop offset="100%" stopColor="#3a1e6b" stopOpacity="0" />
+            <stop offset="0%" stopColor={bloom} stopOpacity=".5" />
+            <stop offset="45%" stopColor={bloom} stopOpacity=".22" />
+            <stop offset="100%" stopColor={bloom} stopOpacity="0" />
           </radialGradient>
-          {/* the board's red: a solid line, and a wash under it that fades to
-              nothing at the floor */}
+          {/* the board's red: a solid line over a near-even crimson wash
+              that runs all the way down to the floor */}
           <linearGradient id="av-area" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#E10512" stopOpacity=".55" />
-            <stop offset="100%" stopColor="#E10512" stopOpacity=".04" />
+            <stop offset="0%" stopColor="#E10512" stopOpacity=".5" />
+            <stop offset="100%" stopColor="#E10512" stopOpacity=".42" />
           </linearGradient>
           <filter id="av-glow" x="-40%" y="-40%" width="180%" height="180%">
             <feGaussianBlur stdDeviation=".9" result="b" />
@@ -145,9 +154,9 @@ export default function AviatorCanvas({
 
         <rect width={W} height={H} fill="#000" fillOpacity="0" />
 
-        {/* the violet glow belongs to the flight; while the board waits it is
-            plain black and grey, the way the reference board sits */}
-        {(flying || crashed) && <rect width={W} height={H} fill="url(#av-bloom)" />}
+        {/* the glow belongs to the flight alone; on a bust and between rounds
+            the board is plain black and grey, the way the reference sits */}
+        {flying && <rect width={W} height={H} fill="url(#av-bloom)" />}
 
         {/* ---- flight path — drawn only while the plane is up; on a bust the
               plane flies off and the board goes bare, the way Aviator does ---- */}
@@ -155,13 +164,14 @@ export default function AviatorCanvas({
           <>
             <path d={area} fill="url(#av-area)" />
             <path d={d} fill="none" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
-                  stroke="#E10512" filter="url(#av-glow)" />
+                  stroke="#F00B3E" filter="url(#av-glow)" />
           </>
         )}
 
         {/* ---- the aircraft ---- */}
         {idle && (
-          <g transform={`translate(15 ${FLOOR - 7})`}>
+          /* parked in the corner, wheels on the board's bottom edge */
+          <g transform={`translate(15 ${FLOOR})`}>
             {/* the bob lives on an inner group: a CSS transform replaces the
                 SVG transform attribute outright, which would reset the
                 position to the origin */}
