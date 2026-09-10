@@ -150,7 +150,8 @@ export default function SecurityPage() {
 
         {level !== 'High' && (
           <p className="ms-warn">
-            Your account security level is {level}，&nbsp;Please improve your safety information
+            {/* the full-width comma carries its own gap; nothing after it */}
+            Your account security level is {level}，Please improve your safety information
           </p>
         )}
 

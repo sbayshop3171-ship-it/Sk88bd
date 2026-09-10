@@ -159,7 +159,12 @@ export default function LinkEWalletPage() {
   if (picked) {
     return (
       <>
-        <PageHeader title="Link E-wallet" />
+        {/* the form is state on this route, so back returns to the list, as
+            the reference's does — there is no Cancel to do it otherwise */}
+        <PageHeader
+          title="Link E-wallet"
+          onBack={() => { setGroup(null); setNo(''); setPass(''); setErr(''); }}
+        />
         <div className="msheet">
           <form className="ms-pad ms-lwform" onSubmit={add} noValidate>
             <p className="ms-label">Select E-wallet group</p>

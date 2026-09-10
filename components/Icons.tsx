@@ -162,42 +162,58 @@ export const MemberIconDefs = () => (
           vertical stroke — the power bar, the lock's keyhole tail — has a
           zero-width box, and a bounding-box gradient cannot resolve on one,
           so those paths silently do not paint at all. */}
-      <linearGradient id="mi-grad" gradientUnits="userSpaceOnUse" x1="12" y1="2" x2="12" y2="22">
-        <stop offset="0%" stopColor="#43c6f0" />
-        <stop offset="100%" stopColor="#a855f7" />
+      {/* the stops sit on the glyphs' own top and bottom (y 4 → 20), not
+          the 24 box's, or every icon lands in the purple middle */}
+      <linearGradient id="mi-grad" gradientUnits="userSpaceOnUse" x1="12" y1="4" x2="12" y2="20">
+        <stop offset="0%" stopColor="#50d8ff" />
+        <stop offset="100%" stopColor="#b35cf5" />
+      </linearGradient>
+      {/* the reference runs Logout's the other way: purple on top */}
+      <linearGradient id="mi-grad-r" gradientUnits="userSpaceOnUse" x1="12" y1="4" x2="12" y2="20">
+        <stop offset="0%" stopColor="#b35cf5" />
+        <stop offset="100%" stopColor="#50d8ff" />
       </linearGradient>
     </defs>
   </svg>
 );
 
+/** head, and shoulders open at the right of the neck */
 export const PersonLineIcon = (p: P) => (
-  <svg {...line} {...p}><circle cx="12" cy="7.5" r="4.2" /><path d="M4.6 20a7.4 7.4 0 0 1 14.8 0z" /></svg>
+  <svg {...line} {...p}>
+    <circle cx="12" cy="7.4" r="3.7" />
+    <path d="M14 12.1a7.3 7.3 0 0 1 5.3 7H4.7a7.3 7.3 0 0 1 7.1-7.3" />
+  </svg>
 );
+/** a wallet with a bold "e" on its face and a clasp on the right edge */
 export const EWalletLineIcon = (p: P) => (
   <svg {...line} {...p}>
-    <rect x="3" y="6.6" width="18" height="13.4" rx="2.6" />
-    <path d="M6.2 6.6V5.4a1.4 1.4 0 0 1 1.4-1.4h9.2" />
-    <path d="M14.4 11.4a2.4 2.4 0 1 0 0 4.4M12 13.6h4.4" />
-    <circle cx="19" cy="13.6" r="1.1" />
+    <rect x="3" y="6.6" width="17" height="13.2" rx="2.4" />
+    <path d="M6 6.6v-.9a1.5 1.5 0 0 1 1.5-1.5h9.9a1.5 1.5 0 0 1 1.5 1.5v.9" />
+    <path d="M20 11.7h-.5a1.55 1.55 0 0 0 0 3.1h.5" />
+    <path d="M9.2 13.1h4.9a2.45 2.45 0 1 0-.8 2.4" strokeWidth={2.2} />
   </svg>
 );
+/** tall, with a two-line shackle and a keyhole */
 export const PadlockLineIcon = (p: P) => (
   <svg {...line} {...p}>
-    <rect x="4.5" y="10.5" width="15" height="10" rx="2.2" />
-    <path d="M7.8 10.5V7.8a4.2 4.2 0 0 1 8.4 0v2.7" />
-    <circle cx="12" cy="14.6" r="1.4" /><path d="M12 16v1.8" />
+    <rect x="5.6" y="10.6" width="12.8" height="9.8" rx="1.1" />
+    <path d="M7.6 10.6V8a4.4 4.4 0 0 1 8.8 0v2.6" />
+    <path d="M9.3 10.6V8.1a2.7 2.7 0 0 1 5.4 0v2.5" />
+    <circle cx="12" cy="14.3" r="1.1" />
+    <path d="M11.5 15.2 11.1 17.6h1.8l-.4-2.4" />
   </svg>
 );
-/** a strongbox with a dial — the reference's mark for the fund password */
+/** a strongbox: a dial with three spokes, and two feet */
 export const VaultLineIcon = (p: P) => (
   <svg {...line} {...p}>
-    <rect x="3.4" y="5" width="17.2" height="14" rx="2.4" />
-    <circle cx="12" cy="12" r="3.4" /><path d="M12 8.6V7M12 17v-1.6" />
-    <path d="M6.4 19v1.6M17.6 19v1.6" />
+    <rect x="3.6" y="4.4" width="16.8" height="14" rx="1.8" />
+    <circle cx="12" cy="12.4" r="1.9" />
+    <path d="M12 10.5V7.9M10.4 13.4l-2.6 1.6M13.6 13.4l2.6 1.6" />
+    <path d="M6 19.5h2.4M15.6 19.5h2.4" strokeWidth={1.9} />
   </svg>
 );
 export const PowerLineIcon = (p: P) => (
-  <svg {...line} {...p}><path d="M12 3.6v8" /><path d="M17.5 6.6a7.6 7.6 0 1 1-11 0" /></svg>
+  <svg {...line} stroke="url(#mi-grad-r)" {...p}><path d="M12 3.6v7.4" /><path d="M16.9 6.2a7.6 7.6 0 1 1-9.8 0" /></svg>
 );
 
 /* ---- the small grey marks in front of a field ---- */

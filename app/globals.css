@@ -978,7 +978,7 @@ ul{margin:0;padding:0;list-style:none}
 .av-slot__tabs{grid-column:1 / -1}
 .av-slot__ctl{min-width:0;display:grid;gap:6px;align-content:start}
 .av-slot__err{grid-column:1 / -1}
-.av-slot.is-live{border-color:rgba(255,196,46,.5)}
+/* a live seat keeps its box as it is; only the action button changes colour */
 
 .av-slot__tabs{
   display:grid;grid-template-columns:1fr 1fr;gap:3px;padding:2px;width:190px;margin:0 auto;
@@ -1766,7 +1766,6 @@ body:has(.gpv) .refer-bubble{display:none}
 .av-skin .av-slot{
   background:#1b1c1d;border-color:#1b1c1d;border-radius:10px;padding:10px;
 }
-.av-skin .av-slot.is-live{border-color:var(--bet-hi)}
 /* Bet / Auto pill: 200px wrap, 33px tall halves */
 .av-skin .av-slot__tabs{background:#0f1011;border-radius:20px;width:200px;padding:4px;gap:0}
 .av-skin .av-slot__tabs button{color:#9ea0a3;font-size:14px;font-weight:500;padding:7px 0;border-radius:16px}

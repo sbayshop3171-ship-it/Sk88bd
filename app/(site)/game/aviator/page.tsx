@@ -74,9 +74,11 @@ function Board() {
       .reduce((a, s) => a + (s.staked ?? 0), 0);
     if (lost > 0) toast(`Flew away at ${fmtX(crashAt)} — you lost ${money(lost)}`);
 
-    // clear the round; seats on auto queue themselves up again
+    // clear the round; seats on auto queue themselves up again, and a bet
+    // placed mid-flight for the next round must survive this crash — it used
+    // to be reset here, so it never reached the betting window it waited for
     setSlots((s) => s.map((x) => ({
-      ...x, staked: null, cashedAt: null, queued: x.auto,
+      ...x, staked: null, cashedAt: null, queued: x.queued || x.auto,
     })) as [Slot, Slot]);
   }, [toast]);
 
