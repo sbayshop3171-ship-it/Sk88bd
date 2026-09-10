@@ -20,7 +20,7 @@ import { money } from '@/lib/brand';
 const SEED_KEY = 'sk88bd:client-seed';
 
 export default function AviatorPage() {
-  return <GameGate><Board /></GameGate>;
+  return <GameGate curtain="aviator"><Board /></GameGate>;
 }
 
 function Board() {

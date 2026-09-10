@@ -2007,6 +2007,118 @@ body.game-immersive .app{padding-bottom:0}
 @media (prefers-reduced-motion:reduce){.gload__glow,.gload__ring i{animation:none}}
 @media (prefers-reduced-motion:reduce){.gate__spin{animation-duration:2s}}
 
+/* ---------- Aviator's own opening card ----------------------------------
+   The house lockup on black, a bar that fills, then a short "connecting"
+   beat before the board takes over. GameLoading owns the clock; everything
+   here is drawing. */
+.avld{
+  position:fixed;inset:0;z-index:1200;overflow:hidden;
+  display:grid;place-items:center;background:#080808;
+  transition:opacity .45s ease;
+}
+.avld--out{opacity:0;pointer-events:none}
+
+/* beams fanning out of the lower left — the board's rays, slowed right down */
+.avld__rays{position:absolute;left:-55%;top:150%;width:0;height:0;pointer-events:none}
+.avld__rays i{
+  position:absolute;left:-200vmax;top:-200vmax;width:400vmax;height:400vmax;border-radius:50%;
+  background:repeating-conic-gradient(#171717 0deg 3.4deg,#0a0a0a 3.4deg 6.8deg);
+  animation:av-rays-flow 150s linear infinite;
+}
+
+/* card and connecting beat share the one centred cell, so one fades into
+   the other without the layout moving */
+.avld__card,.avld__link{grid-area:1/1;position:relative}
+.avld__card{
+  width:min(90vw,460px);text-align:center;
+  animation:avld-in .75s cubic-bezier(.2,.75,.3,1) both;
+}
+.avld--link .avld__card{animation:avld-off .4s ease forwards}
+@keyframes avld-in{from{opacity:0;transform:translateY(16px) scale(.93)}to{opacity:1;transform:none}}
+@keyframes avld-off{to{opacity:0;transform:translateY(-12px) scale(.97)}}
+
+/* the lockup: house wordmark, a hairline rule, the plane riding over Aviator */
+.avld__lock{display:flex;align-items:center;justify-content:center;gap:clamp(15px,5vw,28px)}
+.avld__brand{
+  font-size:clamp(30px,10vw,50px);font-weight:900;font-style:italic;
+  letter-spacing:-1.5px;line-height:1;color:#fff;
+}
+.avld__brand i{font-style:inherit;color:#E10512}
+.avld__rule{
+  width:2px;height:clamp(42px,13vw,64px);
+  background:linear-gradient(180deg,transparent,#4b4b4b 22%,#4b4b4b 78%,transparent);
+  animation:avld-rule .55s .3s ease both;
+}
+@keyframes avld-rule{from{opacity:0;transform:scaleY(.2)}to{opacity:1;transform:none}}
+.avld__game{position:relative;display:block;padding-top:clamp(30px,10vw,50px)}
+.avld__word{display:block;height:clamp(30px,10vw,46px);width:auto}
+/* the plane clears the wordmark's cap height and banks away from it */
+.avld__plane{
+  position:absolute;top:0;right:-9%;width:clamp(62px,21vw,100px);height:auto;
+  filter:drop-shadow(0 8px 16px rgba(225,5,18,.4));
+  animation:avld-fly 3.8s ease-in-out infinite;
+}
+@keyframes avld-fly{
+  0%,100%{transform:rotate(-5deg)}
+  50%{transform:translate(5px,-6px) rotate(-9deg)}
+}
+
+.avld__tag{
+  margin:clamp(15px,4.5vw,22px) 0 0;
+  font-size:clamp(15px,5vw,23px);font-weight:900;letter-spacing:2.5px;
+  text-transform:uppercase;color:#fff;
+  animation:avld-up .6s .35s ease both;
+}
+@keyframes avld-up{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+
+.avld__bar{
+  display:block;width:min(64%,250px);height:5px;margin:clamp(12px,3.5vw,16px) auto 0;
+  border-radius:var(--r-pill);overflow:hidden;background:#3a3a3a;
+  animation:avld-up .6s .45s ease both;
+}
+.avld__bar i{
+  display:block;height:100%;border-radius:inherit;
+  background:linear-gradient(90deg,#9d060f,#E10512);transition:width .12s linear;
+}
+
+/* the fairness seal, the way a provider stamps its own game */
+.avld__seal{
+  display:inline-flex;flex-direction:column;align-items:center;gap:5px;
+  margin-top:clamp(20px,6vw,32px);padding:9px 17px 8px;border-radius:10px;
+  background:#16200f;border:1px solid #3d6a26;
+  animation:avld-up .6s .6s ease both;
+}
+.avld__seal b{font-size:13px;font-weight:900;letter-spacing:3px;color:#e6e6e6}
+.avld__seal em{
+  display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:5px;
+  border:1px solid #4f8b31;color:#8fd46a;font-size:11px;font-weight:700;font-style:normal;
+}
+.avld__seal em i{
+  width:13px;height:13px;border-radius:50%;background:#3fae2a;color:#0b160a;
+  display:grid;place-items:center;font-size:9px;font-weight:900;font-style:normal;
+}
+.avld__seal small{font-size:9.5px;letter-spacing:1.5px;color:#6e7d63}
+
+/* the connecting beat, once the bar is nearly home */
+.avld__link{
+  display:flex;align-items:center;justify-content:center;gap:7px;margin:0;
+  font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#d2d2d2;
+  opacity:0;transition:opacity .35s ease .2s;
+}
+.avld--link .avld__link{opacity:1}
+.avld__link i{
+  width:5px;height:5px;border-radius:50%;background:#E10512;
+  animation:avld-dot 1s ease-in-out infinite;
+}
+.avld__link i:nth-of-type(2){animation-delay:.16s}
+.avld__link i:nth-of-type(3){animation-delay:.32s}
+@keyframes avld-dot{0%,100%{opacity:.2;transform:scale(.75)}50%{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){
+  .avld__rays i,.avld__plane,.avld__link i{animation:none}
+  .avld__card,.avld__tag,.avld__bar,.avld__seal,.avld__rule{animation-duration:.01s}
+}
+
 /* aviator carries two figures: the real wallet and the demo credit it bets */
 .av-bals{display:flex;align-items:center;gap:6px}
 .bal-pill--demo{opacity:.85}

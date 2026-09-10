@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from './AuthProvider';
-import GameLoading from './GameLoading';
+import GameLoading, { type GameCurtain } from './GameLoading';
 import { toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import { t } from '@/lib/strings';
@@ -31,7 +31,14 @@ const GateCtx = createContext<() => boolean>(() => true);
     has been raised and the bet must not be sent. */
 export const useGameGate = () => useContext(GateCtx);
 
-export default function GameGate({ children }: { children: React.ReactNode }) {
+export default function GameGate({
+  children,
+  curtain = 'house',
+}: {
+  children: React.ReactNode;
+  /** which opening card the game shows while it loads */
+  curtain?: GameCurtain;
+}) {
   const { ready, backendReady, session, wallet } = useAuth();
   const [prompt, setPrompt] = useState<Block | null>(null);
 
@@ -59,7 +66,7 @@ export default function GameGate({ children }: { children: React.ReactNode }) {
 
   return (
     <GateCtx.Provider value={requireFunds}>
-      <GameLoading>{children}</GameLoading>
+      <GameLoading skin={curtain}>{children}</GameLoading>
       {prompt && (
         <GateSheet
           kind={prompt}

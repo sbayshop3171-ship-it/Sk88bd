@@ -2,18 +2,31 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import AviatorCurtain from './aviator/AviatorCurtain';
 import { Wordmark } from './Header';
 
 /** How long the branded curtain stays up before the game shows. */
 export const GAME_LOADING_MS = 3000;
+
+/** Which curtain a game opens behind. */
+export type GameCurtain = 'house' | 'aviator';
 
 /**
  * The three-second curtain every game opens behind: the wordmark, a filling
  * bar and a percentage, then a fade. The game itself is mounted underneath
  * the whole time, so its own assets load while the curtain is up and it is
  * usually ready the moment the curtain lifts.
+ *
+ * A game may ask for its own curtain with `skin` — Aviator opens on its own
+ * title card. The timing below is shared either way.
  */
-export default function GameLoading({ children }: { children: React.ReactNode }) {
+export default function GameLoading({
+  children,
+  skin = 'house',
+}: {
+  children: React.ReactNode;
+  skin?: GameCurtain;
+}) {
   const [phase, setPhase] = useState<'on' | 'fade' | 'off'>('on');
   const [pct, setPct] = useState(0);
   /* The player asks the browser for real fullscreen as soon as it mounts. In
@@ -49,6 +62,9 @@ export default function GameLoading({ children }: { children: React.ReactNode })
   }, []);
 
   const curtain = phase !== 'off' && (
+    skin === 'aviator' ? (
+      <AviatorCurtain pct={pct} out={phase === 'fade'} />
+    ) : (
     <div className={`gload${phase === 'fade' ? ' gload--out' : ''}`} aria-live="polite" aria-busy={phase === 'on'}>
       <span className="gload__glow" aria-hidden />
       <Wordmark />
@@ -56,6 +72,7 @@ export default function GameLoading({ children }: { children: React.ReactNode })
       <span className="gload__bar" aria-hidden><i style={{ width: `${pct}%` }} /></span>
       <p className="gload__txt">Loading the game… <b>{pct}%</b></p>
     </div>
+    )
   );
 
   return (
