@@ -5,11 +5,15 @@ import { createPortal } from 'react-dom';
 import AviatorCurtain from './aviator/AviatorCurtain';
 import { Wordmark } from './Header';
 
-/** How long the branded curtain stays up before the game shows. */
-export const GAME_LOADING_MS = 3000;
-
 /** Which curtain a game opens behind. */
 export type GameCurtain = 'house' | 'aviator';
+
+/** How long each curtain stays up before the game shows. Aviator's runs
+    longer because it plays three beats, not one. */
+const CURTAIN_MS: Record<GameCurtain, number> = { house: 3000, aviator: 4200 };
+
+/** How long the house curtain stays up. */
+export const GAME_LOADING_MS = CURTAIN_MS.house;
 
 /**
  * The three-second curtain every game opens behind: the wordmark, a filling
@@ -28,7 +32,11 @@ export default function GameLoading({
   skin?: GameCurtain;
 }) {
   const [phase, setPhase] = useState<'on' | 'fade' | 'off'>('on');
-  const [pct, setPct] = useState(0);
+  /* One piece of state, advanced every frame: how far through the curtain we
+     are, 0→1 and linear. The percentage the house bar shows is an eased read
+     of it, and Aviator's beats are cut from it directly. */
+  const [t, setT] = useState(0);
+  const pct = Math.round(100 * (1 - Math.pow(1 - t, 2.2)));
   /* The player asks the browser for real fullscreen as soon as it mounts. In
      that mode only the fullscreen element paints, so the curtain moves inside
      it — otherwise it would sit hidden underneath for the whole three
@@ -43,27 +51,27 @@ export default function GameLoading({
   }, []);
 
   useEffect(() => {
+    const total = CURTAIN_MS[skin];
     const start = performance.now();
     let frame = 0;
     const tick = (now: number) => {
-      const p = Math.min(1, (now - start) / GAME_LOADING_MS);
-      // quick off the line, easing into 100 — reads as real work, not a timer
-      setPct(Math.round(100 * (1 - Math.pow(1 - p, 2.2))));
+      const p = Math.min(1, (now - start) / total);
+      setT(p);
       if (p < 1) frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
-    const fade = setTimeout(() => setPhase('fade'), GAME_LOADING_MS);
-    const off = setTimeout(() => setPhase('off'), GAME_LOADING_MS + 450);
+    const fade = setTimeout(() => setPhase('fade'), total);
+    const off = setTimeout(() => setPhase('off'), total + 450);
     return () => {
       cancelAnimationFrame(frame);
       clearTimeout(fade);
       clearTimeout(off);
     };
-  }, []);
+  }, [skin]);
 
   const curtain = phase !== 'off' && (
     skin === 'aviator' ? (
-      <AviatorCurtain pct={pct} out={phase === 'fade'} />
+      <AviatorCurtain t={t} out={phase === 'fade'} />
     ) : (
     <div className={`gload${phase === 'fade' ? ' gload--out' : ''}`} aria-live="polite" aria-busy={phase === 'on'}>
       <span className="gload__glow" aria-hidden />

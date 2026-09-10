@@ -3,20 +3,33 @@
 import { BRAND } from '@/lib/brand';
 
 /**
- * Aviator opens on its own title card instead of the house curtain: the
- * lockup on black, a bar that fills, then a short "connecting" beat before
- * the board takes the screen — the shape a crash game is expected to open
- * with.
+ * Aviator opens on its own title card instead of the house curtain, in three
+ * beats — the shape a crash game is expected to open with:
  *
- * All timing lives in GameLoading; this only draws the frame it is handed.
- * The card holds until the bar is nearly home, then hands over to the beat.
+ *   1. the lockup and a bar that fills
+ *   2. the maker's stamp, with the pair of dots ticking under it
+ *   3. a short "connecting", and the board takes the screen
+ *
+ * All timing lives in GameLoading, which hands this `t` — how far through the
+ * curtain we are, 0→1 and linear. The beats below are cut from it, so the
+ * three always add up to exactly one curtain however long that is set to be.
  */
-export default function AviatorCurtain({ pct, out }: { pct: number; out: boolean }) {
-  const linking = pct >= 78;
+
+/** where the lockup gives way to the stamp, and the stamp to the connect */
+const CARD_END = 0.58;
+const STAMP_END = 0.86;
+/** the bar reaches full a shade before the lockup leaves, never on the way out */
+const BAR_SPAN = CARD_END - 0.06;
+
+export default function AviatorCurtain({ t, out }: { t: number; out: boolean }) {
+  const beat = t < CARD_END ? 'card' : t < STAMP_END ? 'stamp' : 'link';
+  // quick off the line, easing home — reads as real work, not a timer
+  const filled = Math.min(1, t / BAR_SPAN);
+  const pct = Math.round(100 * (1 - Math.pow(1 - filled, 2.2)));
 
   return (
     <div
-      className={`avld${out ? ' avld--out' : ''}${linking ? ' avld--link' : ''}`}
+      className={`avld avld--${beat}${out ? ' avld--out' : ''}`}
       aria-live="polite"
       aria-busy={!out}
     >
@@ -41,6 +54,19 @@ export default function AviatorCurtain({ pct, out }: { pct: number; out: boolean
           <em>Provably fair <i aria-hidden>✓</i></em>
           <small>Since 2026</small>
         </span>
+      </div>
+
+      {/* the maker's stamp: a halftone disc, the name, and the ticking pair */}
+      <div className="avld__stamp">
+        <p className="avld__by">Powered by</p>
+        <span className="avld__maker">
+          <span className="avld__mark" aria-hidden><i /><b>{BRAND.light[0]}</b></span>
+          <span className="avld__made">
+            <b>{BRAND.name.toUpperCase()}</b>
+            <small>Original casino games</small>
+          </span>
+        </span>
+        <span className="avld__pair" aria-hidden><i /><i /></span>
       </div>
 
       <p className="avld__link">Connecting<i aria-hidden /><i aria-hidden /><i aria-hidden /></p>
