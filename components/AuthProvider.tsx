@@ -15,6 +15,15 @@ export interface Profile {
   role: 'player' | 'agent' | 'admin';
   vip_level: number;
   referral_code: string;
+  /* the contact fields My Account collects (migration 011). They are
+     optional so a deployment without that migration still loads a profile —
+     the select below drops them and every screen reads them as null. */
+  real_name?: string | null;
+  facebook_id?: string | null;
+  google_id?: string | null;
+  whatsapp?: string | null;
+  email?: string | null;
+  contact_phone?: string | null;
 }
 
 export interface Wallet {
@@ -63,15 +72,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const load = useCallback(async (uid: string | undefined) => {
     if (!supabase || !uid) { setProfile(null); setWallet(null); return; }
+    const FULL = 'id, phone, display_name, role, vip_level, referral_code, '
+      + 'real_name, facebook_id, google_id, whatsapp, email, contact_phone';
+    const BASE = 'id, phone, display_name, role, vip_level, referral_code';
     const [p, w] = await Promise.all([
-      supabase.from('profiles')
-        .select('id, phone, display_name, role, vip_level, referral_code')
-        .eq('id', uid).maybeSingle(),
+      supabase.from('profiles').select(FULL).eq('id', uid).maybeSingle(),
       supabase.from('wallets')
         .select('balance, bonus_balance, turnover_need, turnover_done')
         .eq('user_id', uid).maybeSingle(),
     ]);
-    setProfile((p.data as Profile) ?? null);
+    // migration 011 not applied yet: ask again for the columns that do exist
+    const row = p.error
+      ? (await supabase.from('profiles').select(BASE).eq('id', uid).maybeSingle()).data
+      : p.data;
+    setProfile((row as Profile) ?? null);
     setWallet((w.data as Wallet) ?? null);
   }, [supabase]);
 

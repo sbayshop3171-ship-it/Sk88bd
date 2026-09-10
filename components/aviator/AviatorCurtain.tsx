@@ -1,33 +1,22 @@
 'use client';
 
 /**
- * Aviator opens on its own curtain instead of the house one, in three beats:
- *
- *   1. the partners card, with a bar that fills
- *   2. the maker's stamp, with the pair of dots ticking under it
- *   3. a short "connecting", and the board takes the screen
- *
- * Both title frames are the reference artwork itself, lifted off its
- * background so the curtain's own rays run behind it. The bar was taken out
- * of the card image and is drawn live over the gap it left, which is why the
- * percentages below are so exact — they are that gap, measured.
+ * Aviator's opening. The reference shows one frame before the board arrives —
+ * the maker's stamp on black with its dots ticking — and then a short
+ * "connecting" while the socket comes up. The partners card is not here; on
+ * the reference it belongs to the board, and it runs in the stage between
+ * rounds rather than over the whole screen.
  *
  * All timing lives in GameLoading, which hands this `t`: how far through the
- * curtain we are, 0→1 and linear. The beats are cut from it, so the three
- * always add up to exactly one curtain however long that is set to be.
+ * curtain we are, 0→1 and linear. The two beats are cut from it, so they add
+ * up to exactly one curtain however long that is set to be.
  */
 
-/** where the card gives way to the stamp, and the stamp to the connect */
-const CARD_END = 0.58;
-const STAMP_END = 0.86;
-/** the bar reaches full a shade before the card leaves, never on the way out */
-const BAR_SPAN = CARD_END - 0.06;
+/** where the stamp gives way to the connect */
+const STAMP_END = 0.72;
 
 export default function AviatorCurtain({ t, out }: { t: number; out: boolean }) {
-  const beat = t < CARD_END ? 'card' : t < STAMP_END ? 'stamp' : 'link';
-  // quick off the line, easing home — reads as real work, not a timer
-  const filled = Math.min(1, t / BAR_SPAN);
-  const pct = Math.round(100 * (1 - Math.pow(1 - filled, 2.2)));
+  const beat = t < STAMP_END ? 'stamp' : 'link';
 
   return (
     <div
@@ -35,20 +24,9 @@ export default function AviatorCurtain({ t, out }: { t: number; out: boolean }) 
       aria-live="polite"
       aria-busy={!out}
     >
-      <span className="avld__rays" aria-hidden><i /></span>
-
-      <div className="avld__card">
-        <img
-          className="avld__art"
-          src="/games/aviator/splash-partners.png"
-          alt="UFC and Aviator — official partners"
-        />
-        <span className="avld__bar" aria-hidden><i style={{ width: `${pct}%` }} /></span>
-      </div>
-
       <div className="avld__stamp">
         <img className="avld__made" src="/games/aviator/splash-powered.png" alt="Powered by Spribe" />
-        <span className="avld__pair" aria-hidden><i /><i /></span>
+        <span className="avld__pair" aria-hidden><i /><i /><i /></span>
       </div>
 
       <p className="avld__link">Connecting<i aria-hidden /><i aria-hidden /><i aria-hidden /></p>

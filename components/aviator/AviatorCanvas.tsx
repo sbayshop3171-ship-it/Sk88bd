@@ -192,24 +192,29 @@ export default function AviatorCanvas({
         )}
       </svg>
 
+      {/* Between rounds the board carries the partners card, the way the
+          reference fills its betting window: no label and no clock on it —
+          the bar drains, and that is the countdown. */}
+      {idle && (
+        <div className="av-promo">
+          <img
+            className="av-promo__art"
+            src="/games/aviator/promo-lockup.png"
+            alt="UFC and Aviator — official partners"
+          />
+          <span className="av-promo__bar" aria-hidden>
+            <i style={{ width: `${betting ? Math.max(0, Math.min(100, (bettingLeft / bettingTotal) * 100)) : 100}%` }} />
+          </span>
+          <img
+            className="av-promo__seal"
+            src="/games/aviator/promo-seal.png"
+            alt="Spribe — official game since 2019"
+          />
+        </div>
+      )}
+
       <div className="av-stage__hud">
-        {waiting ? (
-          <>
-            <div className="av-hud__label">WAITING FOR NEXT ROUND</div>
-            <div className="av-hud__count">{(bettingLeft / 1000).toFixed(1)}s</div>
-            <div className="av-hud__bar">
-              <i style={{ width: `${Math.max(0, Math.min(100, 100 - (bettingLeft / bettingTotal) * 100))}%` }} />
-            </div>
-          </>
-        ) : betting ? (
-          <>
-            <div className="av-hud__label">NEXT ROUND STARTS IN</div>
-            <div className="av-hud__count">{(bettingLeft / 1000).toFixed(1)}s</div>
-            <div className="av-hud__bar">
-              <i style={{ width: `${Math.max(0, Math.min(100, (bettingLeft / bettingTotal) * 100))}%` }} />
-            </div>
-          </>
-        ) : (
+        {!idle && (
           <>
             {crashed && <div className="av-hud__flew">FLEW AWAY!</div>}
             <div className={`av-hud__mult${crashed ? ' is-crashed' : ''}`}>{fmtX(multiplier)}</div>

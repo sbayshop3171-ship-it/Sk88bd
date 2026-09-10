@@ -7,108 +7,148 @@ import PageHeader from '@/components/PageHeader';
 import { useUI } from '@/components/UIProvider';
 import { t } from '@/lib/strings';
 import { useLightSheet } from '@/components/useLightSheet';
+import {
+  EnvelopeIcon, FacebookBoxIcon, IdCardIcon, NickIcon, PhoneLineIcon, WhatsAppLineIcon,
+} from '@/components/Icons';
 
-/** The account's own details, and the one thing a player may change here:
-    the display name. Everything else (phone, VIP, referral code) is set by
-    the system or the admin, so it is shown read-only. */
+/* ============================================================
+   My Account — the reference's phone screen.
+
+   The username at the top is the login and cannot move. Under it the
+   real name, shown greyed and masked once it is set: a withdrawal is
+   checked against it, so it is write-once (migration 011 enforces that
+   in the database, not just here). Everything below is a way for
+   support to reach the player, and every one of them has a column to
+   land in.
+   ============================================================ */
+
+type Key = 'real_name' | 'display_name' | 'facebook_id' | 'google_id'
+  | 'whatsapp' | 'email' | 'contact_phone';
+
+/** J** — the reference shows the first letter and two stars, whatever the
+    length, so the mask says nothing about the name behind it. */
+const maskName = (name: string) => `${name.slice(0, 1)}**`;
+
 export default function MyProfilePage() {
   useLightSheet();
   const { toast } = useUI();
   const { ready, session, profile, supabase, refresh } = useAuth();
-  const [name, setName] = useState('');
+
+  const [form, setForm] = useState<Record<Key, string>>({
+    real_name: '', display_name: '', facebook_id: '',
+    google_id: '', whatsapp: '', email: '', contact_phone: '',
+  });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    setName(profile?.display_name ?? '');
-  }, [profile?.display_name]);
+    setForm({
+      real_name: profile?.real_name ?? '',
+      display_name: profile?.display_name ?? '',
+      facebook_id: profile?.facebook_id ?? '',
+      google_id: profile?.google_id ?? '',
+      whatsapp: profile?.whatsapp ?? '',
+      email: profile?.email ?? '',
+      contact_phone: profile?.contact_phone ?? '',
+    });
+  }, [profile]);
 
   const signedIn = ready && Boolean(session);
-  const joined = session?.user.created_at
-    ? new Date(session.user.created_at).toLocaleDateString('en-CA')
-    : '—';
+  const nameLocked = Boolean(profile?.real_name);
 
-  const rows: [string, string][] = [
-    ['User ID', profile?.phone ?? '—'],
-    ['Mobile number', profile?.phone ?? '—'],
-    ['Name', profile?.display_name || '—'],
-    ['VIP level', `VIP ${profile?.vip_level ?? 0}`],
-    ['Referral code', profile?.referral_code ?? '—'],
-    ['Registered on', joined],
+  const set = (k: Key) => (v: string) => {
+    setForm((f) => ({ ...f, [k]: v }));
+    setErr('');
+  };
+
+  const fields: [Key, React.ReactNode, string][] = [
+    ['display_name', <NickIcon key="n" />, 'Please fill in Nickname'],
+    ['facebook_id', <FacebookBoxIcon key="f" />, 'Please fill in Facebook ID'],
+    ['google_id', <NickIcon key="g" />, 'Please fill in Google'],
+    ['whatsapp', <WhatsAppLineIcon key="w" />, 'Please fill in WhatsApp'],
+    ['email', <EnvelopeIcon key="e" />, 'Please fill in Email'],
+    ['contact_phone', <PhoneLineIcon key="p" />, 'Please fill in Phone Number'],
   ];
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    const clean = name.trim().slice(0, 40);
-    if (clean.length < 2) { setErr('The name must be at least 2 characters'); return; }
     if (!supabase || !session) { setErr('Log in first'); return; }
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      setErr('That email does not look right'); return;
+    }
+
+    const patch: Record<string, string | null> = {};
+    for (const k of Object.keys(form) as Key[]) {
+      if (k === 'real_name' && nameLocked) continue;
+      const v = form[k].trim().slice(0, 80);
+      patch[k] = v || null;
+    }
 
     setBusy(true);
-    setErr('');
     // RLS "edit own profile" lets a player update only their own row.
-    const { error } = await supabase
-      .from('profiles')
-      .update({ display_name: clean })
-      .eq('id', session.user.id);
+    const { error } = await supabase.from('profiles').update(patch).eq('id', session.user.id);
     setBusy(false);
 
-    if (error) { setErr('Could not change the name — try again'); return; }
+    if (error) {
+      setErr(/real name/i.test(error.message)
+        ? 'The name cannot be changed — contact support'
+        : 'Could not save — try again');
+      return;
+    }
     await refresh();
-    toast('Name changed');
+    toast('Saved');
   };
 
   return (
     <>
       <PageHeader title="My Account" />
 
-      <div className="ma">
-        <p className="ma__user">Username: <b>{signedIn ? profile?.phone ?? '—' : 'Guest'}</b></p>
+      <div className="msheet ms--white">
+        <p className="ms-user">Username:<b>{signedIn ? profile?.phone ?? '—' : 'Guest'}</b></p>
 
         {!signedIn && ready && (
-          <div className="wallet-bar" style={{ margin: '0 0 12px' }}>
+          <div className="wallet-bar" style={{ margin: '16px 20px 0' }}>
             <Link href="/login" className="btn btn--ghost" style={{ padding: 12 }}>{t.login}</Link>
             <Link href="/register" className="btn btn--gold" style={{ padding: 12 }}>{t.register}</Link>
           </div>
         )}
 
-        {/* The one field on this screen a player owns. The reference asks for
-            a Facebook, a Google, a WhatsApp, an email and a second phone as
-            well; `profiles` has nowhere to put any of them, and a box that
-            forgets what it was told is worse than no box, so they are not
-            drawn until there is a column behind them. */}
-        <label className="ma__field">
-          <span aria-hidden>✎</span>
-          <input
-            value={name}
-            onChange={(e) => { setName(e.target.value); setErr(''); }}
-            placeholder="Please fill in Nickname"
-            maxLength={40}
-            disabled={!signedIn}
-          />
-        </label>
-        {err && <p className="ma__err">{err}</p>}
+        <form className="ms-pad ms-acct" onSubmit={save} noValidate>
+          {/* the name a withdrawal is checked against: greyed and masked once
+              it is set, and the database refuses a second value */}
+          <label className={`ms-field${nameLocked ? ' ms-field--locked' : ''}`}>
+            <span className="ms-field__ico"><IdCardIcon /></span>
+            <input
+              value={nameLocked ? maskName(profile?.real_name ?? '') : form.real_name}
+              placeholder="Please fill in your name"
+              disabled={!signedIn || nameLocked}
+              onChange={(e) => set('real_name')(e.target.value)}
+            />
+          </label>
 
-        {/* what the account is, as it stands — set by the system, not here */}
-        <div className="ma__facts">
-          {rows.slice(1).map(([k, v]) => (
-            <div key={k}><span>{k}</span><b>{v}</b></div>
+          {fields.map(([key, icon, placeholder]) => (
+            <label className="ms-field" key={key}>
+              <span className="ms-field__ico">{icon}</span>
+              <input
+                value={form[key]}
+                placeholder={placeholder}
+                disabled={!signedIn}
+                inputMode={key === 'contact_phone' || key === 'whatsapp' ? 'tel' : undefined}
+                onChange={(e) => set(key)(e.target.value)}
+              />
+            </label>
           ))}
-        </div>
 
-        <p className="ma__privacy">We care about your privacy</p>
-        <p className="ma__note">
-          আপনার তথ্য এনক্রিপ্ট করে রাখা হয়। মোবাইল নাম্বার বদলাতে সাপোর্টে যোগাযোগ
-          করুন — ওটাই আপনার লগইন আইডি।
-        </p>
+          {err && <p className="ms-err">{err}</p>}
 
-        <button
-          type="button"
-          className="ma__submit"
-          disabled={!signedIn || busy || name.trim() === (profile?.display_name ?? '')}
-          onClick={(e) => void save(e as unknown as React.FormEvent)}
-        >
-          {busy ? 'Saving…' : 'Submit'}
-        </button>
+          <p className="ms-privacy">We care about your privacy</p>
+          <p>All user data is encrypted to protect your privacy.</p>
+
+          {/* live from the start, as the reference's is */}
+          <button type="submit" className="ms-submit" disabled={!signedIn || busy}>
+            {busy ? '…' : 'Submit'}
+          </button>
+        </form>
       </div>
     </>
   );

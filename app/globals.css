@@ -2007,81 +2007,49 @@ body.game-immersive .app{padding-bottom:0}
 @media (prefers-reduced-motion:reduce){.gload__glow,.gload__ring i{animation:none}}
 @media (prefers-reduced-motion:reduce){.gate__spin{animation-duration:2s}}
 
-/* ---------- Aviator's own opening curtain --------------------------------
-   Three beats over the board's rays: the partners card with a bar that
-   fills, the maker's stamp with its pair of dots, then "connecting". Both
-   title frames are the reference artwork lifted off its own background, so
-   the rays here run behind them. GameLoading owns the clock. */
+/* ---------- Aviator's opening curtain ------------------------------------
+   Two beats on plain black: the maker's stamp with its dots, then a short
+   "connecting". The partners card is not here — it belongs to the board, and
+   runs in the stage between rounds. GameLoading owns the clock. */
 .avld{
   position:fixed;inset:0;z-index:1200;overflow:hidden;
   display:grid;place-items:center;background:#000;
   transition:opacity .45s ease;
 }
 .avld--out{opacity:0;pointer-events:none}
+.avld__stamp,.avld__link{grid-area:1/1;position:relative}
 
-/* beams fanning out of the lower left — the board's rays, slowed right down */
-.avld__rays{position:absolute;left:-55%;top:150%;width:0;height:0;pointer-events:none}
-.avld__rays i{
-  position:absolute;left:-200vmax;top:-200vmax;width:400vmax;height:400vmax;border-radius:50%;
-  background:repeating-conic-gradient(#171717 0deg 3.4deg,#0a0a0a 3.4deg 6.8deg);
-  animation:av-rays-flow 150s linear infinite;
-}
-
-/* all three beats share the one centred cell, so each fades into the next
-   without the layout moving */
-.avld__card,.avld__stamp,.avld__link{grid-area:1/1;position:relative}
-
-/* ---- beat one: the partners card ---- */
-.avld__card{
-  width:min(80vw,430px);
-  animation:avld-in .75s cubic-bezier(.2,.75,.3,1) both;
-}
-.avld:not(.avld--card) .avld__card{animation:avld-off .4s ease forwards}
-@keyframes avld-in{from{opacity:0;transform:translateY(16px) scale(.93)}to{opacity:1;transform:none}}
-@keyframes avld-off{to{opacity:0;transform:translateY(-12px) scale(.97)}}
-.avld__art{display:block;width:100%;height:auto}
-
-/* the bar was cut out of the artwork; this fills the gap it left, and the
-   numbers are that gap measured against the image, not a guess */
-.avld__bar{
-  position:absolute;left:17.26%;top:58.19%;width:65.15%;height:2.16%;
-  border-radius:var(--r-pill);overflow:hidden;background:#2A2C33;
-}
-.avld__bar i{
-  display:block;height:100%;border-radius:inherit;
-  background:#E40D3C;transition:width .12s linear;
-}
-
-/* ---- beat two: the maker's stamp ---- */
+/* ---- beat one: the maker's stamp ---- */
 .avld__stamp{
   --w:min(74vw,380px);
   opacity:0;visibility:hidden;transition:opacity .35s ease;
 }
-.avld--stamp .avld__stamp{opacity:1;visibility:visible;transition-delay:.18s}
+.avld--stamp .avld__stamp{opacity:1;visibility:visible}
 .avld__made{display:block;width:var(--w);height:auto}
-.avld--stamp .avld__made{animation:avld-up .55s .26s ease both}
+.avld--stamp .avld__made{animation:avld-up .6s .1s ease both}
 @keyframes avld-up{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
 
-/* the pair of dots ticking under the stamp, sized and placed off the
-   artwork's own width so they sit where the reference puts them */
+/* the dots ticking under the stamp — sized and spaced off the artwork's own
+   width, so they sit where the reference puts them at any screen size */
 .avld__pair{
   position:absolute;left:50%;top:100%;transform:translateX(-50%);
   margin-top:calc(var(--w) * .174);
   display:flex;align-items:center;
-  gap:calc(var(--w) * .028);height:calc(var(--w) * .0855);
+  gap:calc(var(--w) * .018);height:calc(var(--w) * .09);
 }
 .avld__pair i{
-  width:calc(var(--w) * .0855);height:calc(var(--w) * .0855);
+  width:calc(var(--w) * .09);height:calc(var(--w) * .09);
   border-radius:50%;background:#E32410;
   animation:avld-pair 1.15s ease-in-out infinite;
 }
-.avld__pair i:nth-of-type(2){animation-delay:.575s}
+.avld__pair i:nth-of-type(2){animation-delay:.383s}
+.avld__pair i:nth-of-type(3){animation-delay:.766s}
 @keyframes avld-pair{
-  0%,100%{transform:scale(.5);opacity:.55}
-  50%{transform:scale(1);opacity:1}
+  0%,100%{transform:scale(.46);opacity:.5}
+  30%{transform:scale(1);opacity:1}
 }
 
-/* ---- beat three: connecting, and the board takes over ---- */
+/* ---- beat two: connecting, and the board takes over ---- */
 .avld__link{
   display:flex;align-items:center;justify-content:center;gap:7px;margin:0;
   font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#d2d2d2;
@@ -2098,10 +2066,30 @@ body.game-immersive .app{padding-bottom:0}
 @keyframes avld-dot{0%,100%{opacity:.2;transform:scale(.75)}50%{opacity:1;transform:none}}
 
 @media (prefers-reduced-motion:reduce){
-  .avld__rays i,.avld__link i{animation:none}
+  .avld__link i{animation:none}
   .avld__pair i{animation-duration:3s}
-  .avld__card,.avld--stamp .avld__made{animation-duration:.01s}
+  .avld--stamp .avld__made{animation-duration:.01s}
 }
+
+/* ---------- the board's betting window -----------------------------------
+   The reference fills it with the partners card rather than a clock: no
+   label, no seconds, and the bar drains to say how long is left. Every width
+   here is a share of the stage, measured off the reference at 393px, so the
+   block holds its proportions whatever the board is sized to. */
+.av-promo{
+  position:absolute;inset:0;z-index:3;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.av-promo__art{display:block;width:39%;height:auto}
+.av-promo__bar{
+  width:52%;height:4px;margin-top:2.1%;overflow:hidden;
+  border-radius:var(--r-pill);background:#2A2C33;
+}
+.av-promo__bar i{
+  display:block;height:100%;border-radius:inherit;
+  background:#E40D3C;transition:width .12s linear;
+}
+.av-promo__seal{display:block;width:27.5%;height:auto;margin-top:2.1%}
 
 /* aviator carries two figures: the real wallet and the demo credit it bets */
 .av-bals{display:flex;align-items:center;gap:6px}
@@ -4148,231 +4136,221 @@ body.cz-light .rc__bar{background:rgba(31,36,48,.14)}
   font-size:12px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums;
 }
 
-/* ---------- Security Center ----------
-   CK44's member-centre `securityCenter` screen, ported.
+/* ---------- Member sheet ----------
+   The Security Center and the four screens behind it, drawn from the
+   reference's phone app: a pale lilac-grey sheet, white cards with
+   hairline rows, grey pill fields with a mark on the left, one red
+   submit bar.
 
-   Everything down to the "phone" block below is the reference's own CSS,
-   filtered to the rules this page's markup actually matches and with its
-   image paths repointed at /security/. Class names are the reference's, so
-   app/(site)/security/page.tsx reads against it line for line. Do not
-   hand-tidy these — re-derive them from the reference instead.
+   Every length below is measured off the reference's own screenshots at
+   a 393px viewport (the phone's CSS width), and every type size was
+   fitted to the measured width of the reference's text in Roboto — the
+   face the reference renders in, and the one an Android phone already
+   has, so nothing is downloaded for it.
 
-   The reference draws three 330px cards side by side in a 1110px drawer;
-   we are a phone, so the block after it stacks the same three cards and
-   turns the right-hand slide-in form into a full-screen sheet. Nothing
-   else is changed: the card art is 330x540, and any other width breaks it. */
-#mc_container{height: 100%; width: 1110px; text-align: left;}
-#mc_container{height: 620px; position: relative; width: 1110px; color: rgb(102, 102, 102); font-size: 14px; background-color: rgb(255, 255, 255); font-family: Avenir, "Helvetica Neue", Helvetica, Arial, "Microsoft YaHei", "serif\9 ";}
-@keyframes rotate-full { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-#mc_container button,#mc_container input{appearance: none; background: 0px 0px; outline: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: none;}
-#mc_container *{box-sizing: border-box; line-height: 1;}
-#mc_container a,#mc_container input,#mc_container label{margin: 0px; padding: 0px; text-decoration: none; list-style: none;}
-#mc_container ::-webkit-scrollbar{width: 6px; background-color: transparent !important;}
-#mc_container ::-webkit-scrollbar-button{display: block; height: 4px;}
-#mc_container ::-webkit-scrollbar-thumb{border-radius: 10px; box-shadow: rgba(139, 139, 137, 0.5) 0px 0px 6px inset; background-color: rgb(139, 138, 138);}
-#mc_container .fr{float: right;}
-#mc_container .overflow{overflow: hidden; position: relative;}
-#mc_container .colon::after{content: "：" !important; display: inline !important;}
-#mc_container .ellipsis{white-space: nowrap; overflow: hidden; line-height: normal; text-overflow: ellipsis; display: block;}
-#mc_container .clear-float::after{content: ""; display: block; clear: both;}
-#mc_container .close-info{position: absolute; z-index: 11; box-shadow: rgba(0, 0, 0, 0.1) -5px 0px 20px; top: 0px; left: -30px; padding: 29px 5px 0px; width: 30px; line-height: 1.2; font-size: 0px; background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAABmJLR0QAAAAAAAD5Q7t/AAAACXBIWXMAAAsSAAALEgHS3X78AAABhklEQVQ4y53SPWiUQRSF4WfWtdHeIYUWIyIKYrCwEQuVQFAQtbCxC0hMZSUoRPEXS60MBMFaBCNYKbiFWAgKplKwGAlEzdindSzcLOHzy7LmdHPuue9wZ27QohrTSZzDYezs28v4gIVQ8stmT2gA9mIOxwzXW8yEkj//A6oxHUUPXaPpNyZCyb0BqMa0C0sjApraHUrOnf7h+SYh8AJCjek43jSKF7ADDxr+XWzBtYY/2cFUyy3bQ8kPMbvOuxNKvo6fLfnprr9f3NR8jWkslHy7xpTQDSXfqDFdxf2W/HioMa1i2wbzPwklT0GN6RFmNsitdgzX+lXYOiQXuviOPS3Fe6Hk2RrTXH+0izWmZdxsyf7q4mMLaDqUPF9juoJL/dGWQsm3akw/MN/IL4Ya0wReNwr7cASPG/5lrOBpwz+1ttmLOGhz+hJK3r/22Gc3CYEz0IFQ8jecQP1PyGQo+esA1If1cADvRgC8x3go+dWgvy1VYzqN8ziEsb69gk94FkpeaPb8ASG+cPprxWvbAAAAAElFTkSuQmCC") center 7px no-repeat rgb(254, 254, 254); text-align: center; cursor: pointer;}
-#mc_container .close-info::after{content: ""; width: 0px; height: 0px; right: 0px; position: absolute; top: 100%; border-width: 0px 30px 13px; border-style: solid; border-color: transparent rgb(254, 254, 254) transparent transparent; border-image: none;}
-#mc_container .button{position: relative; display: inline-block; height: 34px; line-height: 34px; padding: 0px 10px; background-color: rgb(253, 47, 47); color: rgb(255, 255, 255); vertical-align: middle; text-align: center; border-radius: 20px; cursor: pointer; min-width: 98px; width: fit-content; transition: 0.2s ease-in-out;}
-#mc_container .button.btn-submit{box-shadow: rgb(255, 211, 211) 0px 0px 10px;}
-#mc_container .button.btn-submit:hover{background-color: rgb(242, 82, 82);}
-#mc_container .button.btn-submit:active{background-color: rgb(228, 42, 42) !important;}
-#mc_container .input-control{display: inline-block; vertical-align: middle; height: 34px; border-radius: 5px; width: 118px; border: 1px solid rgb(229, 229, 229); background-color: rgb(245, 245, 245); color: rgb(100, 100, 100); outline: 0px; padding-left: 5px; font-size: 12px; box-shadow: rgba(0, 0, 0, 0.08) 0px 1px 5px inset;}
-#mc_container .input-control::placeholder{color: rgb(181, 181, 181);}
-#mc_container .input-control[type]:hover{border-color: rgb(160, 219, 255) !important;}
-#mc_container .input-control[type]:focus{border-color: rgb(160, 219, 255) !important;}
-#mc_container .form-group{word-spacing: -2px; margin-bottom: 16px; white-space: nowrap;}
-#mc_container .form-group .input-case{display: inline-block; position: relative; vertical-align: middle;}
-#mc_container .form-group .input-case .icon-eyes,#mc_container .form-group .input-case .icon-eyes-close{position: absolute; top: 50%; transform: translateY(-50%); right: 14px; cursor: pointer;}
-#mc_container .form-group .fr{float: right;}
-#mc_container .form-group .form-label{line-height: 34px; display: inline-block; vertical-align: middle; width: auto;}
-#mc_container .form-group .input-control{width: 210px;}
-#mc_container .form-group .error-tips{display: none;}
-#mc_container .mcac-icon{display: inline-block; vertical-align: middle; background: url(/security/mcac-icon.png) no-repeat;}
-#mc_container .mcac-icon.icon-optimal{flex: 0 0 40px; width: 40px; height: 40px; background-position: 0px -92px; border-radius: 50%; box-shadow: rgba(92, 188, 42, 0.35) 6px 6px 13px;}
-#mc_container .mcac-icon.icon-eyes{width: 24px; height: 14px; background-position: -94px 0px;}
-#mc_container .mcac-icon.icon-eyes-close{width: 24px; height: 18px; background-position: -135px 1px;}
-#mc_container .model-case{position: absolute; z-index: 11; left: 0px; top: 47px; height: calc(100% - 47px); display: none; width: 100%; overflow: hidden;}
-#mc_container .model-case.all-h{top: 0px; height: 100%;}
-#mc_container .model-case .model-mask{position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);}
-#mc_container .model-case .model-content{position: relative; z-index: 2;}
-#mc_container .caption-text{border-left: 4px solid rgb(253, 47, 47); font-weight: 400; line-height: 15px; padding-left: 9px; margin: 17px 0px 15px;}
-#mc_container .caption-text.border-blue{border-color: rgb(35, 230, 58);}
-#mc_container.security-center .setting-modal{position: relative; height: 100%; float: right; box-shadow: rgba(0, 0, 0, 0.2) -18px 0px 40px -18px;}
-#mc_container.security-center .setting-modal .setting-item{padding: 0px 30px; float: right; background-color: rgb(255, 255, 255); height: 100%; position: relative;}
-#mc_container.security-center .setting-modal .setting-item .setting-item-footer{position: absolute; bottom: 0px; left: 0px; padding-left: 30px; line-height: 44px; height: 47px; border-top: 1px solid rgb(239, 239, 239); width: 100%;}
-#mc_container.security-center{background-color: rgb(255, 255, 255);}
-#mc_container.security-center::after{content: ""; height: 60px; box-shadow: rgba(255, 255, 255, 0.8) 0px -50px 50px; position: absolute; bottom: -60px; right: 0px; width: 360px;}
-#mc_container.security-center .personal-information{box-shadow: rgba(170, 106, 226, 0.19) 0px 7px 62px 0px;}
-#mc_container.security-center .information-wrap{float: left; margin: 40px 0px 0px 30px; border-radius: 10px; height: 539px; width: 330px; position: relative; line-height: 1;}
-#mc_container.security-center .security-information{color: rgb(255, 255, 255); position: relative;}
-#mc_container.security-center .security-information .grade-view{margin: 88px auto 0px; max-width: 168px; min-height: 168px; text-align: center; font-size: 44px; display: flex; flex-direction: column; justify-content: center;}
-#mc_container.security-center .security-information .grade-view div{line-height: 1;}
-#mc_container.security-center .security-information .grade-view .small-view{margin-top: 12px; line-height: 1; font-size: 15px; padding: 0px 5px;}
-#mc_container.security-center .security-information .more-gradeInfo{text-align: center; margin-top: 15px; line-height: 25px;}
-#mc_container.security-center .security-information .more-gradeInfo div{line-height: 25px;}
-#mc_container.security-center .security-information .more-gradeInfo strong{font-size: 22px; font-family: Arial, serif, "Microsoft YaHei"; vertical-align: text-bottom; font-weight: 400;}
-#mc_container.security-center .security-information .more-gradeInfo .js_scorelevel{margin-left: 5px;}
-#mc_container.security-center .security-information .setting-optimal{display: none; margin: 40px 20px 0px; height: 118px; font-size: 16px; color: rgb(94, 94, 94); font-weight: 700; text-align: center;}
-#mc_container.security-center .security-information .setting-text{color: rgb(94, 94, 94); text-align: center; font-size: 15px; font-weight: 700; position: absolute; width: 100%; bottom: 24%;}
-#mc_container.security-center .security-information .setting-options{margin-top: 19px; overflow: hidden; white-space: nowrap; height: 104px; position: absolute; width: 100%; bottom: 0px;}
-#mc_container.security-center .security-information .setting-options .setting-item{width: 33.33%; text-align: center; display: inline-block; font-size: 16px; float: left; height: 104px;}
-#mc_container.security-center .security-information .setting-options .setting-item .item-text{margin-top: 12px; color: rgb(102, 102, 102); white-space: normal; overflow-wrap: break-word;}
-#mc_container.security-center .security-information.grade-low{background: url(/security/grade-low-bg.png) no-repeat; box-shadow: rgba(218, 81, 97, 0.19) 0px 7px 62px;}
-#mc_container.security-center .security-information.grade-low .grade-view{color: rgb(187, 60, 85);}
-#mc_container.security-center .security-information.grade-mid{background: url(/security/grade-mid-bg.png) no-repeat; box-shadow: rgba(56, 124, 248, 0.19) 0px 7px 62px;}
-#mc_container.security-center .security-information.grade-mid .grade-view{color: rgb(54, 120, 196);}
-#mc_container.security-center .security-information.grade-optimal .setting-optimal{display: flex; align-items: center; justify-content: center;}
-#mc_container.security-center .security-information.grade-optimal .setting-optimal span{line-height: 1.5;}
-#mc_container.security-center .security-information.grade-optimal .setting-options,#mc_container.security-center .security-information.grade-optimal .setting-text{display: none;}
-#mc_container.security-center .security-information.grade-high{background: url(/security/grade-high-bg.png) no-repeat; box-shadow: rgba(29, 162, 29, 0.19) 0px 7px 62px;}
-#mc_container.security-center .security-information.grade-high .grade-view{color: rgb(67, 150, 86);}
-#mc_container.security-center .account-information{box-shadow: none; height: 580px; padding-left: 20px; width: 340px; padding-right: 25px;}
-#mc_container.security-center .account-information .account-bind-item .item-text{display: flex; align-items: center; gap: 5px;}
-#mc_container.security-center .account-information .account-bind-item .item-text-info{flex: 1 1 0%; display: flex; align-items: center; gap: 5px;}
-#mc_container.security-center .account-information .account-bind-item{min-height: 61px; margin-bottom: 24px; padding-left: 74px; position: relative;}
-#mc_container.security-center .account-information .account-bind-item .iconinfo{position: absolute; left: 0px; top: 2px;}
-#mc_container.security-center .account-information .account-bind-item .item-text{color: rgb(102, 102, 102); font-size: 16px; line-height: 18px; margin-bottom: 8px;}
-#mc_container.security-center .account-information .account-bind-item .item-detail{line-height: 18px; font-size: 13px; color: rgb(151, 151, 151); text-align: start;}
-#mc_container.security-center .iconinfo{display: inline-block; width: 55px; height: 55px; border-radius: 50%; vertical-align: middle; background-repeat: no-repeat; cursor: pointer; background-image: url(/security/iconinfo.png); box-shadow: rgba(194, 194, 192, 0.35) 9px 9px 21px;}
-#mc_container.security-center .iconinfo.icon-info{background-position: -11px -7px;}
-#mc_container.security-center .iconinfo.icon-info.active{background-position: -245px -7px; box-shadow: rgba(254, 235, 107, 0.35) 9px 9px 21px;}
-#mc_container.security-center .iconinfo.icon-info.active:hover{background-position: -474px -7px;}
-#mc_container.security-center .iconinfo.icon-info.active:active{background-position: -713px -7px !important;}
-#mc_container.security-center .iconinfo.icon-pwd{background-position: -11px -95px;}
-#mc_container.security-center .iconinfo.icon-pwd.active{background-position: -245px -95px; box-shadow: rgba(87, 239, 235, 0.35) 9px 9px 21px;}
-#mc_container.security-center .iconinfo.icon-pwd.active:hover{background-position: -474px -95px;}
-#mc_container.security-center .iconinfo.icon-pwd.active:active{background-position: -713px -95px !important;}
-#mc_container.security-center .iconinfo.icon-moneypwd{background-position: -11px -356px;}
-#mc_container.security-center .iconinfo.icon-moneypwd.active{background-position: -245px -356px; box-shadow: rgba(221, 205, 120, 0.35) 9px 9px 21px;}
-#mc_container.security-center .iconinfo.icon-moneypwd.active:hover{background-position: -474px -356px;}
-#mc_container.security-center .iconinfo.icon-moneypwd.active:active{background-position: -713px -356px !important;}
-#mc_container.security-center .iconinfo.icon-eWallet{background-position: -11px -961px;}
-#mc_container.security-center .iconinfo.icon-eWallet.active{background-position: -245px -961px; box-shadow: rgba(254, 235, 107, 0.35) 9px 9px 21px;}
-#mc_container.security-center .iconinfo.icon-eWallet.active:hover{background-position: -474px -961px;}
-#mc_container.security-center .iconinfo.icon-eWallet.active:active{background-position: -713px -961px !important;}
-#mc_container.security-center .iconinfo.icon-logout{background-image: url(/security/icon-logout.png); background-size: 55px 55px;}
-#mc_container.security-center .iconinfo.icon-logout.active{box-shadow: rgba(255, 109, 124, 0.35) 9px 9px 21px;}
-#mc_container.security-center .icons-danger{flex: 0 0 18px; display: inline-block; width: 18px; vertical-align: sub; height: 18px; background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAABWElEQVQ4y42UPUsDQRCGn10C2lsoiIgGHPwKiF+dWETwA4QU2lhYqfiTJFgIlikERREUG0GIgiKoTJtGSGElgiiuxd3J5bzb3FvNLc+8O7sze4YUOZElYA2YAXrD5VegDtSM6kkyxyQMBoE9oIxfV8CuUdV/Rk5kDjgHOsmnb2DRqF7+GTmRnrD0pJrAAvAVbtKXwvQb1YYNP44ydj00qo9G9QXYz2COAawTmQdmcxzFZqyXnMiyBXY8yUOxWDzctiVocZYmYvGUj7NAtwfodSIdYVz0cF2FHHcz7ETe20EFghYPeJgD4KeNz1sBuG1jVMpR9YMFqh7gE9gCNoEPD1eNJvsOmEwBnozqWMjUgekU5tmojkaXXQEaKVDRiWwQPJGRjGpWofXRloEzggbk1YpRPYXY2BvVC2AcuM5hcAOUIpOWiuJyIhVgnWCyo4FtAvcEP7ZaMucXChNXCqnhyzUAAAAASUVORK5CYII=") no-repeat;}
-#mc_container.security-center .icons-checked-green{flex: 0 0 18px; display: inline-block; width: 18px; vertical-align: sub; height: 18px; background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAABbklEQVQ4y53Uv2sVQRTF8c8ulraCIKQYG0HQwl9sI4qDIgFjoRZiYZHGv0Ft1NLeRguxkggRYhXHNAanUAQLrXREEBVsLQUtdt/jsVlf3vN0e87cLzN37mxlQLE0i7iAo9jT2d/wGk9SyGv9mqoH2Id7OGG6XuJaCvn9FlAszXG8wA6z6Q9iCnljDIqlWcCXGQF97U0hl7r7WP1PCDyFKpYm4vkchWt4hLtY6LyzNZbngLxJIZ9LIa9gc8JfrrVXPCvkCMTS3Mbliexwjd29gof4OgVyBzd6+a66Z6ykkK9q5+j3AOQWrg9tt8aPyS3G0pxMIX/CIp71IDf/ceyfVSzNY1zqBadTyOOb3AYCqzUeDATrsTTHJho7DQL3R5P9Dgd64S/tsF3ZBvIhhbx/1OzzAwt2zgCBpVGzpZA/45T2Ic6jMynkj2NQB9vojrc5A+AVDqaQ10dGNbQqlmYJF3FIO7AVvuOt9se25ZH/BQLRbx5LyZ6wAAAAAElFTkSuQmCC") no-repeat;}
-@keyframes rotate-full { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-#mc_container.security-center .setting-modal .form-group{direction: ltr;}
-#mc_container.security-center .personal-information{border-radius: 10px; overflow: hidden; box-shadow: rgba(170, 106, 226, 0.19) 0px 7px 62px 0px;}
-#mc_container.security-center .personal-information .information-top{padding: 0px 16px; display: flex; justify-content: space-between; align-items: center; position: relative; background: linear-gradient(0deg, rgba(241, 249, 255, 0) 0px, rgba(179, 188, 200, 0.5) 100%);}
-#mc_container.security-center .personal-information .information-top::before{left: 0px; position: absolute; content: ""; width: 100%; height: 100%; background-image: url(/security/level-bg.png); background-position: center bottom; background-size: cover; background-repeat: no-repeat; mask-image: linear-gradient(rgb(0, 0, 0), rgba(0, 0, 0, 0));}
-#mc_container.security-center .personal-information .information-top .upper-right{z-index: 1; padding-top: 12px; color: rgb(248, 255, 255); font-size: 16px; flex: 1 1 0%; display: flex; align-items: center; gap: 8px; width: 0px; margin-bottom: 8px;}
-#mc_container.security-center .personal-information .information-top .upper-right .info-img{display: flex; flex-direction: column; align-items: center; gap: 7px;}
-#mc_container.security-center .personal-information .information-top .upper-right .info-left{flex: 1 1 0%; display: flex; flex-direction: column; align-items: flex-end; margin-right: 10px; width: 0px;}
-#mc_container.security-center .personal-information .information-top .upper-right .info-left .nickname-wrap{color: rgb(102, 102, 102); font-size: 15px; display: flex; margin-top: 4px; font-weight: 600; flex: 1 1 0%; width: 100%; text-align: right; margin-bottom: 8px;}
-#mc_container.security-center .personal-information .information-top .upper-right .info-left .nickname-wrap .information-nickname{height: 18px; font-size: 16px; font-weight: 900;}
-#mc_container.security-center .personal-information .information-top .upper-right .info-left .nickname-wrap .edit-icon{cursor: pointer; display: flex; align-items: center; justify-content: center; background-size: contain; background-repeat: no-repeat; background-image: url(/security/edit-icon.svg); width: 12px; height: 12px; min-width: 12px; min-height: 12px; margin-left: 8px;}
-#mc_container.security-center .personal-information .information-top .upper-right .info-left .regdate-wrap{width: 100%; color: rgb(178, 178, 178); font-size: 10px; font-weight: 500; text-align: left; display: flex; justify-content: flex-start;}
-#mc_container.security-center .personal-information .information-top .upper-right .info-left .regdate-wrap .join-title{margin-right: 3px; text-align: center; display: flex; align-items: center;}
-#mc_container.security-center .personal-information .information-top .upper-right .info-left .regdate-wrap .regdate-icon{background-image: url(/security/icon-date.svg); background-repeat: no-repeat; background-size: contain; margin-right: 2px; display: block; min-width: 12px; width: 12px; height: 12px;}
-#mc_container.security-center .personal-information .information-top .upper-right .info-left .info-level-wrap{display: flex; width: 100%; align-items: center; flex: 1 1 0%;}
-#mc_container.security-center .personal-information .information-top .upper-right .info-left .info-level-wrap .vip-label{cursor: pointer; padding: 4px 8px; display: flex; max-width: 173px; border-radius: 60px; border: 1px solid rgba(255, 255, 255, 0.2); background: linear-gradient(rgba(102, 102, 102, 0.7) 0px, rgba(67, 72, 81, 0.7) 100%); backdrop-filter: blur(10px); margin-right: 5px;}
-#mc_container.security-center .personal-information .information-top .upper-right .info-left .info-level-wrap .vip-label:hover{filter: brightness(120%);}
-#mc_container.security-center .personal-information .information-top .upper-right .info-left .info-level-wrap .vip-label .vipicon{position: static; width: 16px; height: 18px; margin-right: 8px; display: block; mask-image: none; filter: initial; opacity: 1;}
-#mc_container.security-center .personal-information .information-top .upper-right .info-left .info-level-wrap .vip-label .level-name{align-items: center; display: flex; max-width: 173px; text-align: left; padding: 0px 8px; color: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.25) 0px 1px 0px; font-family: Inter; font-size: 12px; font-weight: 700;}
-#mc_container.security-center .personal-information .information-top .upper-right .information-nickname{display: inline-block; line-height: 16px; text-align: left;}
-#mc_container.security-center .personal-information .information-top .upper-right .first-name{display: inline-block; background:  0% 0% / 100% 100% rgb(177, 184, 182); width: 80px; height: 80px; text-align: center; color: transparent; border-radius: 50%; line-height: 40px; font-weight: 700; font-size: 22px; position: relative;}
-#mc_container.security-center .personal-information .information-top .vipicon{background-image: url(/security/spe-icon.png); mask-image: linear-gradient(rgb(0, 0, 0), rgba(0, 0, 0, 0)); filter: blur(0.5px); opacity: 0.5; width: 81px; height: 90px; position: absolute; background-size: 100% 100%; right: 23px; top: 5px; z-index: 0;}
-#mc_container.security-center .personal-information .copy-wrap{padding-left: 16px; display: flex; align-items: center; justify-content: flex-start; margin-top: 12px; width: 100%;}
-#mc_container.security-center .personal-information .copy-wrap .copy-btn{margin-right: 6px; height: 24px; border-radius: 35px; color: rgb(151, 151, 151); font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center;}
-#mc_container.security-center .personal-information .copy-wrap .copy-btn .username-copy{overflow: hidden; text-overflow: ellipsis; white-space: nowrap; word-break: break-all; min-width: 0px; max-width: 110px;}
-#mc_container.security-center .personal-information .copy-wrap .copy-btn .copy-icon{cursor: pointer; align-items: center; justify-content: center; width: 12px; min-width: 12px; height: 12px; display: block; background-size: contain; background-repeat: no-repeat; background-image: url(/security/icon-copy.png); margin-left: 5px;}
-#mc_container.security-center .personal-information .information-money{color: rgb(67, 72, 81); text-align: center; font-size: 24px; font-weight: 600; margin-top: 8px; padding: 0px 9px;}
-#mc_container.security-center .personal-information .information-money .money-view{width: fit-content; align-items: center; flex: 1 1 0%; display: flex; font-size: 24px; font-weight: 600; font-family: Arial, Helvetica, sans-serif;}
-#mc_container.security-center .personal-information .information-money .eyes-icon{aspect-ratio: 1 / 1; cursor: pointer; display: block; width: 18px; height: 18px; background: url(/security/eyes-icon-open.svg) center center / contain no-repeat;}
-#mc_container.security-center .personal-information .information-money .eyes-icon.icon-eyes-close{background: url(/security/eyes-icon-close.svg) center center / contain no-repeat;}
-#mc_container.security-center .personal-information .information-money .amount-wrap{display: flex; justify-content: flex-start; align-items: center;}
-#mc_container.security-center .personal-information .information-money .amount-wrap .refresh{aspect-ratio: 1 / 1; width: 15px; height: 15px; background: url(/security/refresh-icon.svg) 0% 0% / 100% 100% no-repeat; cursor: pointer; margin: 0px 5px;}
-#mc_container.security-center .personal-information .information-money .amount-wrap .processing{animation: 0.5s linear 0s infinite normal none running rotate-full;}
-#mc_container.security-center .personal-information .money-plan{margin-top: 0px; color: rgb(102, 102, 102); font-size: 14px; padding-left: 30px;}
-#mc_container.security-center .personal-information .money-plan .plan-wrap{width: 210px;}
-#mc_container.security-center .personal-information .money-plan .plan-item{margin-top: 20px; background: url(/security/security-deposit.png) left center no-repeat; height: 38px; padding-left: 55px; position: relative; font-size: 14px;}
-#mc_container.security-center .personal-information .money-plan .plan-item:nth-child(2){background-image: url(/security/security-withdrawal.png);}
-#mc_container.security-center .personal-information .money-plan .plan-item .now{padding-top: 8px; font-size: 12px; color: rgb(170, 170, 170);}
-#mc_container.security-center .personal-information .money-plan .plan-item::after{right: 20px; content: ""; width: 210px; position: absolute; border-top: 1px dashed rgb(239, 239, 241); bottom: -18px;}
-#mc_container.security-center .personal-information .money-plan .plan-item #pendingDepositCount,#mc_container.security-center .personal-information .money-plan .plan-item #pendingWithdrawCount{margin-right: 5px;}
-#mc_container.security-center .personal-information::after{content: ""; bottom: 0px; left: 0px; width: 100%; height: 90px; position: absolute; background: linear-gradient(rgba(241, 249, 255, 0) 0px, rgba(179, 188, 200, 0.2) 100%); backdrop-filter: blur(2px); border-radius: 0px 0px 10px 10px;}
+   Shared by /security, /my-profile, /link-ewallet, /change-password and
+   /transaction-password, so a change here moves all five. */
 
-/* ---------- the same three cards, stacked for a phone ---------- */
-#mc_container.security-center{width:100%;height:auto;padding:0 0 18px}
-#mc_container.security-center::after{display:none}
-#mc_container.security-center .outer-casing{overflow:visible}
-/* the reference floats these three, which is also what stops the score
-   ring's 88px top margin escaping the card; stacked, they need a block
-   formatting context of their own or the margin pushes the card down */
-#mc_container.security-center .information-wrap{
-  float:none;display:flow-root;width:330px;max-width:calc(100% - 24px);margin:14px auto 0;
+body.cz-light .msheet{background:#f5f4f9;min-height:calc(100dvh - 52px);padding-bottom:26px}
+body.cz-light .msheet.ms--white{background:#fefefe}
+.msheet{
+  --ms-line:#ececec;--ms-red:#fc2232;
+  font-family:Roboto,"Helvetica Neue",Arial,sans-serif;color:#333;
 }
-#mc_container.security-center .account-information{
-  width:330px;max-width:calc(100% - 24px);height:auto;padding:6px 25px 0 20px;
+.msheet *{box-sizing:border-box}
+.ms-pad{padding:0 20px}
+
+/* ---- the score card: 105px tall on a 13px margin, an 84px ring ---- */
+.ms-score{
+  display:flex;align-items:center;gap:16px;
+  height:105px;margin:13px 13px 0;padding:0 11px;
+  border-radius:6px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.04);
 }
-/* the reference gives all three cards one height so its three columns line
-   up. Stacked, that leaves 200px of nothing under the pending rows — the
-   score card keeps 539px because its art is drawn at that size, this one
-   does not need to. The padding is the height of the frosted strip the
-   reference floats at the card's foot, so the strip still lands on empty
-   card rather than over the last row. */
-#mc_container.security-center .personal-information{height:auto;padding-bottom:90px}
-/* we have no avatar art, so the initial has to be legible */
-#mc_container.security-center .personal-information .information-top .upper-right .first-name{
-  color:#fff;line-height:80px;font-size:30px;
+.ms-ring{flex:0 0 84px;width:84px;height:84px;display:grid;place-items:center;position:relative}
+.ms-ring svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.ms-ring b{
+  position:relative;display:flex;align-items:baseline;
+  font-size:31px;font-weight:500;line-height:1;
+  background:linear-gradient(90deg,#9b6af5 0%,#6f93f0 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
 }
-/* the reference's rows and suggestion tiles are divs; ours are buttons, and a
-   button keeps its own font and its UA padding unless it is told not to —
-   which is enough to re-wrap "Recommended password with combination of…" */
-#mc_container button{
-  font-family:inherit;font-weight:inherit;letter-spacing:inherit;
-  color:inherit;padding:0;
+.ms-ring b i{font-style:normal;font-size:14px;font-weight:500;margin-left:3px;-webkit-text-fill-color:#4aa8f0}
+/* the level and its five bolts share one line and must never wrap */
+.ms-score__lv{
+  min-width:0;display:flex;align-items:center;gap:10px;white-space:nowrap;
+  font-size:16px;font-weight:500;color:#3c3c3c;
 }
-#mc_container.security-center .account-information .account-bind-item{
-  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
-  width:100%;text-align:left;background:none;
-}
-/* Chrome centres a button's content vertically whatever its display is, which
-   drops these tiles ~4px below the reference's divs; a real flex container is
-   the one display value that turns that off */
-#mc_container.security-center .security-information .setting-options .setting-item{
-  background:none;display:flex;flex-direction:column;
-  align-items:center;justify-content:flex-start;
+.ms-bolts{display:flex;gap:5.1px;flex-shrink:0}
+.ms-bolts svg{display:block;width:13px;height:18.5px;fill:#fcdf00}
+.ms-bolts svg.off{fill:#d1d1d1}
+
+.ms-warn{
+  margin:26px 12px 0;text-align:center;
+  font-size:16px;font-weight:500;line-height:18.3px;letter-spacing:.45px;color:#e8322b;
 }
 
-/* ---------- the slide-in form, as a full-screen sheet ---------- */
-#mc_container.security-center .model-case{
-  position:fixed;left:0;top:0;width:100%;height:100%;display:block;z-index:70;
+/* ---- the rows: 62px for one line of subtitle, +17px per extra line ---- */
+.ms-rows{margin:13px 13px 0;background:#fff}
+.ms-row{
+  display:flex;align-items:center;width:100%;min-height:62px;border:0;
+  padding:9px 23px 9px 24px;background:none;text-align:left;
+  font:inherit;color:inherit;
 }
-#mc_container.security-center .setting-modal{float:none;width:100%;height:100%;box-shadow:none}
-#mc_container.security-center .setting-modal .setting-item{
-  float:none;width:100%;height:100%;padding:0 18px;overflow-y:auto;
+.ms-row+.ms-row{border-top:1px solid var(--ms-line)}
+.ms-row__ico{flex:0 0 36px;width:36px;height:36px;margin-right:37.5px}
+/* the art is drawn inside a 24 box with room round it; the reference's
+   glyphs are 35-42px, so the svg overhangs its 36px slot */
+.ms-row__ico svg{width:50px;height:50px;margin:-7px;display:block}
+.ms-row__text{flex:1;min-width:0}
+.ms-row__title{
+  display:flex;align-items:center;
+  font-size:14.5px;font-weight:700;line-height:20px;color:#333;
 }
-#mc_container.security-center .setting-modal .setting-item .setting-item-footer{
-  padding-left:18px;display:flex;align-items:center;
+.ms-row__title>span{white-space:nowrap}
+.ms-badge{flex:0 0 18px;width:18px;height:18px;margin-left:9px;display:block}
+.ms-row__pen{flex:0 0 20px;width:20px;height:20px;margin-left:3px;color:#b8b8b8}
+.ms-row__sub{display:block;margin-top:5px;font-size:11.3px;line-height:17.2px;color:#a6a6a6}
+.ms-row__chev{flex:0 0 11px;width:11px;height:19px;margin-left:22px;color:#9a9a9a}
+
+/* ---- grey pill field, the shape every form on these screens uses ---- */
+.ms-field{
+  display:flex;align-items:center;height:55px;margin:0 0 15.4px;
+  padding:0 26px 0 13.5px;border-radius:6px;background:#efefef;
 }
-#mc_container .close-info{
-  left:auto;right:0;top:0;width:auto;padding:16px 14px;
-  box-shadow:none;background:none;color:#979797;font-size:13px;line-height:1;
+.ms-field--locked{background:#c1c1c1}
+.ms-field__ico{flex:0 0 22px;width:22px;height:22px;margin-right:17px;color:#a0a0a0}
+.ms-field__ico svg{width:26px;height:26px;margin:-2px;display:block}
+.ms-field input{
+  flex:1;min-width:0;height:100%;border:0;padding:0;background:none;outline:none;
+  font:inherit;font-size:16px;color:#333;
 }
-#mc_container .close-info::after{display:none}
-/* the reference floats an error tooltip; a phone has no room, so it reads
-   under the field it belongs to */
-#mc_container.security-center .form-group .error-tips{
-  display:block;clear:both;margin:0;padding:6px 0 0;word-spacing:normal;
-  color:#ed5650;font-size:12px;line-height:1.5;text-align:right;white-space:normal;
+.ms-field input::placeholder{color:#a3a3a3}
+.ms-field input:disabled{color:#555;-webkit-text-fill-color:#555;opacity:1}
+.ms-field__eye{
+  flex:0 0 22px;width:22px;height:22px;margin-left:10px;padding:0;border:0;
+  color:#a4a4a4;background:none;
 }
-#mc_container.security-center .form-group .error-tips.is-form,
-#mc_container.security-center .error-tips.is-form{
-  text-align:left;padding:0 0 10px;color:#ed5650;font-size:12px;
+.ms-field__eye svg{width:22px;height:22px;display:block}
+
+.ms-err{margin:-6px 0 12px;font-size:13px;color:#e8322b}
+
+.ms-submit{
+  display:block;width:100%;height:47px;margin:0;border:0;border-radius:5px;
+  font:inherit;font-size:18px;color:#fff;
+  background:linear-gradient(180deg,#ff3940 0%,#fc2232 100%);
+  box-shadow:0 6px 12px rgba(252,34,50,.3);
 }
-#mc_container.security-center .button.btn-submit[disabled]{
-  background-color:#d5d5d5;box-shadow:none;
+.ms-submit:disabled{
+  background:linear-gradient(180deg,#cdcdcd 0%,#c6c6c6 100%);
+  box-shadow:0 2px 4px rgba(0,0,0,.16);color:#111;
 }
+
+/* ---- the two password screens ---- */
+.ms-pw{padding-top:15.5px}
+.ms-pw .ms-field{margin-bottom:17.7px}
+.ms-pw .ms-field__ico{color:#9e9e9e}
+.ms-note{margin:7.5px 0 0;font-size:13.5px;line-height:15.5px;color:#333}
+.ms-pw .ms-err{margin:10px 0 0}
+.ms-pw .ms-submit{height:54px;margin-top:18px;border-radius:3px;font-size:14px}
+.ms-pw .ms-submit:disabled{color:#fff}
+
+/* ---- My Account ---- */
+.ms-user{margin:0;padding:21.7px 20px 0;font-size:18px;line-height:24px;color:#000}
+.ms-user b{font-weight:400;margin-left:9px}
+.ms-acct{padding-top:19.7px}
+.ms-privacy{margin:1px 0 0;font-size:16.5px;line-height:20px;color:#4596e0}
+.ms-privacy+p{margin:12px 0 0;font-size:12.4px;line-height:16px;color:#6b6b6b}
+.ms-acct .ms-submit{margin-top:16px}
+
+/* ---- Link E-wallet ---- */
+.ms-lw__count{
+  display:flex;align-items:center;margin:0;padding:9.9px 13px 0;
+  font-size:14.3px;line-height:20px;color:#333;
+}
+.ms-lw__count i{flex:0 0 5px;width:5px;height:5px;margin-right:3px;border-radius:50%;background:#f5a623}
+.ms-card{
+  position:relative;height:91.7px;margin:12.6px 11px 0;padding:10.2px 10.7px;
+  border-radius:8px;overflow:hidden;
+  background:
+    radial-gradient(circle at 100% 100%,rgba(255,255,255,0) 58px,rgba(255,222,180,.35) 59px,rgba(255,222,180,0) 76px),
+    linear-gradient(90deg,#ffe9d1 0%,#fdeedb 55%,#fdf1e3 100%);
+  box-shadow:0 2px 4px rgba(0,0,0,.08);
+}
+.ms-card__top{display:flex;align-items:flex-start}
+.ms-card__logo{
+  flex:0 0 86.4px;height:41px;margin-right:8.8px;border-radius:5px;background:#fff;
+  display:grid;place-items:center;padding:4px 6px;
+}
+.ms-card__logo img{width:100%;height:100%;object-fit:contain;display:block}
+.ms-card__who{min-width:0;padding-top:0}
+.ms-card__who b{display:block;font-size:13.5px;font-weight:400;line-height:18px;color:#333}
+.ms-card__who span{display:block;margin-top:3.5px;font-size:13.5px;line-height:18px;color:#555;letter-spacing:.3px}
+.ms-card__when{position:absolute;right:10.7px;bottom:11px;font-size:11.5px;line-height:14px;color:#999}
+.ms-lw__max{margin:28.9px 0 0;text-align:center;font-size:14.5px;line-height:20px;color:#555}
+.ms-fab{
+  display:grid;place-items:center;margin:28.2px auto 0;
+  width:42.5px;height:42.5px;padding:0;border-radius:50%;border:0;
+  background:#fe2c3b;color:#fff;box-shadow:0 4px 14px rgba(252,34,50,.45);
+}
+.ms-fab svg{width:17px;height:17px;display:block}
+.ms-fab:disabled{background:#c6c6c6;box-shadow:none}
+.ms-empty{margin:40px 0;text-align:center;font-size:14.5px;color:#999}
+
+/* the "Add New" sheet the + opens */
+.ms-sheet{
+  position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;justify-content:flex-end;
+  font-family:Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+.ms-sheet__mask{position:absolute;inset:0;background:rgba(0,0,0,.4);border:0;padding:0}
+.ms-sheet__box{position:relative;margin:0 22px;border-radius:10px;background:#fff;overflow:hidden}
+.ms-sheet__h{
+  margin:0;height:47.8px;display:grid;place-items:center;
+  font-size:16.5px;font-weight:400;color:#333;background:#f2f2f2;
+}
+.ms-sheet__opt{
+  position:relative;display:flex;align-items:center;gap:13px;width:100%;height:48.3px;
+  padding:0 20.8px;border:0;background:#fff;font:inherit;text-align:left;
+}
+.ms-sheet__opt+.ms-sheet__opt::before{
+  content:"";position:absolute;top:0;left:20.8px;right:20.8px;height:1px;background:#e5e5e5;
+}
+.ms-sheet__opt img{height:18px;width:auto;max-width:40px;object-fit:contain;display:block}
+.ms-sheet__opt span{font-size:14.3px;color:#333}
+.ms-sheet__x{
+  position:relative;align-self:center;display:grid;place-items:center;
+  margin:14px 0 23px;width:42.5px;height:42.5px;padding:0;border-radius:50%;border:0;
+  background:#f2f2f2;color:#333;
+}
+.ms-sheet__x svg{width:17px;height:17px;display:block}
+
+/* the add form */
+.ms-label{margin:0;padding-top:24px;font-size:14.4px;line-height:18px;color:#6b6b6b}
+.ms-group{
+  display:grid;place-items:center;width:105.4px;height:45.2px;margin-top:11.7px;
+  border:1px solid #f5222d;border-radius:6px;background:#fdf0f1;
+}
+.ms-group__art{display:block;width:83px;height:39px;padding:2px 4px;background:#fff}
+.ms-group__art img{width:100%;height:100%;object-fit:contain;display:block}
+.ms-box{
+  margin-top:27.5px;padding:8.4px 5.7px 16px;
+  border:1px solid #d2d2d4;border-radius:6px;background:#fff;
+}
+.ms-box>p{margin:0 0 12.1px 1.1px;font-size:14.2px;line-height:18px;color:#6b6b6b}
+/* the group picked, repeated as the one e-wallet type it offers */
+.ms-chip{
+  display:grid;place-items:center;width:102.3px;height:45.2px;margin:0 0 16.4px;
+  border:1px solid #f5222d;border-radius:6px;background:#fff0f0;
+  font-size:14.4px;color:#111;
+}
+.ms-box .ms-field{margin:0 0 16.4px}
+.ms-box .ms-field:last-child{margin-bottom:0}
+.ms-field--square{border-radius:0;padding-right:10px}
+/* the name on file inside the box is greyed right down, as the reference's is */
+.ms-box .ms-field--locked input:disabled{color:#a3a3a3;-webkit-text-fill-color:#a3a3a3}
+.ms-lwform .ms-box+.ms-field{margin-top:16.8px}
+.ms-lwform .ms-submit{margin-top:11.1px;border-radius:3px}
+/* the fund-password screen's bar sits 11px lower than the login one's */
+.ms--txn .ms-pw .ms-submit{margin-top:29px}
 
 /* ============================================================
    Golden Ace — the house slot (components/mini/SlotBoard.tsx)
@@ -4606,38 +4584,6 @@ body.cz-light .rc__bar{background:rgba(31,36,48,.14)}
 .sa-pay__rules{margin:12px 0 0;padding-left:16px;display:grid;gap:7px}
 .sa-pay__rules li{font-size:11.5px;color:var(--muted);line-height:1.65}
 .sa-pay__rules b{color:var(--text)}
-
-/* ---------- My Account (the details form) ---------- */
-.ma{padding:16px 14px 26px}
-.ma__user{margin:0 0 14px;font-size:15px;color:var(--text)}
-.ma__user b{font-weight:800;margin-left:4px}
-.ma__field{
-  display:flex;align-items:center;gap:11px;margin-bottom:12px;padding:0 14px;
-  border-radius:var(--r-sm);background:#f1f2f4;border:1px solid transparent;
-}
-.ma__field:focus-within{border-color:#2f6fe0;background:#fff}
-.ma__field span{color:var(--muted);font-size:15px}
-.ma__field input{
-  flex:1;min-width:0;padding:15px 0;background:none;border:0;
-  color:var(--text);font-size:14.5px;font-weight:600;font-family:inherit;
-}
-.ma__field input:focus{outline:none}
-.ma__field input::placeholder{color:#a7adb6}
-.ma__field input:disabled{color:var(--muted)}
-.ma__err{margin:-6px 0 12px;font-size:12.5px;font-weight:700;color:#c02626}
-.ma__facts{margin:4px 0 16px;border-radius:var(--r-sm);border:1px solid var(--line);overflow:hidden}
-.ma__facts div{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff}
-.ma__facts div+div{border-top:1px solid var(--line)}
-.ma__facts span{font-size:13px;color:var(--muted)}
-.ma__facts b{margin-left:auto;font-size:13px;font-weight:700;color:var(--text)}
-.ma__privacy{margin:0 0 4px;font-size:14px;font-weight:700;color:#2f6fe0}
-.ma__note{margin:0 0 18px;font-size:12px;line-height:1.8;color:var(--muted)}
-.ma__submit{
-  display:block;width:100%;padding:15px;border-radius:var(--r-sm);
-  background:#f4262c;color:#fff;font-size:15.5px;font-weight:700;
-  box-shadow:0 6px 18px rgba(244,38,44,.28);
-}
-.ma__submit[disabled]{background:#dfe2e6;color:#9aa1a9;box-shadow:none}
 
 /* ---------- Invite Friends ---------- */
 .iv__tabs{display:flex;border-bottom:1px solid var(--line);background:#fff}

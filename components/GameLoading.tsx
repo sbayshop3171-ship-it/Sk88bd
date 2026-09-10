@@ -9,8 +9,9 @@ import { Wordmark } from './Header';
 export type GameCurtain = 'house' | 'aviator';
 
 /** How long each curtain stays up before the game shows. Aviator's runs
-    longer because it plays three beats, not one. */
-const CURTAIN_MS: Record<GameCurtain, number> = { house: 3000, aviator: 4200 };
+    shorter: it plays the stamp and a connect, and hands the partners card to
+    the board itself. */
+const CURTAIN_MS: Record<GameCurtain, number> = { house: 3000, aviator: 2600 };
 
 /** How long the house curtain stays up. */
 export const GAME_LOADING_MS = CURTAIN_MS.house;
