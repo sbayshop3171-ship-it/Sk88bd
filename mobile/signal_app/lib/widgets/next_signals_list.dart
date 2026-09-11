@@ -210,8 +210,10 @@ String _status(UpcomingSignal signal, DateTime now, bool revealed) {
   return revealed ? 'এই রাউন্ডে উড়বে' : 'সিগন্যাল আসছে…';
 }
 
+/// Red is kept for the burst alone, so a low signal is never read as a
+/// plane that has already gone.
 Color _colourFor(double value) {
-  if (value < 2) return NeonPalette.red;
+  if (value < 2) return NeonPalette.green;
   if (value < 3) return NeonPalette.cyan;
   if (value < 10) return NeonPalette.mint;
   return NeonPalette.gold;
