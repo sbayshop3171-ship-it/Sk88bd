@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
+import LockNotice, { useWithdrawLock } from '@/components/LockNotice';
 import PageHeader from '@/components/PageHeader';
 import { useUI } from '@/components/UIProvider';
 import {
@@ -51,6 +52,7 @@ export default function MemberPage() {
   const { toast } = useUI();
   const { ready, session, profile, wallet, signOut, refresh } = useAuth();
   const [spinning, setSpinning] = useState(false);
+  const lock = useWithdrawLock();
 
   const signedIn = ready && Boolean(session);
   /* the player ID (migration 012) is the number support asks for; before it
@@ -76,7 +78,7 @@ export default function MemberPage() {
 
   const reload = async () => {
     setSpinning(true);
-    await refresh();
+    await Promise.all([refresh(), lock.reload()]);
     // let the turn finish even when the request comes back instantly
     setTimeout(() => setSpinning(false), 600);
   };
@@ -150,6 +152,10 @@ export default function MemberPage() {
             </div>
           )}
         </div>
+
+        {signedIn && lock.status?.locked && (
+          <LockNotice status={lock.status} onChange={lock.setStatus} />
+        )}
 
         <div className="mc__sechd">
               <span>Member Center</span>

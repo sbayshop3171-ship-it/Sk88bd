@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth-next';
+import { can } from '@/lib/admin-roles';
 import { adjustBalance, listPlayers, setBlocked, setHeld } from '@/lib/cashier';
-import { playerScope } from '@/lib/player-scope';
+import { inScope, playerScope } from '@/lib/player-scope';
+import { adminClient } from '@/lib/supabase';
+import { rejectAppeal, setWithdrawLock } from '@/lib/withdraw-lock';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -13,18 +16,24 @@ export async function GET(req: Request) {
   const gate = await requireAdmin('players.read');
   if (!gate.ok) return gate.response;
 
-  const search = new URL(req.url).searchParams.get('search') ?? '';
+  const params = new URL(req.url).searchParams;
+  const search = params.get('search') ?? '';
   // an agent's search runs over their own players only
-  const result = await listPlayers(search, 100, await playerScope(gate.session));
+  const result = await listPlayers(search, 100, await playerScope(gate.session), params.get('filter') === 'locked');
   return result.ok
     ? json({ ok: true, players: result.data })
     : json(result, result.reason === 'no-backend' ? 503 : 500);
 }
 
+/** What an agent may do to one of their own players: stop and restart
+    withdrawals, and answer the appeal. Everything else is players.write. */
+const LOCK_ACTIONS = new Set(['lock', 'unlock', 'reject-appeal']);
+
 export async function POST(req: Request) {
-  const gate = await requireAdmin('players.write');
+  const gate = await requireAdmin('players.lock');
   if (!gate.ok) return gate.response;
   const { session } = gate;
+  const scope = await playerScope(session);
 
   let body: unknown;
   try {
@@ -38,7 +47,23 @@ export async function POST(req: Request) {
   const userId = String(record.userId ?? '');
   if (!userId) return json({ ok: false, reason: 'invalid-user' }, 400);
 
-  if (record.action === 'adjust') {
+  const action = String(record.action ?? '');
+  if (LOCK_ACTIONS.has(action)) {
+    // an agent's own players only — asked again here, the id came from the body
+    if (!(await inScope(scope, userId))) return json({ ok: false, reason: 'forbidden' }, 403);
+  } else if (!can(session.role, 'players.write')) {
+    return json({ ok: false, reason: 'forbidden' }, 403);
+  }
+
+  if (LOCK_ACTIONS.has(action)) {
+    const db = adminClient();
+    if (!db) return json({ ok: false, reason: 'no-backend' }, 503);
+    const note = String(record.reason ?? '').trim().slice(0, 200);
+    const result = action === 'reject-appeal'
+      ? await rejectAppeal(db, userId, Number(record.appealId), note, session.username)
+      : await setWithdrawLock(db, userId, action === 'lock', note, session.username);
+    if (!result.ok) return json({ ok: false, reason: 'db-error', message: result.message }, 400);
+  } else if (record.action === 'adjust') {
     const amount = Math.round(Number(record.amount));
     if (!Number.isFinite(amount) || amount === 0) {
       return json({ ok: false, reason: 'invalid-amount' }, 400);
@@ -62,7 +87,7 @@ export async function POST(req: Request) {
     return json({ ok: false, reason: 'invalid-action' }, 400);
   }
 
-  const players = await listPlayers(String(record.search ?? ''), 100, await playerScope(session));
+  const players = await listPlayers(String(record.search ?? ''), 100, scope, record.filter === 'locked');
   // saved either way; an empty list would look like the player vanished
   return players.ok
     ? json({ ok: true, players: players.data })

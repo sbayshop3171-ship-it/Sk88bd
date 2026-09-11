@@ -2231,6 +2231,95 @@ body.game-immersive .app{padding-bottom:0}
 }
 .mc__lbl{font-size:11px;line-height:1.35;color:#4a5060;font-weight:600}
 
+/* --- withdraw-lock notice (components/LockNotice.tsx) ------------------
+
+   A white card on the light account desk, the reference's: a dark-teal
+   stripe down the left edge, the shield in a pale tile, a red "!" after the
+   title. Colours are its own so it reads the same on My Account and on the
+   (also light) withdraw screen.
+   ---------------------------------------------------------------------- */
+.lk{
+  --lk-ink:#1f2430;--lk-soft:#5d6470;--lk-teal:#113f3a;--lk-line:rgba(31,36,48,.1);
+  margin:12px 12px 0;padding:14px 13px 14px 16px;border-radius:14px;
+  background:#fff;color:var(--lk-ink);
+  border:1px solid var(--lk-line);border-left:5px solid var(--lk-teal);
+  box-shadow:0 2px 10px rgba(31,36,48,.06);
+}
+.lk__head{display:flex;align-items:flex-start;gap:11px}
+.lk__ico{
+  flex:0 0 40px;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;
+  background:#eef1f4;color:var(--lk-teal);
+}
+.lk__ico svg{width:21px;height:21px}
+.lk__txt{flex:1;min-width:0}
+.lk__title{display:flex;align-items:center;gap:7px;min-width:0}
+.lk__title b{font-size:15px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lk__bang{
+  flex:0 0 19px;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;
+  background:#e5484d;color:#fff;font-size:12px;font-weight:900;font-style:normal;
+}
+.lk__reason{margin:4px 0 0;font-size:12.5px;line-height:1.55;color:var(--lk-soft)}
+.lk__rule{margin:10px 0 0;font-size:11.5px;line-height:1.5;color:#8a6212}
+.lk__btn{
+  flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 14px;border-radius:9px;background:var(--lk-teal);color:#fff;
+  font-size:13px;font-weight:800;white-space:nowrap;
+}
+.lk__btn svg{width:16px;height:16px}
+.lk__btn:disabled{opacity:.6}
+.lk__btn:active{transform:translateY(1px)}
+.lk__btn--wide{width:100%;margin-top:12px;padding:12px}
+.lk__ghost{padding:9px 14px;border-radius:9px;background:#eef1f4;color:var(--lk-soft);font-size:13px;font-weight:700}
+
+.lk__box{
+  margin-top:12px;padding:13px 12px;border-radius:12px;border:1px solid var(--lk-line);background:#fff;
+}
+.lk__row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.lk__chip{
+  display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;
+  background:#eef1f4;font-size:12px;font-weight:700;color:var(--lk-ink);
+}
+.lk__chip svg{width:14px;height:14px}
+.lk__chip.is-no{background:#fdecec;color:#c0282d}
+.lk__ago{font-size:11px;color:#9aa0aa;white-space:nowrap}
+.lk__when{margin:10px 0 0;font-size:12.5px;color:var(--lk-soft)}
+.lk__when b{color:var(--lk-ink)}
+.lk__quote{
+  margin-top:10px;padding:10px 12px;border-radius:10px;background:#f3f5f7;
+  border-left:3px solid var(--lk-teal);
+}
+.lk__quote small{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--lk-soft)}
+.lk__quote small svg{width:13px;height:13px}
+.lk__quote p{margin:4px 0 0;font-size:13.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.lk__quote.is-no{background:#fdf1f1;border-left-color:#e5484d}
+
+.lk__steps{display:flex;align-items:center;margin:14px 0 0;padding:0;list-style:none;font-size:12px}
+.lk__steps li{display:flex;align-items:center;gap:5px;color:#9aa0aa;white-space:nowrap}
+.lk__steps li + li::before{content:'';width:22px;height:1px;background:#d6dae0;margin:0 7px;flex:1 1 auto}
+.lk__steps li{flex:1 1 0}
+.lk__steps li:first-child{flex:0 0 auto}
+.lk__steps span{
+  width:16px;height:16px;border-radius:50%;display:grid;place-items:center;flex:0 0 16px;
+  border:1.5px solid currentColor;font-size:9px;font-weight:900;line-height:1;
+}
+.lk__steps .is-done{color:#1a9a58}
+.lk__steps .is-now{color:var(--lk-ink);font-weight:700}
+.lk__steps .is-no{color:#c0282d;font-weight:700}
+
+.lk__label{display:block;font-size:12.5px;font-weight:700;margin-bottom:8px}
+.lk__presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.lk__presets button{
+  padding:5px 10px;border-radius:999px;background:#eef1f4;color:var(--lk-ink);
+  font-size:11.5px;text-align:left;
+}
+.lk textarea{
+  width:100%;box-sizing:border-box;padding:10px 11px;border-radius:10px;resize:vertical;
+  border:1px solid #cfd4db;background:#fff;color:var(--lk-ink);font:inherit;font-size:14px;
+}
+.lk textarea:focus{outline:2px solid rgba(17,63,58,.35);outline-offset:0;border-color:var(--lk-teal)}
+.lk__err{margin:6px 0 0;font-size:12px;color:#c0282d}
+.lk__acts{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+
 /* --- ledger screens: signed figures + turnover progress ---------------- */
 .stat .is-up b,.hist__main b.is-up{color:#6fe6cb}
 .stat .is-down b,.hist__main b.is-down{color:#ff9d9d}

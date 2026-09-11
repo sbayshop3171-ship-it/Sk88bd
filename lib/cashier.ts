@@ -10,6 +10,7 @@
     so an approval and its ledger entry land together. */
 
 import { adminClient } from './supabase';
+import { latestAppeals, type Appeal } from './withdraw-lock';
 
 export type RequestState = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
@@ -55,6 +56,13 @@ export type PlayerRow = {
   isHeld: boolean;
   blockReason: string | null;
   holdReason: string | null;
+  /** withdraw locked (migration 013): plays on, cannot withdraw */
+  withdrawLocked: boolean;
+  lockReason: string | null;
+  lockedAt: string | null;
+  lockedBy: string | null;
+  /** their latest appeal against the current lock */
+  appeal: Appeal | null;
   createdAt: string;
   /** paisa */
   balance: number;
@@ -118,11 +126,14 @@ export async function listCashier(
 }
 
 /** Players, newest first. `agentCode` narrows the list to one agent's
-    signups — that is the agent screen's whole query. */
+    signups — that is the agent screen's whole query. `onlyLocked` keeps the
+    withdraw-locked ones, most recently locked first, so an appeal is never
+    lost below the first hundred signups. */
 export async function listPlayers(
   search = '',
   limit = 100,
   agentCode?: string,
+  onlyLocked = false,
 ): Promise<CashierResult<PlayerRow[]>> {
   const db = adminClient();
   if (!db) return NO_BACKEND;
@@ -131,6 +142,7 @@ export async function listPlayers(
   // 012, agent_code with 008. A database that has not run one yet drops back
   // to the next narrower select rather than losing the player list.
   const TIERS = [
+    ', agent_code, player_no, is_held, hold_reason, block_reason, withdraw_locked, lock_reason, locked_at, locked_by',
     ', agent_code, player_no, is_held, hold_reason, block_reason',
     ', agent_code',
     '',
@@ -150,7 +162,7 @@ export async function listPlayers(
         `id, phone, display_name, role, vip_level, referral_code, is_blocked, created_at${extra},
          wallets (balance, bonus_balance, turnover_need, turnover_done)`,
       )
-      .order('created_at', { ascending: false })
+      .order(onlyLocked ? 'locked_at' : 'created_at', { ascending: false })
       .limit(limit);
 
     if (term) {
@@ -159,6 +171,7 @@ export async function listPlayers(
       query = query.or(match.join(','));
     }
     if (agentCode) query = query.eq('agent_code', agentCode);
+    if (onlyLocked) query = query.eq('withdraw_locked', true);
 
     return query.returns<Record<string, unknown>[]>();
   };
@@ -167,11 +180,23 @@ export async function listPlayers(
     // asked to filter by a column this database does not have: an empty list
     // is the honest answer, not every player on the site
     if (agentCode && !extra.includes('agent_code')) return { ok: true, data: [] };
+    if (onlyLocked && !extra.includes('withdraw_locked')) return { ok: true, data: [] };
 
     const { data, error } = await run(extra);
     if (error && isMissingColumn(error.message)) continue;
     if (error) return { ok: false, reason: 'db-error', message: error.message };
-    return { ok: true, data: (data ?? []).map(toPlayerRow) };
+
+    const rows = (data ?? []).map(toPlayerRow);
+    const locked = rows.filter((p) => p.withdrawLocked);
+    if (locked.length) {
+      const appeals = await latestAppeals(db, locked.map((p) => p.id));
+      for (const p of locked) {
+        const appeal = appeals.get(p.id);
+        // one sent against an earlier lock that was already lifted is history
+        if (appeal && (!p.lockedAt || appeal.createdAt >= p.lockedAt)) p.appeal = appeal;
+      }
+    }
+    return { ok: true, data: rows };
   }
   return { ok: false, reason: 'db-error', message: 'The player list could not be read' };
 }
@@ -439,6 +464,11 @@ function toPlayerRow(row: Record<string, unknown>): PlayerRow {
     isHeld: Boolean(row.is_held),
     blockReason: (row.block_reason as string) || null,
     holdReason: (row.hold_reason as string) || null,
+    withdrawLocked: Boolean(row.withdraw_locked),
+    lockReason: (row.lock_reason as string) || null,
+    lockedAt: (row.locked_at as string) || null,
+    lockedBy: (row.locked_by as string) || null,
+    appeal: null,
     createdAt: String(row.created_at),
     balance: Number(wallet?.balance ?? 0),
     bonusBalance: Number(wallet?.bonus_balance ?? 0),

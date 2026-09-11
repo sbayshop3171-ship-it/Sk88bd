@@ -19,6 +19,9 @@ export type AdminPermission =
   /** the deposit/withdraw flow itself: steps, charges, channels */
   | 'cashier.config'
   | 'players.read'
+  /** lock a player's withdrawals and answer their appeal (an agent: their
+      own players only) */
+  | 'players.lock'
   /** balance adjustments, block/unblock */
   | 'players.write'
   /** see the operator wallet numbers */
@@ -39,8 +42,10 @@ export type AdminPermission =
   | 'agents.read';
 
 /* An agent sits at the cashier: they see who is asking and they answer.
-   Nothing they touch changes where money lands. */
-const AGENT: AdminPermission[] = ['cashier.review', 'players.read', 'agents.self'];
+   Nothing they touch changes where money lands. They may lock one of their
+   own players' withdrawals, which moves nothing — the operator's call,
+   2026-09-11. */
+const AGENT: AdminPermission[] = ['cashier.review', 'players.read', 'players.lock', 'agents.self'];
 
 /* An admin runs the day: the cashier, the players, the games, the front
    page — and, since 2026-09-10, the wallet numbers a deposit lands in. That

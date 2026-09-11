@@ -168,7 +168,9 @@ export default function AgentControl({
                         ? <span key="b" className="adm__miss">Banned</span>
                         : p.isHeld
                           ? <span key="b" className="adm__miss" style={{ color: '#e0a526' }}>On hold</span>
-                          : <span key="b" className="adm__ok">Active</span>,
+                          : p.withdrawLocked
+                            ? <span key="b" className="adm__miss" style={{ color: '#e0a526' }}>Withdraw locked</span>
+                            : <span key="b" className="adm__ok">Active</span>,
                       new Date(p.createdAt).toLocaleDateString('en-GB'),
                     ])}
                     empty={migrated ? 'Nobody has registered through this link yet.' : 'Visible once the migration has been run.'}

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { getCashierConfig } from '@/lib/cashier-config-store';
 import { accountBlock } from '@/lib/player-status';
 import { adminClient, serverClient } from '@/lib/supabase';
+import { lockStatus } from '@/lib/withdraw-lock';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,6 +43,10 @@ export async function POST(req: Request) {
   const blocked = await accountBlock(asService, uid);
   if (blocked === 'banned') return fail('account-banned', 'This account has been banned. Contact support.', 403);
   if (blocked === 'held') return fail('account-held', 'This account is on hold. Contact support.', 403);
+
+  // locked (013): everything else still works, this does not
+  const lock = await lockStatus(asService, uid);
+  if (lock.locked) return fail('account-locked', `উইথড্র বন্ধ: ${lock.reason}`, 403);
 
   const cfg = (await getCashierConfig()).withdraw;
   const method = cfg.methods.find((m) => m.id === String(record.methodId ?? '') && m.active);
@@ -96,6 +101,7 @@ export async function POST(req: Request) {
     }
     if (/account banned/i.test(m)) return fail('account-banned', 'This account has been banned. Contact support.', 403);
     if (/account held/i.test(m)) return fail('account-held', 'This account is on hold. Contact support.', 403);
+    if (/account locked/i.test(m)) return fail('account-locked', 'উইথড্র বন্ধ — অ্যাকাউন্টটি পর্যালোচনাধীন', 403);
     if (/wrong password/i.test(m)) return fail('wrong-password', 'Wrong password — go back and enter it again', 400);
     if (/balance|check/i.test(m)) return fail('insufficient-balance', 'Not enough balance', 400);
     return fail('db-error', 'Could not send the request — try again', 500);

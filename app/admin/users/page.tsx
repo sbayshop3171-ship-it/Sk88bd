@@ -20,9 +20,10 @@ export default async function AdminUsers() {
     <>
       <h1 className="adm__h1">Users</h1>
       <p className="adm__sub">
-        Find a player by their ID, phone or name. Adjust a balance, put an account on hold, or
-        ban it. Every balance change is written to the ledger, and every hold or ban keeps its
-        reason and who set it.
+        Find a player by their ID, phone or name. Adjust a balance, lock their withdrawals, put
+        an account on hold, or ban it. Every balance change is written to the ledger, and every
+        lock, hold or ban keeps its reason and who set it. A locked player can appeal from My
+        Account — their appeal waits here under “Locked &amp; appeals”.
       </p>
       <PlayerControl
         scopedToAgent={!can(session.role, 'agents.read')}
@@ -30,6 +31,7 @@ export default async function AdminUsers() {
         initialError={players.ok ? '' : players.message ?? `Could not load the players (${players.reason})`}
         backendReady={isBackendReady()}
         canWrite={can(session.role, 'players.write')}
+        canLock={can(session.role, 'players.lock')}
       />
     </>
   );

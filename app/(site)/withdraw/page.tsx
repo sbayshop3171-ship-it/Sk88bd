@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import CashierHeader from '@/components/CashierHeader';
+import LockNotice, { useWithdrawLock } from '@/components/LockNotice';
 import EmptyWalletArt from '@/components/EmptyWalletArt';
 import { useCashierConfig } from '@/components/useCashierConfig';
 import { useUI } from '@/components/UIProvider';
@@ -53,6 +54,8 @@ export default function WithdrawPage() {
   const { toast } = useUI();
   const { ready, backendReady, session, wallet, supabase, refresh } = useAuth();
   const { config, ready: configReady } = useCashierConfig();
+  // locked (migration 013): the form gives way to the notice and its appeal
+  const lock = useWithdrawLock();
   const cfg = config.withdraw;
 
   const methods = useMemo(() => cfg.methods.filter((m) => m.active), [cfg.methods]);
@@ -279,7 +282,7 @@ export default function WithdrawPage() {
     // daily count from the cashier config, which the database cannot see.
     // The database then checks the password again, the hold/ban, bonus
     // turnover and the balance — so none of it rests on this screen.
-    let reply: { ok?: boolean; id?: number | null; message?: string } = {};
+    let reply: { ok?: boolean; id?: number | null; message?: string; reason?: string } = {};
     try {
       const res = await fetch('/api/withdraw/request', {
         method: 'POST',
@@ -299,6 +302,8 @@ export default function WithdrawPage() {
 
     if (!reply.ok) {
       setErr({ apply: reply.message ?? 'Could not send the request — try again' });
+      // locked since the page opened: swap the form for the notice
+      if (reply.reason === 'account-locked') void lock.reload();
       return;
     }
 
@@ -388,6 +393,18 @@ export default function WithdrawPage() {
       toast('Could not copy — write it down');
     }
   };
+
+  if (lock.status?.locked) {
+    return (
+      <>
+        <CashierHeader title={t.withdraw} historyHref="/withdraw-history" direction="out" />
+        <LockNotice status={lock.status} onChange={lock.setStatus} />
+        <p className="note" style={{ margin: 12 }}>
+          আপনার অ্যাকাউন্ট পর্যালোচনা শেষ না হওয়া পর্যন্ত উইথড্র করা যাবে না। আপিল গৃহীত হলে এই পেজে আবার উইথড্র করতে পারবেন।
+        </p>
+      </>
+    );
+  }
 
   if (!method) {
     return (

@@ -7,6 +7,7 @@
 
 import { can, type AdminRole } from './admin-roles';
 import { findStaffById } from './admin-users-store';
+import { adminClient } from './supabase';
 
 /** undefined = everybody; otherwise the agent code to filter on. */
 export async function playerScope(session: { uid: string; role: AdminRole }): Promise<string | undefined> {
@@ -14,4 +15,15 @@ export async function playerScope(session: { uid: string; role: AdminRole }): Pr
   const me = await findStaffById(session.uid);
   // an agent without a code of their own sees nobody, not everybody
   return me?.refCode || '~none~';
+}
+
+/** Whether a player falls inside a scope from playerScope(). The list is
+    already narrowed for an agent; a write names its player in the body, so
+    it asks again rather than trusting the id it was sent. */
+export async function inScope(scope: string | undefined, userId: string): Promise<boolean> {
+  if (scope === undefined) return true;
+  const db = adminClient();
+  if (!db) return false;
+  const { data } = await db.from('profiles').select('agent_code').eq('id', userId).maybeSingle();
+  return Boolean(data && (data as { agent_code: string | null }).agent_code === scope);
 }

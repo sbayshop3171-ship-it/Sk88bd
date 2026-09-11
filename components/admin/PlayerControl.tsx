@@ -6,7 +6,7 @@ import { money } from '@/lib/brand';
 import type { PlayerRow } from '@/lib/cashier';
 
 const ERROR_LABEL: Record<string, string> = {
-  forbidden: 'You are not allowed to change balances, hold or ban players.',
+  forbidden: 'You are not allowed to do that to this player.',
   'invalid-amount': 'Enter an amount — zero will not do.',
   'amount-too-large': 'A single adjustment can be at most ৳100,000.',
   'invalid-user': 'Player not found.',
@@ -14,8 +14,28 @@ const ERROR_LABEL: Record<string, string> = {
   unauthorized: 'Your session has expired — log in again.',
 };
 
+type Kind = 'balance' | 'hold' | 'ban' | 'lock' | 'appeal';
+
 /** Which row has its drawer open, and for what. */
-type Panel = { id: string; kind: 'balance' | 'hold' | 'ban' } | null;
+type Panel = { id: string; kind: Kind } | null;
+
+/** One tap fills the lock reason — the player reads it word for word on
+    their My Account screen, so these are in Bangla. */
+const LOCK_PRESETS = [
+  'সন্দেহজনক গেমপ্লে / হ্যাকিং কার্যকলাপ সনাক্ত হয়েছে',
+  'একাধিক অ্যাকাউন্ট ব্যবহারের সন্দেহ',
+  'ডিপোজিট যাচাই করা হচ্ছে',
+  'বোনাস অপব্যবহারের সন্দেহ',
+];
+
+/** "5 min ago" for the appeal line. */
+function ago(iso: string) {
+  const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min} min ago`;
+  const h = Math.round(min / 60);
+  return h < 24 ? `${h} h ago` : `${Math.round(h / 24)} d ago`;
+}
 
 /** How a player is named in a notice: their ID once they have one. */
 const nameOf = (p: PlayerRow) => (p.playerNo ? `ID ${p.playerNo}` : p.phone);
@@ -25,6 +45,7 @@ export default function PlayerControl({
   initialError = '',
   backendReady,
   canWrite,
+  canLock = false,
   scopedToAgent = false,
 }: {
   initialPlayers: PlayerRow[];
@@ -34,11 +55,14 @@ export default function PlayerControl({
   /** false for an agent: they look players up while answering a cashier
       request, they do not move balances, hold or ban anybody. */
   canWrite: boolean;
+  /** lock withdrawals and answer appeals — agents too, on their own players */
+  canLock?: boolean;
   /** an agent: the list holds only the players who came through their link */
   scopedToAgent?: boolean;
 }) {
   const [players, setPlayers] = useState(initialPlayers);
   const [search, setSearch] = useState('');
+  const [onlyLocked, setOnlyLocked] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -46,11 +70,12 @@ export default function PlayerControl({
   const [error, setError] = useState(initialError);
   const [notice, setNotice] = useState('');
 
-  async function load(term: string) {
+  async function load(term: string, locked = onlyLocked) {
     setError('');
     setNotice('');
     try {
-      const res = await fetch(`/api/admin/players?search=${encodeURIComponent(term)}`, {
+      const filter = locked ? '&filter=locked' : '';
+      const res = await fetch(`/api/admin/players?search=${encodeURIComponent(term)}${filter}`, {
         cache: 'no-store',
       });
       const data = (await res.json()) as
@@ -74,7 +99,7 @@ export default function PlayerControl({
       const res = await fetch('/api/admin/players', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ userId, search, ...body }),
+        body: JSON.stringify({ userId, search, filter: onlyLocked ? 'locked' : '', ...body }),
       });
       const data = (await res.json()) as
         | { ok: true; players: PlayerRow[] }
@@ -95,7 +120,7 @@ export default function PlayerControl({
     }
   }
 
-  function toggle(id: string, kind: 'balance' | 'hold' | 'ban') {
+  function toggle(id: string, kind: Kind) {
     setPanel(panel?.id === id && panel.kind === kind ? null : { id, kind });
     setAmount('');
     setNote('');
@@ -140,6 +165,32 @@ export default function PlayerControl({
     }
   }
 
+  async function lock(player: PlayerRow, on: boolean) {
+    const who = nameOf(player);
+    const ok = await send(
+      player.id,
+      { action: on ? 'lock' : 'unlock', reason: on ? note.trim() : '' },
+      on ? `${who}'s withdrawals are locked. They see the notice on My Account.` : `${who} is unlocked — withdrawals work again.`,
+    );
+    if (ok) {
+      setNote('');
+      setPanel(null);
+    }
+  }
+
+  async function rejectAppeal(player: PlayerRow) {
+    if (!player.appeal) return;
+    const ok = await send(
+      player.id,
+      { action: 'reject-appeal', appealId: player.appeal.id, reason: note.trim() },
+      `${nameOf(player)}'s appeal is turned down. The account stays locked.`,
+    );
+    if (ok) {
+      setNote('');
+      setPanel(null);
+    }
+  }
+
   if (!backendReady) {
     return (
       <p className="adm__warn">
@@ -152,8 +203,11 @@ export default function PlayerControl({
   const totalBalance = players.reduce((sum, p) => sum + p.balance, 0);
   const banned = players.filter((p) => p.isBlocked).length;
   const held = players.filter((p) => p.isHeld && !p.isBlocked).length;
+  const locked = players.filter((p) => p.withdrawLocked && !p.isBlocked).length;
+  const appeals = players.filter((p) => p.withdrawLocked && p.appeal?.state === 'pending').length;
   const numbered = players.some((p) => p.playerNo !== null);
-  const columns = canWrite ? 11 : 10;
+  const acts = canWrite || canLock;
+  const columns = acts ? 11 : 10;
 
   return (
     <>
@@ -161,6 +215,8 @@ export default function PlayerControl({
         <div className="adm__tile"><b>{players.length}</b><small>In this list</small></div>
         <div className="adm__tile"><b>{money(toTaka(totalBalance))}</b><small>Total balance</small></div>
         <div className="adm__tile"><b>{held}</b><small>On hold</small></div>
+        <div className="adm__tile"><b>{locked}</b><small>Withdraw locked</small></div>
+        <div className="adm__tile"><b style={appeals ? { color: '#e0a526' } : undefined}>{appeals}</b><small>Appeals waiting</small></div>
         <div className="adm__tile"><b>{banned}</b><small>Banned</small></div>
       </div>
 
@@ -181,6 +237,12 @@ export default function PlayerControl({
               Show all
             </button>
           )}
+          <button
+            type="button" className={`btn ${onlyLocked ? 'btn--gold' : 'btn--ghost'}`}
+            onClick={() => { const next = !onlyLocked; setOnlyLocked(next); void load(search, next); }}
+          >
+            {onlyLocked ? 'Showing locked only' : 'Locked & appeals'}
+          </button>
         </div>
         {scopedToAgent && (
           <p className="adm__hint">You see only the players who signed up through your own link.</p>
@@ -202,7 +264,7 @@ export default function PlayerControl({
             <tr>
               <th>ID</th><th>Phone</th><th>Name</th><th>Balance</th><th>Bonus</th>
               <th>VIP</th><th>Referral code</th><th>Agent</th><th>Registered</th><th>Status</th>
-              {canWrite && <th></th>}
+              {acts && <th></th>}
             </tr>
           </thead>
           <tbody>
@@ -236,16 +298,45 @@ export default function PlayerControl({
                             ? <span className="adm__miss" style={{ color: '#e0a526' }}>On hold</span>
                             : <span className="adm__ok">Active</span>}
                         {reason && <div className="adm__muted" style={{ fontSize: 12 }}>{reason}</div>}
+                        {p.withdrawLocked && !p.isBlocked && (
+                          <div style={{ marginTop: 4 }}>
+                            <span className="adm__miss" style={{ color: '#e0a526' }}>Withdraw locked</span>
+                            {p.lockReason && <div className="adm__muted" style={{ fontSize: 12 }}>{p.lockReason}</div>}
+                            {p.lockedBy && <div className="adm__muted" style={{ fontSize: 11 }}>by {p.lockedBy}</div>}
+                            {p.appeal?.state === 'pending' && (
+                              <button
+                                type="button" className="btn btn--gold" disabled={busy || !canLock}
+                                style={{ marginTop: 4, padding: '3px 10px', fontSize: 12 }}
+                                onClick={() => toggle(p.id, 'appeal')}
+                              >
+                                Appeal waiting · {ago(p.appeal.createdAt)}
+                              </button>
+                            )}
+                            {p.appeal?.state === 'rejected' && (
+                              <div className="adm__muted" style={{ fontSize: 11 }}>Last appeal turned down</div>
+                            )}
+                          </div>
+                        )}
                       </td>
-                      {canWrite && (
+                      {acts && (
                       <td className="adm__rowacts">
+                        {canWrite && (
                         <button
                           type="button" className="btn btn--ghost" disabled={busy}
                           onClick={() => toggle(p.id, 'balance')}
                         >
                           Balance
                         </button>
-                        {!p.isBlocked && (
+                        )}
+                        {canLock && !p.isBlocked && (
+                          <button
+                            type="button" className="btn btn--ghost" disabled={busy}
+                            onClick={() => (p.withdrawLocked ? void lock(p, false) : toggle(p.id, 'lock'))}
+                          >
+                            {p.withdrawLocked ? 'Unlock' : 'Lock'}
+                          </button>
+                        )}
+                        {canWrite && !p.isBlocked && (
                           <button
                             type="button" className="btn btn--ghost" disabled={busy}
                             onClick={() => (p.isHeld ? void setStatus(p, 'hold', false) : toggle(p.id, 'hold'))}
@@ -253,6 +344,7 @@ export default function PlayerControl({
                             {p.isHeld ? 'Release' : 'Hold'}
                           </button>
                         )}
+                        {canWrite && (
                         <button
                           type="button" className={`btn btn--ghost${p.isBlocked ? '' : ' adm__danger'}`}
                           disabled={busy}
@@ -260,6 +352,7 @@ export default function PlayerControl({
                         >
                           {p.isBlocked ? 'Unban' : 'Ban'}
                         </button>
+                        )}
                       </td>
                       )}
                     </tr>
@@ -297,6 +390,81 @@ export default function PlayerControl({
                           <p className="adm__hint">
                             Every adjustment is written to the ledger — who did it, and why.
                           </p>
+                        </td>
+                      </tr>
+                    )}
+
+                    {canLock && open === 'lock' && (
+                      <tr className="adm__subrow">
+                        <td colSpan={columns}>
+                          <div className="adm__adjust">
+                            <label className="adm__f adm__f--wide">
+                              <span>Reason the player will see</span>
+                              <input
+                                value={note} disabled={busy} maxLength={200}
+                                onChange={(e) => setNote(e.target.value)}
+                                placeholder={LOCK_PRESETS[0]}
+                              />
+                            </label>
+                            <div className="adm__rowacts">
+                              <button type="button" className="btn btn--ghost adm__danger" disabled={busy}
+                                      onClick={() => void lock(p, true)}>
+                                Lock withdrawals
+                              </button>
+                              <button type="button" className="btn btn--ghost" disabled={busy}
+                                      onClick={() => setPanel(null)}>
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                          <div className="adm__rowacts" style={{ flexWrap: 'wrap', marginTop: 6 }}>
+                            {LOCK_PRESETS.map((text) => (
+                              <button key={text} type="button" className="btn btn--ghost" disabled={busy}
+                                      style={{ fontSize: 12, padding: '4px 10px' }}
+                                      onClick={() => setNote(text)}>
+                                {text}
+                              </button>
+                            ))}
+                          </div>
+                          <p className="adm__hint">
+                            A locked player can still log in, deposit, play and claim bonuses — only
+                            withdrawals are refused. My Account shows them this reason with an Appeal
+                            button; their appeal shows up here. Leave it blank for a general notice.
+                          </p>
+                        </td>
+                      </tr>
+                    )}
+
+                    {canLock && open === 'appeal' && p.appeal && (
+                      <tr className="adm__subrow">
+                        <td colSpan={columns}>
+                          <p style={{ margin: '0 0 8px' }}>
+                            <span className="adm__muted">
+                              Appeal from {nameOf(p)}, {new Date(p.appeal.createdAt).toLocaleString('en-GB')}:
+                            </span>
+                            <br />
+                            <b style={{ whiteSpace: 'pre-wrap' }}>{p.appeal.message}</b>
+                          </p>
+                          <div className="adm__adjust">
+                            <label className="adm__f adm__f--wide">
+                              <span>Note to the player if you turn it down</span>
+                              <input
+                                value={note} disabled={busy} maxLength={200}
+                                onChange={(e) => setNote(e.target.value)}
+                                placeholder="e.g. যাচাই শেষ হয়নি, সাপোর্টে যোগাযোগ করুন"
+                              />
+                            </label>
+                            <div className="adm__rowacts">
+                              <button type="button" className="btn btn--gold" disabled={busy}
+                                      onClick={() => void lock(p, false)}>
+                                Accept &amp; unlock
+                              </button>
+                              <button type="button" className="btn btn--ghost adm__danger" disabled={busy}
+                                      onClick={() => void rejectAppeal(p)}>
+                                Turn down
+                              </button>
+                            </div>
+                          </div>
                         </td>
                       </tr>
                     )}
