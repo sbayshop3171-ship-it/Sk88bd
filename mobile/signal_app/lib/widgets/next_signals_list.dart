@@ -14,9 +14,12 @@ class NextSignalsList extends StatelessWidget {
     super.key,
     required this.signals,
     required this.now,
+    this.revealed = true,
     this.scale = 1,
   });
 
+  /// false until the reveal lead — the row keeps its countdown, not its number
+  final bool revealed;
   final List<UpcomingSignal> signals;
   final DateTime now;
   final double scale;
@@ -55,7 +58,7 @@ class NextSignalsList extends StatelessWidget {
             ],
           ),
         ),
-        _SignalRow(signal: signal, lead: true, now: now, scale: scale),
+        _SignalRow(signal: signal, lead: true, now: now, scale: scale, revealed: revealed),
       ],
     );
   }
@@ -67,16 +70,18 @@ class _SignalRow extends StatelessWidget {
     required this.lead,
     required this.now,
     required this.scale,
+    this.revealed = true,
   });
 
   final UpcomingSignal signal;
+  final bool revealed;
   final bool lead;
   final DateTime now;
   final double scale;
 
   @override
   Widget build(BuildContext context) {
-    final target = signal.targetX;
+    final target = revealed ? signal.targetX : null;
     final colour = target == null ? NeonPalette.cyanSoft : _colourFor(target);
     // the row fades back down the queue, so the eye lands on the next one
     final depth = lead ? 1.0 : (1 - (signal.position - 1) * 0.13).clamp(0.5, 1.0);

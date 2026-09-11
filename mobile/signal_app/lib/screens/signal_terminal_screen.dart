@@ -144,6 +144,13 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
 
   @override
   Widget build(BuildContext context) {
+    // the round being counted to, and whether its number may show yet
+    final next = _snapshot.upcoming.isEmpty ? null : _snapshot.upcoming.first;
+    final int? msToFly = next == null
+        ? null
+        : (next.flyAt != null ? next.flyAt!.difference(_now).inMilliseconds : next.flyInMs);
+    final revealed = msToFly == null || msToFly <= signalRevealLead.inMilliseconds;
+
     return Scaffold(
       extendBody: true,
       body: NeonBackground(
@@ -205,6 +212,8 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
                           SignalGauge(
                             multiplier: _snapshot.targetMultiplier,
                             timestamp: _now,
+                            msToFly: msToFly,
+                            revealed: revealed,
                             active: _snapshot.signalActive,
                             label: _snapshot.signalLabel,
                             pulse: _pulse,
@@ -219,6 +228,7 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
                               NextSignalsList(
                                 signals: _snapshot.upcoming,
                                 now: _now,
+                                revealed: revealed,
                                 scale: layout.scale,
                               ),
                               SizedBox(height: layout.gapSm),
