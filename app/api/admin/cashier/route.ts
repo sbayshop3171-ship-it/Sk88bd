@@ -19,7 +19,8 @@ export async function GET(req: Request) {
   if (!isTable(table)) return json({ ok: false, reason: 'invalid-table' }, 400);
   if (!STATES.includes(state)) return json({ ok: false, reason: 'invalid-state' }, 400);
 
-  const result = await listCashier(table, state as RequestState | 'all');
+  const search = url.searchParams.get('search') ?? '';
+  const result = await listCashier(table, state as RequestState | 'all', 100, search);
   return result.ok
     ? json({ ok: true, rows: result.data })
     : json(result, result.reason === 'no-backend' ? 503 : 500);
@@ -63,7 +64,7 @@ export async function POST(req: Request) {
   const listState = STATES.includes(String(record.state))
     ? (record.state as RequestState | 'all')
     : 'pending';
-  const rows = await listCashier(table, listState);
+  const rows = await listCashier(table, listState, 100, String(record.search ?? ''));
   // The decision is saved either way; an empty list here would read as
   // "nothing waiting", so say plainly that only the reload failed.
   return rows.ok

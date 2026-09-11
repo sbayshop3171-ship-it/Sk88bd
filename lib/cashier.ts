@@ -19,6 +19,8 @@ export type CashierRow = {
   userId: string;
   phone: string;
   displayName: string | null;
+  /** the player's ID (migration 012); null if the embed could not carry it */
+  playerNo: number | null;
   channelId: string;
   /** paisa */
   amount: number;
@@ -85,14 +87,29 @@ export type CashierResult<T> =
 
 const NO_BACKEND = { ok: false, reason: 'no-backend' } as const;
 
-/** Rows joined to the player's profile, newest first. */
+/** Rows joined to the player's profile, newest first. `search` narrows to
+    one player: their ID (all digits, up to 9) or part of their phone. */
 export async function listCashier(
   table: 'deposits' | 'withdrawals',
   state: RequestState | 'all' = 'pending',
   limit = 100,
+  search = '',
 ): Promise<CashierResult<CashierRow[]>> {
   const db = adminClient();
   if (!db) return NO_BACKEND;
+
+  // Who the search names, as user ids. Digits only — a phone or an ID — so
+  // nothing typed can reach the filter as PostgREST syntax.
+  const term = search.replace(/\D/g, '').slice(0, 14);
+  let only: string[] | null = null;
+  if (term) {
+    const match = [`phone.ilike.%${term}%`];
+    if (term.length <= 9) match.unshift(`player_no.eq.${Number(term)}`);
+    const found = await db.from('profiles').select('id').or(match.join(',')).limit(50);
+    if (found.error) return { ok: false, reason: 'db-error', message: found.error.message };
+    only = (found.data ?? []).map((r) => String((r as { id: string }).id));
+    if (!only.length) return { ok: true, data: [] };
+  }
 
   // The columns differ by table, so the select string cannot be a literal —
   // .returns<>() gives the rows a shape the mapper can read. The charge
@@ -108,11 +125,12 @@ export async function listCashier(
       .from(table)
       .select(
         `id, user_id, channel_id, amount, state, admin_note, created_at, reviewed_at, ${extra}, `
-        + 'profiles!user_id (phone, display_name)',
+        + 'profiles!user_id (phone, display_name, player_no)',
       )
       .order('created_at', { ascending: false })
       .limit(limit);
     if (state !== 'all') query = query.eq('state', state);
+    if (only) query = query.in('user_id', only);
     return query.returns<Record<string, unknown>[]>();
   };
 
@@ -416,7 +434,7 @@ export async function setHeld(
   return { ok: true, data: null };
 }
 
-type RawProfile = { phone: string; display_name: string | null };
+type RawProfile = { phone: string; display_name: string | null; player_no?: number | null };
 type RawWallet = {
   balance: number; bonus_balance: number; turnover_need: number; turnover_done: number;
 };
@@ -432,6 +450,7 @@ function toCashierRow(row: Record<string, unknown>): CashierRow {
     userId: String(row.user_id),
     phone: profile?.phone ?? '—',
     displayName: profile?.display_name ?? null,
+    playerNo: profile?.player_no == null ? null : Number(profile.player_no),
     channelId: String(row.channel_id),
     amount: Number(row.amount ?? 0),
     state: row.state as RequestState,

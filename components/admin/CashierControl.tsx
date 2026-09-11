@@ -39,15 +39,19 @@ export default function CashierControl({
   const [busyId, setBusyId] = useState(0);
   const [error, setError] = useState(initialError);
   const [notice, setNotice] = useState('');
+  const [search, setSearch] = useState('');
+  /** what the list on screen was filtered by — the box may have moved on */
+  const [applied, setApplied] = useState('');
 
   const isDeposit = table === 'deposits';
 
-  async function load(next: RequestState | 'all') {
+  async function load(next: RequestState | 'all', term = applied) {
     setState(next);
     setError('');
     setNotice('');
     try {
-      const res = await fetch(`/api/admin/cashier?table=${table}&state=${next}`, { cache: 'no-store' });
+      const q = term ? `&search=${encodeURIComponent(term)}` : '';
+      const res = await fetch(`/api/admin/cashier?table=${table}&state=${next}${q}`, { cache: 'no-store' });
       const data = (await res.json()) as
         | { ok: true; rows: CashierRow[] }
         | { ok: false; reason: string; message?: string };
@@ -56,6 +60,7 @@ export default function CashierControl({
         return;
       }
       setRows(data.rows);
+      setApplied(term);
     } catch {
       setError('Could not reach the server.');
     }
@@ -69,7 +74,7 @@ export default function CashierControl({
       const res = await fetch('/api/admin/cashier', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ table, id, decision, note: notes[id] ?? '', state }),
+        body: JSON.stringify({ table, id, decision, note: notes[id] ?? '', state, search: applied }),
       });
       const data = (await res.json()) as
         | { ok: true; rows: CashierRow[] }
@@ -115,6 +120,34 @@ export default function CashierControl({
         <div className="adm__tile"><b>{money(toTaka(total))}</b><small>Total amount</small></div>
       </div>
 
+      <form
+        className="adm__card"
+        style={{ marginBottom: 12 }}
+        onSubmit={(e) => { e.preventDefault(); void load(state, search.trim()); }}
+      >
+        <div className="adm__formgrid">
+          <label className="adm__f adm__f--wide">
+            <span>Search by player ID or phone number</span>
+            <input
+              value={search} inputMode="numeric"
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="100023 or 01XXXXXXXXX"
+            />
+          </label>
+        </div>
+        <div className="adm__actions">
+          <button type="submit" className="btn btn--gold">Search</button>
+          {applied && (
+            <button type="button" className="btn btn--ghost" onClick={() => { setSearch(''); void load(state, ''); }}>
+              Show all
+            </button>
+          )}
+        </div>
+        {applied && (
+          <p className="adm__hint">Showing only player {applied}. The tabs below keep this filter.</p>
+        )}
+      </form>
+
       <div className="adm__seg">
         {STATE_TABS.map((tab) => (
           <button
@@ -155,6 +188,7 @@ export default function CashierControl({
                   <tr key={r.id}>
                     <td className="adm__muted">{r.id}</td>
                     <td>
+                      {r.playerNo && <b style={{ display: 'block' }}>ID {r.playerNo}</b>}
                       {r.phone}
                       {r.displayName && <div className="adm__muted" style={{ fontSize: 11 }}>{r.displayName}</div>}
                     </td>
