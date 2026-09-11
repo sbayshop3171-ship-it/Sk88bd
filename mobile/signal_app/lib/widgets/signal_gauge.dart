@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../config/api_config.dart';
 import '../theme/neon_theme.dart';
 
 class SignalGauge extends StatelessWidget {
@@ -23,8 +22,8 @@ class SignalGauge extends StatelessWidget {
   /// when there is no round to count to.
   final int? msToFly;
 
-  /// false until the reveal lead: the dial counts down instead of showing
-  /// the number.
+  /// false until the reveal lead: the dial waits, without a count, instead
+  /// of showing the number.
   final bool revealed;
 
   final double multiplier;
@@ -58,11 +57,7 @@ class SignalGauge extends StatelessWidget {
                     ),
                   ),
                   if (!revealed)
-                    _Waiting(
-                      secondsToReveal: _secondsToReveal(msToFly),
-                      size: size,
-                      scale: scale,
-                    )
+                    _Waiting(size: size, scale: scale)
                   else
                   Column(
                     mainAxisSize: MainAxisSize.min,
@@ -116,15 +111,12 @@ class SignalGauge extends StatelessWidget {
   }
 }
 
-/// Before the reveal: a big count to the moment the number appears.
+/// Before the reveal. No count: the operator found two running numbers on
+/// one screen confusing (2026-09-12) — the dial just waits, and the next
+/// thing it shows is the multiplier.
 class _Waiting extends StatelessWidget {
-  const _Waiting({
-    required this.secondsToReveal,
-    required this.size,
-    required this.scale,
-  });
+  const _Waiting({required this.size, required this.scale});
 
-  final int? secondsToReveal;
   final double size;
   final double scale;
 
@@ -134,7 +126,7 @@ class _Waiting extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'SIGNAL IN',
+          'NEXT SIGNAL',
           style: TextStyle(
             color: NeonPalette.muted,
             fontSize: 10 * scale,
@@ -143,7 +135,7 @@ class _Waiting extends StatelessWidget {
         ),
         SizedBox(height: 6 * scale),
         Text(
-          secondsToReveal == null ? '— —' : '${secondsToReveal}s',
+          '— —',
           style: TextStyle(
             color: NeonPalette.cyan,
             fontSize: size * 0.2,
@@ -165,7 +157,7 @@ class _Waiting extends StatelessWidget {
   }
 }
 
-/// After the reveal: the seconds left to bet, under the number.
+/// After the reveal: under the number, what it means — no seconds.
 class _FlyCountdown extends StatelessWidget {
   const _FlyCountdown({required this.ms, required this.scale});
 
@@ -175,8 +167,6 @@ class _FlyCountdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final flying = ms <= 0;
-    // whole seconds, rounded up: "1" until the plane actually goes
-    final secs = (ms / 1000).ceil();
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12 * scale, vertical: 4 * scale),
       decoration: BoxDecoration(
@@ -185,7 +175,7 @@ class _FlyCountdown extends StatelessWidget {
         border: Border.all(color: NeonPalette.gold.withValues(alpha: 0.5)),
       ),
       child: Text(
-        flying ? 'উড়ছে এখনই' : 'উড়বে $secs সেকেন্ডে',
+        flying ? 'উড়ছে এখনই' : 'এই রাউন্ডে উড়বে',
         style: TextStyle(
           color: NeonPalette.gold,
           fontSize: 13 * scale,
@@ -194,12 +184,6 @@ class _FlyCountdown extends StatelessWidget {
       ),
     );
   }
-}
-
-int? _secondsToReveal(int? msToFly) {
-  if (msToFly == null) return null;
-  final ms = msToFly - signalRevealLead.inMilliseconds;
-  return ms <= 0 ? 0 : (ms / 1000).ceil();
 }
 
 class _SignalBadge extends StatelessWidget {

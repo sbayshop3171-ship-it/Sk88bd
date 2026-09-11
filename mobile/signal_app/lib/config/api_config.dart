@@ -8,4 +8,4 @@ const signalPollInterval = Duration(seconds: 2);
 /// shift it.
 const signalRevealLead = Duration(seconds: 7);
 
-const signalAppVersion = '0.2.0+2';
+const signalAppVersion = '0.2.2+4';

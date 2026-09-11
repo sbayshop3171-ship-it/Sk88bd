@@ -18,7 +18,7 @@ class NextSignalsList extends StatelessWidget {
     this.scale = 1,
   });
 
-  /// false until the reveal lead — the row keeps its countdown, not its number
+  /// false until the reveal lead — the row waits, without its number
   final bool revealed;
   final List<UpcomingSignal> signals;
   final DateTime now;
@@ -129,7 +129,7 @@ class _SignalRow extends StatelessWidget {
                   ),
                   SizedBox(height: 3 * scale),
                   Text(
-                    _countdown(signal, now),
+                    _status(signal, now, revealed),
                     style: TextStyle(
                       color: NeonPalette.text.withValues(alpha: 0.8),
                       fontSize: 11 * scale,
@@ -190,22 +190,16 @@ class _Position extends StatelessWidget {
   }
 }
 
-/// Time to take-off, counted down from the flyAt the server sent. `now` is
-/// already on the server's clock — the screen corrects the phone's by the
-/// offset it measures on every poll — so a phone set wrong does not matter.
-String _countdown(UpcomingSignal signal, DateTime now) {
+/// What the row says under NEXT ROUND. No seconds — the operator asked for
+/// the count to go (2026-09-12): the number alone is the signal. `now` is on
+/// the server's clock, so a phone set wrong does not matter.
+String _status(UpcomingSignal signal, DateTime now, bool revealed) {
   final flyAt = signal.flyAt;
   final ms = flyAt != null
       ? flyAt.difference(now).inMilliseconds
       : signal.flyInMs;
   if (ms <= 0) return 'উড়ছে এখনই';
-
-  // rounded up, the way the dial counts, so the two never disagree by one
-  final total = (ms / 1000).ceil();
-  final minutes = total ~/ 60;
-  final seconds = total % 60;
-  if (minutes > 0) return '$minutes মিঃ ${seconds.toString().padLeft(2, '0')} সেঃ পরে';
-  return '$seconds সেকেন্ড পরে';
+  return revealed ? 'এই রাউন্ডে উড়বে' : 'সিগন্যাল আসছে…';
 }
 
 Color _colourFor(double value) {
