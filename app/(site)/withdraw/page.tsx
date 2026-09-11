@@ -7,6 +7,7 @@ import CashierHeader from '@/components/CashierHeader';
 import EmptyWalletArt from '@/components/EmptyWalletArt';
 import { useCashierConfig } from '@/components/useCashierConfig';
 import { useUI } from '@/components/UIProvider';
+import { useBackLayer } from '@/components/useBackLayer';
 import { toPaisa, toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import {
@@ -90,6 +91,9 @@ export default function WithdrawPage() {
   const [busy, setBusy] = useState(false);
 
   const [step, setStep] = useState<Step>('form');
+  // the phone's Back from the summary returns to the form, as its arrow does;
+  // after the request is raised there is nothing to go back into
+  useBackLayer(step === 'summary', () => { setStep('form'); setErr({}); });
   const [raised, setRaised] = useState<Raised | null>(null);
   const [agent, setAgent] = useState<PublicDepositAccount | null>(null);
   const [loadingAgent, setLoadingAgent] = useState(false);

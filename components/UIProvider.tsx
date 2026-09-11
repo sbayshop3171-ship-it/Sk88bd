@@ -1,11 +1,14 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useBackLayer } from './useBackLayer';
 
 interface UIState {
   drawerOpen: boolean;
   openDrawer: () => void;
   closeDrawer: () => void;
+  /** close it because one of its links is taking the player elsewhere */
+  leaveDrawer: () => void;
   toast: (msg: string) => void;
 }
 
@@ -35,8 +38,15 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
   const openDrawer = useCallback(() => setDrawerOpen(true), []);
 
+  // the phone's Back closes the menu rather than leaving the site
+  const leave = useBackLayer(drawerOpen, closeDrawer);
+  const leaveDrawer = useCallback(() => {
+    leave();
+    setDrawerOpen(false);
+  }, [leave]);
+
   return (
-    <Ctx.Provider value={{ drawerOpen, openDrawer, closeDrawer, toast }}>
+    <Ctx.Provider value={{ drawerOpen, openDrawer, closeDrawer, leaveDrawer, toast }}>
       {children}
       <div className={`scrim${drawerOpen ? ' on' : ''}`} onClick={closeDrawer} />
       <div className={`toast${msg ? ' on' : ''}`} role="status" aria-live="polite">{msg}</div>

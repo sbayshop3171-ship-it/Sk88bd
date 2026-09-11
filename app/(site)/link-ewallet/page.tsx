@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import { useAuth } from '@/components/AuthProvider';
 import { useUI } from '@/components/UIProvider';
+import { useBackLayer } from '@/components/useBackLayer';
 import { useCashierConfig } from '@/components/useCashierConfig';
 import { useLightSheet } from '@/components/useLightSheet';
 import { isImageIcon } from '@/lib/cashier-config';
@@ -75,6 +76,8 @@ export default function LinkEWalletPage() {
   const [supported, setSupported] = useState(true);
   const [sheet, setSheet] = useState(false);
   const [group, setGroup] = useState<string | null>(null);
+  // the phone's Back leaves the add-wallet form the way its header arrow does
+  useBackLayer(group !== null, () => { setGroup(null); setNo(''); setPass(''); setErr(''); });
 
   const [no, setNo] = useState('');
   const [holder, setHolder] = useState('');

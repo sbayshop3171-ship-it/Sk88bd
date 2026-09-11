@@ -7,6 +7,7 @@ import { useAuth } from '@/components/AuthProvider';
 import CashierHeader from '@/components/CashierHeader';
 import { useCashierConfig } from '@/components/useCashierConfig';
 import { useUI } from '@/components/UIProvider';
+import { useBackLayer } from '@/components/useBackLayer';
 import { toPaisa } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import {
@@ -58,6 +59,12 @@ export default function DepositPage() {
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [promoOpen, setPromoOpen] = useState(false);
+
+  // The phone's Back does what the arrows on this screen do — payment step
+  // back to the method list, a dialog or sheet closed — instead of leaving.
+  useBackLayer(step === 'pay', () => { setStep('pick'); setErr(''); });
+  useBackLayer(confirming, () => setConfirming(false));
+  useBackLayer(promoOpen, () => setPromoOpen(false));
   const [howOpen, setHowOpen] = useState(true);
   const [account, setAccount] = useState<PublicDepositAccount | null>(null);
   const [loadingAccount, setLoadingAccount] = useState(false);

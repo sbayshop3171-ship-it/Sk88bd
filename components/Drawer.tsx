@@ -55,7 +55,7 @@ function Group({ title, items, onNavigate }: { title: string; items: Item[]; onN
 }
 
 export default function Drawer() {
-  const { drawerOpen, closeDrawer } = useUI();
+  const { drawerOpen, closeDrawer, leaveDrawer } = useUI();
 
   return (
     <aside
@@ -67,9 +67,9 @@ export default function Drawer() {
       <div className="drawer__hd">
         <div className="logo"><Wordmark /><span className="logo__sub">{BRAND.tag}</span></div>
       </div>
-      <Group title={t.gameCenter} items={GAME_LINKS} onNavigate={closeDrawer} />
-      <Group title={t.myAccount} items={ACCOUNT_LINKS} onNavigate={closeDrawer} />
-      <Group title={t.support} items={SUPPORT_LINKS} onNavigate={closeDrawer} />
+      <Group title={t.gameCenter} items={GAME_LINKS} onNavigate={leaveDrawer} />
+      <Group title={t.myAccount} items={ACCOUNT_LINKS} onNavigate={leaveDrawer} />
+      <Group title={t.support} items={SUPPORT_LINKS} onNavigate={leaveDrawer} />
     </aside>
   );
 }
