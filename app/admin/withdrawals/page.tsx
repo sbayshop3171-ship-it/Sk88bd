@@ -19,10 +19,11 @@ export default async function AdminWithdrawals() {
     <>
       <h1 className="adm__h1">Withdrawal Requests</h1>
       <p className="adm__sub">
-        The money is held aside the moment a request is made, so a player cannot gamble
-        with funds that are already on their way out. Rejecting a request returns the
-        money to their balance. Lock does the same and also stops the player's
-        withdrawals, with the reason you give shown on their My Account.
+        Nothing leaves the player's balance until you approve — approving takes the
+        amount then. If they have played the money away while the request waited, the
+        approval is refused and you reject it instead. Rejecting leaves the balance as it
+        is. Lock rejects too, and also stops the player's withdrawals, with the reason you
+        give shown on their My Account.
       </p>
       <CashierControl
         table="withdrawals"

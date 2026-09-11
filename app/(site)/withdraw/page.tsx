@@ -25,9 +25,8 @@ import { t } from '@/lib/strings';
 
 type Wallet = { id: number; channel_id: string; account_no: string; holder: string };
 
-/** The raised request, snapshotted the moment it leaves the form: the wallet
-    is debited straight away, so the balance the charge was worked out on is
-    only true before that point. */
+/** The raised request, snapshotted the moment it leaves the form, so the
+    summary and the charge read the figures the player agreed to. */
 type Raised = {
   id: number | null;
   amount: number;
@@ -83,6 +82,9 @@ export default function WithdrawPage() {
   const [newHolder, setNewHolder] = useState('');
   const [inlineNo, setInlineNo] = useState('');
   const [todayCount, setTodayCount] = useState(0);
+  /** taka in requests still waiting — the wallet keeps it until an admin
+      approves (migration 014), so it is not available to ask for again */
+  const [waiting, setWaiting] = useState(0);
   const [amount, setAmount] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -106,6 +108,7 @@ export default function WithdrawPage() {
   const signedIn = ready && Boolean(session);
   const forMethod = (wallets ?? []).filter((w) => method && w.channel_id === method.channelId);
   const picked = forMethod.find((w) => w.id === walletId) ?? forMethod[0];
+  const available = Math.max(0, balance - waiting);
   const remaining = cfg.dailyLimit > 0 ? Math.max(0, cfg.dailyLimit - todayCount) : null;
 
   // What the player will owe on top of the request. It never leaves the
@@ -142,6 +145,15 @@ export default function WithdrawPage() {
       .in('state', ['pending', 'approved'])
       .gte('created_at', start.toISOString());
     setTodayCount(count ?? 0);
+
+    // before 014 there is no `debited` column: the error leaves this at 0,
+    // which is right, since every request then took its money at once
+    const { data: open, error } = await supabase
+      .from('withdrawals')
+      .select('amount')
+      .eq('state', 'pending')
+      .eq('debited', false);
+    setWaiting(error ? 0 : toTaka(((open as { amount: number }[] | null) ?? []).reduce((sum, r) => sum + Number(r.amount), 0)));
   }, [supabase, session]);
 
   useEffect(() => {
@@ -227,7 +239,11 @@ export default function WithdrawPage() {
     const n = Number(amount);
     if (!Number.isFinite(n) || n < method.min) next.amount = `Minimum ${money(method.min)}`;
     else if (n > method.max) next.amount = `Up to ${money(method.max)} in a single request`;
-    if (session && n > balance) next.amount = `Your balance is ${money(balance)}`;
+    if (session && n > available) {
+      next.amount = waiting > 0
+        ? `Available ${money(available)} — ${money(waiting)} is in a request still waiting`
+        : `Your balance is ${money(balance)}`;
+    }
     if (remaining !== null && remaining <= 0) next.amount = 'Today’s withdrawal limit is used up — try again tomorrow';
     // bonus money is bet before it can leave (the database refuses otherwise)
     const owed = (wallet?.turnover_need ?? 0) - (wallet?.turnover_done ?? 0);
@@ -736,7 +752,8 @@ export default function WithdrawPage() {
             <p className="cz-info__daily">Daily withdrawals {cfg.dailyLimit}, remaining {remaining}</p>
           )}
           <p><span>Main wallet:</span> <b>{money(balance, 2)}</b></p>
-          <p><span>Available amount:</span> <b>{money(balance, 2)}</b></p>
+          <p><span>Available amount:</span> <b>{money(available, 2)}</b></p>
+          {waiting > 0 && <p><span>Waiting for approval:</span> <b>{money(waiting, 2)}</b></p>}
           <button type="button" className="cz-refresh" onClick={() => { void refresh(); void loadToday(); toast('Balance refreshed'); }}>
             <i aria-hidden>⟳</i> Refresh your balance
           </button>

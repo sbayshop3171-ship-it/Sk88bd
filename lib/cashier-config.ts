@@ -261,7 +261,7 @@ export const CASHIER_DEFAULTS: CashierConfig = {
     amountLabel: 'Withdrawal Amount',
     passwordLabel: 'Transaction Password',
     passwordHint: 'Enter your login password',
-    note: 'The amount is held aside the moment you request it. It is sent once an admin approves, and returned to your balance if the request is rejected.',
+    note: 'Nothing is taken from your balance until an admin approves the request. The amount is deducted and sent then; if the request is rejected, your balance is not touched.',
     chargePerThousand: 44,
     chargeBasis: 'balance',
     chargeTitle: 'Withdrawal Charge',

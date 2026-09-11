@@ -83,8 +83,8 @@ export async function POST(req: Request) {
 }
 
 /** Lock from the withdrawal queue: stop the player's withdrawals with the
-    reason they will read on My Account, then turn this request down so the
-    held money goes back to their balance. The lock goes first — if it
+    reason they will read on My Account, then turn this request down (a
+    request raised before migration 014 gets its held money back). The lock goes first — if it
     cannot be set (no migration 013, an agent outside their own players) the
     request is left exactly as it was. */
 async function lockFromRequest(

@@ -56,7 +56,9 @@ export const BANGLA_COPY: Record<string, string> = {
   "উত্তোলন পরিমাণ": "Withdrawal Amount",
   "লেনদেন পাসওয়ার্ড": "Transaction Password",
   "আপনার লগইন পাসওয়ার্ডটি দিন": "Enter your login password",
-  "রিকোয়েস্ট করার সাথে সাথে টাকা ব্যালেন্স থেকে সরিয়ে রাখা হবে। অ্যাডমিন অনুমোদন করলে পাঠানো হবে, বাতিল করলে ব্যালেন্সে ফেরত আসবে।": "The amount is held aside the moment you request it. It is sent once an admin approves, and returned to your balance if the request is rejected.",
+  "রিকোয়েস্ট করার সাথে সাথে টাকা ব্যালেন্স থেকে সরিয়ে রাখা হবে। অ্যাডমিন অনুমোদন করলে পাঠানো হবে, বাতিল করলে ব্যালেন্সে ফেরত আসবে।": "Nothing is taken from your balance until an admin approves the request. The amount is deducted and sent then; if the request is rejected, your balance is not touched.",
+  // the earlier English default, from before withdrawals waited for approval to debit (014)
+  "The amount is held aside the moment you request it. It is sent once an admin approves, and returned to your balance if the request is rejected.": "Nothing is taken from your balance until an admin approves the request. The amount is deducted and sent then; if the request is rejected, your balance is not touched.",
   "উত্তোলন চার্জ": "Withdrawal Charge",
   "প্রতি ১,০০০ টাকায় {rate} হারে এজেন্ট ক্যাশআউট চার্জ দিতে হবে।": "An agent cash-out charge of {rate} per ৳1,000 applies.",
   "চার্জ পরিশোধ না করলে উত্তোলনের টাকা ছাড় করা হবে না।": "The withdrawal is not released until the charge is paid.",

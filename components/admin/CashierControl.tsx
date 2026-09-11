@@ -102,12 +102,12 @@ export default function CashierControl({
       }
       setNotice(
         decision === 'lock'
-          ? 'Player locked — the money is back in their balance, and My Account shows them the reason.'
+          ? 'Player locked and the request turned down — My Account shows them the reason.'
           : decision === 'approve'
           ? isDeposit ? 'Deposit approved — the money is in the player’s balance.'
-                      : 'Withdrawal approved.'
+                      : 'Withdrawal approved — the amount is taken from the player’s balance.'
           : isDeposit ? 'Deposit rejected.'
-                      : 'Withdrawal rejected — the money is back in the player’s balance.',
+                      : 'Withdrawal rejected — the player’s balance is untouched.',
       );
     } catch {
       setError('Could not reach the server.');
@@ -275,7 +275,7 @@ export default function CashierControl({
                           <div className="adm__rowacts">
                             <button type="button" className="btn btn--ghost adm__danger" disabled={busy}
                                     onClick={() => void review(r.id, 'lock')}>
-                              Lock &amp; return money
+                              Lock &amp; turn down
                             </button>
                             <button type="button" className="btn btn--ghost" disabled={busy}
                                     onClick={() => { setLockFor(0); setReason(''); }}>

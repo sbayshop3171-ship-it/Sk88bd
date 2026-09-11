@@ -286,7 +286,21 @@ export async function reviewRequest(
 
   const fn = `${action}_${table === 'deposits' ? 'deposit' : 'withdrawal'}`;
   const { error } = await db.rpc(fn, { p_id: id, p_note: note || null });
-  if (error) return { ok: false, reason: 'db-error', message: error.message };
+  if (error) {
+    // since 014 an approval is when the money leaves the wallet, so the
+    // player may have played it away while the request waited
+    if (fn === 'approve_withdrawal' && /check constraint|balance/i.test(error.message)) {
+      return {
+        ok: false,
+        reason: 'db-error',
+        message: `Request #${id}: the player's balance no longer covers it — they have played the money since asking. Reject it.`,
+      };
+    }
+    if (fn === 'approve_withdrawal' && /account (held|banned)/i.test(error.message)) {
+      return { ok: false, reason: 'db-error', message: `Request #${id}: the account is on hold or banned — lift that first, or reject it.` };
+    }
+    return { ok: false, reason: 'db-error', message: error.message };
+  }
 
   if (table === 'deposits' && action === 'approve') {
     const bonus = await payDepositBonus(db, id);
