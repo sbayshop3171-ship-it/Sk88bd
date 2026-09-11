@@ -126,7 +126,27 @@ ul{margin:0;padding:0;list-style:none}
   -webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 2px 7px rgba(255,140,0,.5));
 }
-.logo__sub{font-size:11px;color:var(--mint);font-weight:700;border-left:2px solid var(--mint);padding-left:6px}
+.logo{align-items:center}
+/* "wintk", the reference's way: upright, heavy, white with a green "tk",
+   set off from the wordmark by a thin pale rule */
+.logo__sub{
+  font-size:21px;font-weight:900;letter-spacing:-.6px;line-height:1;color:#fff;
+  border-left:1.5px solid rgba(255,255,255,.55);padding-left:6px;margin-left:1px;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.4));white-space:nowrap;
+}
+.logo__sub b{color:#27d36b;font-weight:900}
+/* signed out, Log In and Register Now take half a phone's width — the
+   wordmark steps down so "wintk" does not run under them */
+@media (max-width:430px){
+  .hdr--guest .logo__mark{font-size:17px}
+  .hdr--guest .logo__sub{font-size:16px;padding-left:5px}
+}
+@media (max-width:380px){
+  .hdr--guest{gap:7px}
+  .hdr--guest .logo__mark{font-size:15px}
+  .hdr--guest .logo__sub{font-size:14px;padding-left:4px}
+  .hdr--guest .hdr__actions .btn{padding-inline:11px;font-size:12px}
+}
 .hdr__actions{display:flex;gap:7px;flex:0 0 auto;align-items:center}
 .btn{
   border-radius:var(--r-pill);font-weight:800;font-size:13px;

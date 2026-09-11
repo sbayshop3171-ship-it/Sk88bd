@@ -17,19 +17,28 @@ export function Wordmark() {
   );
 }
 
+/** "wintk" after the wordmark, behind a thin rule. */
+export function Tagline() {
+  return (
+    <span className="logo__sub">
+      {BRAND.tag}<b>{BRAND.tagAccent}</b>
+    </span>
+  );
+}
+
 export default function Header() {
   const { openDrawer } = useUI();
   const { ready, session, wallet } = useAuth();
 
   return (
-    <header className="hdr">
+    <header className={`hdr${ready && !session ? ' hdr--guest' : ''}`}>
       <button className="icon-btn" type="button" aria-label="Menu" onClick={openDrawer}>
         <MenuIcon />
       </button>
 
       <Link href="/" className="logo" aria-label={BRAND.name}>
         <Wordmark />
-        <span className="logo__sub">{BRAND.tag}</span>
+        <Tagline />
       </Link>
 
       <div className="hdr__actions">

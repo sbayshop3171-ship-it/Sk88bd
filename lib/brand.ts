@@ -8,7 +8,10 @@ export const BRAND = {
   /** wordmark is split so the two halves can carry different gradients */
   light: 'SK',
   accent: '88BD',
-  tag: 'bet',
+  /** the second half of the header logo, "SK88BD | wintk" — split so "tk"
+      can be green, as on the reference (pk44baji) */
+  tag: 'win',
+  tagAccent: 'tk',
   currency: '৳',
   domain: 'sk88bd.com',
   /** Support mailbox shown in the footer and on the support page. The admin
