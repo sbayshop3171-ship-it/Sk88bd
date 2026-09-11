@@ -328,8 +328,13 @@ export const UPCOMING_SIGNAL_COUNT = 5;
  */
 function upcomingSignalRounds(store: SignalStore, now: number, count: number) {
   const current = getCurrentRound(store, now);
+  /* The queue starts at the first round whose plane has not left yet. That
+     is the live round itself while it is still taking bets: it used to be
+     dropped the moment its betting window opened, so for the whole six
+     seconds a player was placing a bet the app was already showing the
+     round after it — one round ahead of the board. */
   const queue: StoredAviatorRound[] = store.rounds
-    .filter((round) => round.round_id > current.round_id && Date.parse(round.crash_at) + CRASHED_HOLD_MS > now)
+    .filter((round) => round.round_id >= current.round_id && Date.parse(round.fly_at) > now)
     .sort((a, b) => a.round_id - b.round_id);
 
   let last = queue[queue.length - 1] ?? current;
@@ -369,8 +374,11 @@ function getCurrentRound(store: SignalStore, now: number): StoredAviatorRound {
   return findPlayableRound(store, now) ?? scheduleNextRound(store, now + BETTING_LEAD_MS, now);
 }
 
+/** The round the app is showing, so the admin panel edits the same one: the
+    live round while it is still taking bets, the next one once it is up. */
 function getQueuedSignalRound(store: SignalStore, now: number): StoredAviatorRound {
   const current = getCurrentRound(store, now);
+  if (Date.parse(current.fly_at) > now) return current;
   const queued = store.rounds
     .filter((round) => round.round_id > current.round_id && Date.parse(round.crash_at) + CRASHED_HOLD_MS > now)
     .sort((a, b) => a.round_id - b.round_id)[0];

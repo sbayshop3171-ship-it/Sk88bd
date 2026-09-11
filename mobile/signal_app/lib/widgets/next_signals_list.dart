@@ -192,8 +192,9 @@ class _Position extends StatelessWidget {
   }
 }
 
-/// Time to take-off, counted down from the flyAt the server sent. Falls back
-/// to the offset it shipped with when the device clock and ours disagree.
+/// Time to take-off, counted down from the flyAt the server sent. `now` is
+/// already on the server's clock — the screen corrects the phone's by the
+/// offset it measures on every poll — so a phone set wrong does not matter.
 String _countdown(UpcomingSignal signal, DateTime now) {
   final flyAt = signal.flyAt;
   final ms = flyAt != null

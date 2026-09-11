@@ -44,8 +44,15 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
      it back — a queue read for Aviator says nothing about Crash. */
   bool _scanned = false;
   DateTime _now = DateTime.now();
+  /* How far the server's clock is ahead of this phone's. Every countdown is
+     "flyAt minus now", and flyAt is the server's time — counted against the
+     phone's own clock, a phone a second or two off ran every signal that
+     much early or late. Measured afresh on each poll. */
+  Duration _clockOffset = Duration.zero;
   Timer? _clockTimer;
   Timer? _pollTimer;
+
+  DateTime get _serverNow => DateTime.now().add(_clockOffset);
 
   @override
   void initState() {
@@ -58,8 +65,10 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
       duration: const Duration(milliseconds: 1800),
     )..repeat(reverse: true);
 
-    _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() => _now = DateTime.now());
+    /* ticks at 4 Hz so the whole-second countdown turns over within a
+       quarter-second of the server's, not up to a second late */
+    _clockTimer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+      setState(() => _now = _serverNow);
     });
     _pollTimer = Timer.periodic(signalPollInterval, (_) => _loadSnapshot());
     _loadSnapshot();
@@ -84,12 +93,20 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
 
   Future<void> _loadSnapshot() async {
     try {
+      final sent = DateTime.now();
       final next = await _api.fetchSnapshot(
         _game,
         accessToken: _accessToken,
       );
       if (!mounted) return;
-      setState(() => _snapshot = next);
+      // the server stamped its time halfway through the round trip
+      final got = DateTime.now();
+      final serverAt = next.timestamp.add(got.difference(sent) ~/ 2);
+      setState(() {
+        _clockOffset = serverAt.difference(got);
+        _now = _serverNow;
+        _snapshot = next;
+      });
     } on SignalUnauthorizedException {
       final refreshedToken = await widget.onUnauthorized();
       if (refreshedToken == null || !mounted) return;
