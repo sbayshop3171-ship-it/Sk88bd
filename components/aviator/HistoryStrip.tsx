@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { bandFor, fmtX } from '@/lib/aviator';
 import type { HistoryEntry } from './useAviatorRound';
 
 /** The last busts in a row, newest first, with the board's "…" pill on the
     right that folds the whole list open under the strip. */
-export default function HistoryStrip({ history }: { history: HistoryEntry[] }) {
+export default memo(function HistoryStrip({ history }: { history: HistoryEntry[] }) {
   const [open, setOpen] = useState(false);
   return (
     <div className={`av-history-wrap${open ? ' is-open' : ''}`}>
@@ -24,4 +24,4 @@ export default function HistoryStrip({ history }: { history: HistoryEntry[] }) {
       </button>
     </div>
   );
-}
+});

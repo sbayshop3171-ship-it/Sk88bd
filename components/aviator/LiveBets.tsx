@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { fmtX, type Phase } from '@/lib/aviator';
 import { fmtAmt } from './BetPanel';
 
@@ -38,7 +38,7 @@ function seatsFor(roundId: number): Seat[] {
   }));
 }
 
-export default function LiveBets({
+export default memo(function LiveBets({
   phase,
   multiplier,
   players,
@@ -113,4 +113,4 @@ export default function LiveBets({
       </div>
     </section>
   );
-}
+});

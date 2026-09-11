@@ -101,6 +101,10 @@ export function useAviatorRound(clientSeed: string, onCrash?: (crashAt: number) 
     let cancelled = false;
     let localMode = false;
     let backend: BackendPayload | null = null;
+    /** the payload's history, mapped once per poll rather than every frame —
+        a fresh array each frame redrew the strip sixty times a second */
+    let history: HistoryEntry[] = [];
+    let shown: RoundState | null = null;
     let serverOffset = 0;
     let offsetTarget = 0;
     let offsetReady = false;
@@ -181,6 +185,8 @@ export function useAviatorRound(clientSeed: string, onCrash?: (crashAt: number) 
         const payload = (await res.json()) as BackendPayload;
         if (!payload.ok || !payload.round) throw new Error('round api empty');
         backend = payload;
+        const nextHistory = historyFrom(payload);
+        if (!sameHistory(history, nextHistory)) history = nextHistory;
         offsetTarget = Date.parse(payload.serverTime) - Date.now();
         if (!offsetReady) {
           serverOffset = offsetTarget;
@@ -199,8 +205,13 @@ export function useAviatorRound(clientSeed: string, onCrash?: (crashAt: number) 
         serverOffset += (offsetTarget - serverOffset) * OFFSET_EASE;
       }
       if (backend?.round) {
-        const next = stateFromBackend(backend, Date.now() + serverOffset);
-        setState(next);
+        const next = stateFromBackend(backend, Date.now() + serverOffset, history);
+        // between flights nothing on the board moves but the countdown, and
+        // after the bust nothing at all — skip the frames that change nothing
+        if (!shown || changed(shown, next)) {
+          shown = next;
+          setState(next);
+        }
         if (next.phase === 'crashed' && next.round && next.round.id !== notifiedCrashId) {
           notifiedCrashId = next.round.id;
           crashCb.current?.(next.round.crashAt);
@@ -225,7 +236,33 @@ export function useAviatorRound(clientSeed: string, onCrash?: (crashAt: number) 
   return state;
 }
 
-function stateFromBackend(payload: BackendPayload, now: number): RoundState {
+/** Whether the board would draw anything different. The countdown is
+    compared in 20ms steps, finer than any bar can show. */
+function changed(a: RoundState, b: RoundState) {
+  return a.phase !== b.phase
+    || a.round?.id !== b.round?.id
+    || a.round?.serverSeed !== b.round?.serverSeed
+    || a.multiplier !== b.multiplier
+    || Math.round(a.bettingLeft / 20) !== Math.round(b.bettingLeft / 20)
+    || a.history !== b.history;
+}
+
+function historyFrom(payload: BackendPayload): HistoryEntry[] {
+  const fallbackSeed = String(payload.round?.clientSeed ?? 'prime-vai-devx-LIVE');
+  return payload.history.map((item) => ({
+    id: Number(item.id ?? item.round_id ?? 0),
+    crashAt: clampMultiplier(item.crashAt ?? item.target_x),
+    serverSeed: String(item.serverSeed ?? ''),
+    clientSeed: String(item.clientSeed ?? fallbackSeed),
+    nonce: Number(item.nonce ?? item.id ?? item.round_id ?? 0),
+  })).filter((item) => item.id > 0).slice(0, 24);
+}
+
+function sameHistory(a: HistoryEntry[], b: HistoryEntry[]) {
+  return a.length === b.length && a.every((h, i) => h.id === b[i].id && h.crashAt === b[i].crashAt);
+}
+
+function stateFromBackend(payload: BackendPayload, now: number, history: HistoryEntry[]): RoundState {
   const source = payload.round!;
   const id = Number(source.id ?? source.round_id ?? 0);
   const target = clampMultiplier(source.targetX ?? source.target_x);
@@ -268,13 +305,7 @@ function stateFromBackend(payload: BackendPayload, now: number): RoundState {
     round,
     multiplier,
     bettingLeft,
-    history: payload.history.map((item) => ({
-      id: Number(item.id ?? item.round_id ?? 0),
-      crashAt: clampMultiplier(item.crashAt ?? item.target_x),
-      serverSeed: String(item.serverSeed ?? ''),
-      clientSeed: String(item.clientSeed ?? backendClientSeed),
-      nonce: Number(item.nonce ?? item.id ?? item.round_id ?? 0),
-    })).filter((item) => item.id > 0).slice(0, 24),
+    history,
   };
 }
 

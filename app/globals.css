@@ -5018,6 +5018,13 @@ body.aviator-immersive .av-wordmark{height:17px}
 .av-skin .av-act--cancel{background:#CB011A;border:2px solid #FF7171;box-shadow:none;color:#fff}
 .av-skin .av-act .av-act__wait{font-size:12px;font-weight:700;opacity:.8;margin-top:2px}
 .av-skin .av-slot__err{font-size:11px;margin-top:-4px}
+/* taps: no double-tap-zoom wait, no grey flash, no text selection on a
+   long press, and the button sinks the moment a finger lands on it — the
+   press shows before the server has answered */
+.av-skin button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+.av-skin .av-act{transition:transform .06s ease-out,filter .06s ease-out}
+.av-skin .av-act:active:not(:disabled){transform:scale(.97);filter:brightness(1.12)}
+.av-skin .av-act.is-busy{filter:brightness(.88)}
 
 /* live bets: a card of its own, 4px under the seats */
 .av-skin .av-live{margin:4px 4px 0;padding:8px;border-radius:16px;background:#1B1C1D;contain-intrinsic-size:auto}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { type Phase } from '@/lib/aviator';
 
 const QUICK = [100, 200, 500, 10000];
@@ -31,19 +31,29 @@ export const emptySlot = (stake: number): Slot => ({
   stake, autoAt: '', auto: false, staked: null, cashedAt: null, queued: false,
 });
 
-export default function BetPanel({
-  slot, phase, multiplier, balance,
+/* Memoised, and every handler takes the seat index, so the page can hand the
+   same functions down on every frame: a seat re-renders only when its own
+   slot, its busy flag or — while it is riding — the multiplier moves. The
+   board used to redraw both seats sixty times a second, and on a slow phone
+   that is what swallowed taps. */
+export default memo(function BetPanel({
+  index, slot, phase, multiplier, balance, busy,
   onPatch, onPlace, onCancel, onCashOut,
 }: {
+  index: 0 | 1;
   slot: Slot;
   phase: Phase;
+  /** 1 unless this seat is riding a flight — it only feeds the Cash Out figure */
   multiplier: number;
   balance: number;
-  onPatch: (patch: Partial<Slot>) => void;
-  onPlace: () => void;
-  onCancel: () => void;
-  onCashOut: () => void;
+  /** a request for this seat is on its way */
+  busy: boolean;
+  onPatch: (i: 0 | 1, patch: Partial<Slot>) => void;
+  onPlace: (i: 0 | 1) => void;
+  onCancel: (i: 0 | 1) => void;
+  onCashOut: (i: 0 | 1) => void;
 }) {
+  const i = index;
   const riding = slot.staked !== null && slot.cashedAt === null;
   const locked = riding || slot.queued;
   const tooPoor = slot.stake > balance;
@@ -57,7 +67,7 @@ export default function BetPanel({
   const action = (() => {
     if (riding && phase === 'flying') {
       return (
-        <button className="av-act av-act--out" type="button" onClick={onCashOut}>
+        <button className={`av-act av-act--out${busy ? ' is-busy' : ''}`} type="button" onClick={() => onCashOut(i)}>
           Cash Out
           <small>{fmtAmt(Math.floor(slot.staked! * multiplier * 100) / 100)} <i>BDT</i></small>
         </button>
@@ -65,20 +75,20 @@ export default function BetPanel({
     }
     if (slot.queued) {
       return (
-        <button className="av-act av-act--cancel" type="button" onClick={onCancel}>
+        <button className="av-act av-act--cancel" type="button" onClick={() => onCancel(i)}>
           Cancel<small className="av-act__wait">Waiting for next round</small>
         </button>
       );
     }
     if (riding) {
       return (
-        <button className="av-act av-act--cancel" type="button" onClick={onCancel}>
+        <button className={`av-act av-act--cancel${busy ? ' is-busy' : ''}`} type="button" onClick={() => onCancel(i)}>
           Cancel
         </button>
       );
     }
     return (
-      <button className="av-act av-act--bet" type="button" onClick={onPlace} disabled={invalid}>
+      <button className={`av-act av-act--bet${busy ? ' is-busy' : ''}`} type="button" onClick={() => onPlace(i)} disabled={invalid}>
         Bet<small>{fmtAmt(slot.stake)} <i>BDT</i></small>
       </button>
     );
@@ -92,14 +102,14 @@ export default function BetPanel({
         <button
           type="button" role="tab" aria-selected={!slot.auto}
           className={!slot.auto ? 'on' : ''}
-          onClick={() => onPatch({ auto: false })}
+          onClick={() => onPatch(i, { auto: false })}
         >
           Bet
         </button>
         <button
           type="button" role="tab" aria-selected={slot.auto}
           className={slot.auto ? 'on' : ''}
-          onClick={() => onPatch({ auto: true })}
+          onClick={() => onPatch(i, { auto: true })}
         >
           Auto
         </button>
@@ -108,15 +118,15 @@ export default function BetPanel({
       <div className="av-slot__ctl">
         <div className="av-stepper">
           <button type="button" aria-label="Decrease" disabled={locked}
-                  onClick={() => onPatch({ stake: Math.max(MIN_STAKE, slot.stake - STEP) })}>−</button>
-          <StakeField value={slot.stake} disabled={locked} onChange={(v) => onPatch({ stake: v })} />
+                  onClick={() => onPatch(i, { stake: Math.max(MIN_STAKE, slot.stake - STEP) })}>−</button>
+          <StakeField value={slot.stake} disabled={locked} onChange={(v) => onPatch(i, { stake: v })} />
           <button type="button" aria-label="Increase" disabled={locked}
-                  onClick={() => onPatch({ stake: slot.stake + STEP })}>+</button>
+                  onClick={() => onPatch(i, { stake: slot.stake + STEP })}>+</button>
         </div>
 
         <div className="av-quick">
           {QUICK.map((q) => (
-            <button key={q} type="button" disabled={locked} onClick={() => onPatch({ stake: q })}>
+            <button key={q} type="button" disabled={locked} onClick={() => onPatch(i, { stake: q })}>
               {q.toLocaleString('en-US')}
             </button>
           ))}
@@ -128,7 +138,7 @@ export default function BetPanel({
             <input
               type="number" step="0.1" min="1.01" placeholder="—"
               value={slot.autoAt} disabled={locked}
-              onChange={(e) => onPatch({ autoAt: e.target.value })}
+              onChange={(e) => onPatch(i, { autoAt: e.target.value })}
             />
           </label>
         )}
@@ -139,7 +149,7 @@ export default function BetPanel({
       {tooPoor && <div className="field__err av-slot__err">Low balance</div>}
     </div>
   );
-}
+});
 
 /** The stake reads "10.00" like the board's, but while it is being typed the
     raw text stands, so the two decimals do not fight the keyboard. */

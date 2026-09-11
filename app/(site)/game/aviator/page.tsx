@@ -34,7 +34,15 @@ function Board() {
      money and then this refetches, so the number on screen is always what the
      ledger says. */
   const balance = toTaka(wallet?.balance ?? 0);
-  const [busySlot, setBusySlot] = useState<number | null>(null);
+  /** a request is on its way for this seat — per seat, so a bet on one
+      never makes a tap on the other do nothing */
+  const [busy, setBusy] = useState<[boolean, boolean]>([false, false]);
+  const busyRef = useRef(busy);
+  busyRef.current = busy;
+  const balanceRef = useRef(balance);
+  balanceRef.current = balance;
+  const gateRef = useRef(requireFunds);
+  gateRef.current = requireFunds;
   const [clientSeed, setClientSeed] = useState('');
   /** two independent seats, exactly like the reference game — both open at
       its 10.00 default */
@@ -86,6 +94,13 @@ function Board() {
 
   const { phase, round, multiplier, bettingLeft, history } = useAviatorRound(clientSeed, onCrash);
   const crowd = useCrowdCount(round?.id, phase);
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+
+  const setSeatBusy = useCallback((i: 0 | 1, on: boolean) => {
+    busyRef.current = (i === 0 ? [on, busyRef.current[1]] : [busyRef.current[0], on]) as [boolean, boolean];
+    setBusy(busyRef.current);
+  }, []);
 
   /* Every bet and cash-out goes through the server: it owns the wallet and it
      alone decides what multiplier was actually reached. The screen just asks,
@@ -95,7 +110,7 @@ function Board() {
     i: 0 | 1,
     stake?: number,
   ) => {
-    setBusySlot(i);
+    setSeatBusy(i, true);
     try {
       const res = await fetch('/api/aviator/play', {
         method: 'POST',
@@ -106,7 +121,9 @@ function Board() {
         | { ok: true; cashedAt?: number; payout?: number }
         | { ok: false; reason: BetReason };
 
-      await refresh();
+      // the balance catches up in the background — the seat answers now,
+      // not after a second round trip for the wallet
+      void refresh();
       if (!data.ok) {
         toast(BET_ERROR[data.reason] ?? 'Something went wrong');
         return null;
@@ -116,9 +133,9 @@ function Board() {
       toast('Could not reach the server');
       return null;
     } finally {
-      setBusySlot(null);
+      setSeatBusy(i, false);
     }
-  }, [refresh, toast]);
+  }, [refresh, setSeatBusy, toast]);
 
   // queued seats go live the moment the next betting window opens
   useEffect(() => {
@@ -168,10 +185,10 @@ function Board() {
       patch(i, { queued: false, auto: false });
       return;
     }
-    if (busySlot !== null) return;
+    if (busyRef.current[i]) return;
     const res = await send('cancel', i);
     if (res) patch(i, { staked: null, cashedAt: null, queued: false, auto: false });
-  }, [busySlot, patch, send]);
+  }, [patch, send]);
 
   // auto cash-out, checked per seat
   useEffect(() => {
@@ -185,22 +202,26 @@ function Board() {
     });
   }, [phase, multiplier, slots, cashOut]);
 
-  const place = async (i: 0 | 1) => {
-    if (busySlot !== null) return;   // a request is already in flight
-    if (!requireFunds()) return;     // watching is free; staking is not
-    const slot = slots[i];
+  /* The seat turns red the instant it is tapped and the server is asked
+     behind it; a refusal puts it back to green with the reason. Waiting for
+     the answer before changing the button is what made taps feel dead. */
+  const place = useCallback(async (i: 0 | 1) => {
+    if (busyRef.current[i]) return;      // this seat's request is already out
+    if (!gateRef.current()) return;      // watching is free; staking is not
+    const slot = slotsRef.current[i];
     if (slot.stake < MIN_STAKE) { toast(`Minimum bet is ${money(MIN_STAKE)}`); return; }
-    if (slot.stake > balance) { toast('Not enough balance'); return; }
+    if (slot.stake > balanceRef.current) { toast('Not enough balance'); return; }
 
-    if (phase !== 'betting') {
+    if (phaseRef.current !== 'betting') {
       patch(i, { queued: true });
       toast('Your bet goes on the next round');
       return;
     }
 
+    patch(i, { staked: slot.stake, cashedAt: null, queued: false });
     const res = await send('bet', i, slot.stake);
-    if (res) patch(i, { staked: slot.stake, cashedAt: null, queued: false });
-  };
+    if (!res) patch(i, { staked: null });
+  }, [patch, send, toast]);
 
   return (
     <>
@@ -235,19 +256,23 @@ function Board() {
         {([0, 1] as const).map((i) => (
           <BetPanel
             key={i}
+            index={i}
             slot={slots[i]}
             phase={phase}
-            multiplier={multiplier}
+            multiplier={slots[i].staked !== null && slots[i].cashedAt === null ? multiplier : 1}
             balance={balance}
-            onPatch={(p) => patch(i, p)}
-            onPlace={() => place(i)}
-            onCancel={() => cancel(i)}
-            onCashOut={() => cashOut(i)}
+            busy={busy[i]}
+            onPatch={patch}
+            onPlace={place}
+            onCancel={cancel}
+            onCashOut={cashOut}
           />
         ))}
       </div>
 
-      <LiveBets phase={phase} multiplier={multiplier} players={crowd} roundId={round?.id} />
+      {/* the table only compares against two-decimal targets, so it redraws
+          when the figure crosses a hundredth, not on every frame */}
+      <LiveBets phase={phase} multiplier={Math.floor(multiplier * 100) / 100} players={crowd} roundId={round?.id} />
 
       {/* the board's foot: the fairness link on the left, the maker on the right */}
       <footer className="av-foot">
