@@ -1,14 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { bandFor, fmtX, multiplierAt, timeToReach, type Phase } from '@/lib/aviator';
 import PlaneSprite from './PlaneSprite';
 
 /* 100×76 sits on the reference board's 374×283, so the stage's
    `aspect-ratio` and this box agree and nothing drawn here is stretched. */
 const W = 100, H = 76;
-/** where the nose settles once it has climbed into frame */
-const TIP_X = 78, TIP_Y = 13, FLOOR = 71;
+/** where the plane arrives once it has climbed into frame — the top of its wave */
+const TIP_X = 71, TIP_Y = 12, FLOOR = 71;
 const STEPS = 34;
 
 /** Multiplier by which the aircraft has finished climbing into frame. On
@@ -16,11 +15,15 @@ const STEPS = 34;
     by 1.5x — the climb is quick. */
 const CRUISE_AT = 1.6;
 
-/** the cruise ride: how far the plane (and the line's tip) swell, how fast,
-    and how much the nose pitches with it */
-const BOB_AMPLITUDE = 2.2;
-const BOB_PERIOD_MS = 3400;
-const BOB_PITCH_DEG = 0.8;
+/* The cruise wave, measured off the reference board: once up, the plane
+   rides a long slow swell on a diagonal — sinking down-and-right, rising
+   up-and-left — about 30% of the board's height and 12% of its width, one
+   swell every ~8s, the nose dipping as it sinks. It starts at the top, where
+   the climb left it, so there is no jump. */
+const WAVE_DX = 12;
+const WAVE_DY = 23;
+const WAVE_PERIOD_MS = 8000;
+const WAVE_PITCH_DEG = 4;
 
 /** 0 on the runway, 1 once the nose reaches cruise — eased both ends: the
     reference plane rolls along the bottom until about 1.2x, then climbs
@@ -53,20 +56,6 @@ function path(multiplier: number, travel: number) {
   return pts;
 }
 
-/** A timestamp that advances every animation frame while `on`, so a render
-    that depends on the clock re-runs each frame; frozen at 0 otherwise. */
-function useFrameClock(on: boolean) {
-  const [now, setNow] = useState(0);
-  useEffect(() => {
-    if (!on) return;
-    let raf = 0;
-    const loop = () => { setNow(performance.now()); raf = requestAnimationFrame(loop); };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
-  }, [on]);
-  return now;
-}
-
 export default function AviatorCanvas({
   phase,
   multiplier,
@@ -89,22 +78,29 @@ export default function AviatorCanvas({
 
   const travel = travelOf(multiplier);
 
-  /* The ride: once the plane is up it swells up and down, and the line's
-     tip rides with it — the curve is bent toward the plane so they never
-     part. Driven off our own frame clock rather than a CSS animation on the
-     plane alone, because the path is drawn by React and the two have to
-     agree; the clock keeps ticking even while the multiplier is pinned at
-     the round's cap, so the plane never freezes mid-air. Scaled by
-     `travel`, so take-off is clean. */
-  const now = useFrameClock(flying);
-  const swell = flying ? Math.sin((now / BOB_PERIOD_MS) * Math.PI * 2) * travel : 0;
-  const bobY = swell * -BOB_AMPLITUDE;
-  const pitch = swell * -BOB_PITCH_DEG;
+  /* The wave is timed by the flight itself — milliseconds flown since the
+     plane reached cruise — not by a clock of the page's own. The multiplier
+     is recomputed every frame from the server's time, so every screen puts
+     the plane at the same point of the same swell, and on the bust it
+     leaves from exactly where it was. The line's tip rides with it: the
+     curve is bent toward the plane so the two never part. */
+  const cruiseMs = Math.max(0, timeToReach(multiplier) - timeToReach(CRUISE_AT));
+  const wave = (cruiseMs / WAVE_PERIOD_MS) * Math.PI * 2;
+  const up = flying || crashed;
+  const dip = up ? (1 - Math.cos(wave)) / 2 : 0;   // 0 at the crest, 1 in the trough
+  const waveX = dip * WAVE_DX;
+  const waveY = dip * WAVE_DY;
+  // nose down while it sinks, up while it rises
+  const pitch = up ? Math.sin(wave) * WAVE_PITCH_DEG : 0;
 
   const pts = path(multiplier, travel).map(([x, y], i, all) => {
     // root stays on the runway; the bend grows toward the tip
     const f = i / (all.length - 1);
-    return [x, Number((y + bobY * f * f * f).toFixed(2))] as [number, number];
+    const bend = f * f * f;
+    return [
+      Number((x + waveX * bend).toFixed(2)),
+      Number((y + waveY * bend).toFixed(2)),
+    ] as [number, number];
   });
   const [tx, ty] = pts[pts.length - 1];
 
