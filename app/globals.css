@@ -4828,7 +4828,9 @@ body.aviator-immersive .av-wordmark{height:17px}
 .av-skin .av-stage{
   margin:0 4px;aspect-ratio:374/283;border-radius:18px;border:1px solid #2A2B2E;
 }
-.av-skin .av-hud__mult{font-size:18vw;font-weight:800;letter-spacing:-1.5px}
+/* 69px on the 384px reference; capped, because on a desktop the column is
+   narrower than the viewport and a bare vw runs away */
+.av-skin .av-hud__mult{font-size:clamp(40px,18vw,69px);font-weight:800;letter-spacing:-1.5px}
 .av-skin .av-hud__flew{font-size:19.5px;font-weight:400;letter-spacing:.3px}
 .av-skin .av-stage__hud{gap:18px}
 .av-skin .av-stage__fair{display:none}
