@@ -1,7 +1,9 @@
 name: prime_signal_app
 description: Demo Aviator signal terminal UI with API-ready dynamic bindings.
 publish_to: "none"
-version: 0.1.0+1
+# The build number (after +) is what the in-app updater compares — raise it
+# for every APK that goes out. scripts/ship-signal-apk.sh reads it from here.
+version: 0.2.0+2
 
 environment:
   sdk: ">=3.4.0 <4.0.0"

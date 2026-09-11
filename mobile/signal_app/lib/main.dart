@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'config/api_config.dart';
 import 'screens/signal_access_gate.dart';
 import 'theme/neon_theme.dart';
+import 'widgets/update_check.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,7 +30,10 @@ class PrimeSignalApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Prime Signal',
       theme: buildNeonTheme(),
-      home: const SignalAccessGate(apiBaseUrl: signalApiBaseUrl),
+      home: const UpdateCheck(
+        apiBaseUrl: signalApiBaseUrl,
+        child: SignalAccessGate(apiBaseUrl: signalApiBaseUrl),
+      ),
     );
   }
 }
