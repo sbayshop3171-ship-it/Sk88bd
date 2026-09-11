@@ -4,6 +4,7 @@ import { Fragment, useState } from 'react';
 import { toPaisa, toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import type { PlayerRow } from '@/lib/cashier';
+import { LOCK_PRESETS } from '@/lib/withdraw-lock';
 
 const ERROR_LABEL: Record<string, string> = {
   forbidden: 'You are not allowed to do that to this player.',
@@ -18,15 +19,6 @@ type Kind = 'balance' | 'hold' | 'ban' | 'lock' | 'appeal';
 
 /** Which row has its drawer open, and for what. */
 type Panel = { id: string; kind: Kind } | null;
-
-/** One tap fills the lock reason — the player reads it word for word on
-    their My Account screen, so these are in Bangla. */
-const LOCK_PRESETS = [
-  'সন্দেহজনক গেমপ্লে / হ্যাকিং কার্যকলাপ সনাক্ত হয়েছে',
-  'একাধিক অ্যাকাউন্ট ব্যবহারের সন্দেহ',
-  'ডিপোজিট যাচাই করা হচ্ছে',
-  'বোনাস অপব্যবহারের সন্দেহ',
-];
 
 /** "5 min ago" for the appeal line. */
 function ago(iso: string) {

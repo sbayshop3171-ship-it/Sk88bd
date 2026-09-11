@@ -21,13 +21,15 @@ export default async function AdminWithdrawals() {
       <p className="adm__sub">
         The money is held aside the moment a request is made, so a player cannot gamble
         with funds that are already on their way out. Rejecting a request returns the
-        money to their balance.
+        money to their balance. Lock does the same and also stops the player's
+        withdrawals, with the reason you give shown on their My Account.
       </p>
       <CashierControl
         table="withdrawals"
         initialRows={rows.ok ? rows.data : []}
         initialError={rows.ok ? '' : rows.message ?? `Could not load the requests (${rows.reason})`}
         backendReady={isBackendReady()}
+        canLock={can(session.role, 'players.lock')}
       />
     </>
   );

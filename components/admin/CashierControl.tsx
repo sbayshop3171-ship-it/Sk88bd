@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { toTaka } from '@/lib/auth';
 import { money } from '@/lib/brand';
 import type { CashierRow, RequestState } from '@/lib/cashier';
+import { LOCK_PRESETS } from '@/lib/withdraw-lock';
 
 type Table = 'deposits' | 'withdrawals';
 
@@ -26,16 +27,22 @@ export default function CashierControl({
   initialRows,
   initialError = '',
   backendReady,
+  canLock = false,
 }: {
   table: Table;
   initialRows: CashierRow[];
   /** the first load failed: say so, rather than "no requests" while players wait */
   initialError?: string;
   backendReady: boolean;
+  /** withdrawals only: stop the player's withdrawals from the queue */
+  canLock?: boolean;
 }) {
   const [rows, setRows] = useState(initialRows);
   const [state, setState] = useState<RequestState | 'all'>('pending');
   const [notes, setNotes] = useState<Record<number, string>>({});
+  /** the request whose lock box is open, and the reason typed into it */
+  const [lockFor, setLockFor] = useState(0);
+  const [reason, setReason] = useState('');
   const [busyId, setBusyId] = useState(0);
   const [error, setError] = useState(initialError);
   const [notice, setNotice] = useState('');
@@ -66,7 +73,7 @@ export default function CashierControl({
     }
   }
 
-  async function review(id: number, decision: 'approve' | 'reject') {
+  async function review(id: number, decision: 'approve' | 'reject' | 'lock') {
     setBusyId(id);
     setError('');
     setNotice('');
@@ -74,7 +81,10 @@ export default function CashierControl({
       const res = await fetch('/api/admin/cashier', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ table, id, decision, note: notes[id] ?? '', state, search: applied }),
+        body: JSON.stringify({
+          table, id, decision, note: notes[id] ?? '', reason: decision === 'lock' ? reason : '',
+          state, search: applied,
+        }),
       });
       const data = (await res.json()) as
         | { ok: true; rows: CashierRow[] }
@@ -86,8 +96,14 @@ export default function CashierControl({
       }
       setRows(data.rows);
       setNotes((n) => ({ ...n, [id]: '' }));
+      if (decision === 'lock') {
+        setLockFor(0);
+        setReason('');
+      }
       setNotice(
-        decision === 'approve'
+        decision === 'lock'
+          ? 'Player locked — the money is back in their balance, and My Account shows them the reason.'
+          : decision === 'approve'
           ? isDeposit ? 'Deposit approved — the money is in the player’s balance.'
                       : 'Withdrawal approved.'
           : isDeposit ? 'Deposit rejected.'
@@ -240,7 +256,38 @@ export default function CashierControl({
                       )}
                     </td>
                     <td>
-                      {r.state === 'pending' ? (
+                      {r.state === 'pending' && lockFor === r.id ? (
+                        <div className="adm__review">
+                          <input
+                            className="adm__mini" autoFocus maxLength={200}
+                            placeholder="Lock reason — the player sees this"
+                            value={reason}
+                            disabled={busy}
+                            onChange={(e) => setReason(e.target.value)}
+                          />
+                          <select
+                            className="adm__mini" value="" disabled={busy}
+                            onChange={(e) => e.target.value && setReason(e.target.value)}
+                          >
+                            <option value="">Pick a reason…</option>
+                            {LOCK_PRESETS.map((text) => <option key={text} value={text}>{text}</option>)}
+                          </select>
+                          <div className="adm__rowacts">
+                            <button type="button" className="btn btn--ghost adm__danger" disabled={busy}
+                                    onClick={() => void review(r.id, 'lock')}>
+                              Lock &amp; return money
+                            </button>
+                            <button type="button" className="btn btn--ghost" disabled={busy}
+                                    onClick={() => { setLockFor(0); setReason(''); }}>
+                              Cancel
+                            </button>
+                          </div>
+                          <span className="adm__muted" style={{ fontSize: 10.5, whiteSpace: 'normal' }}>
+                            Turns this request down and stops all their withdrawals until you unlock
+                            them at Players. They can still deposit and play.
+                          </span>
+                        </div>
+                      ) : r.state === 'pending' ? (
                         <div className="adm__review">
                           <input
                             className="adm__mini"
@@ -258,6 +305,12 @@ export default function CashierControl({
                                     onClick={() => void review(r.id, 'reject')}>
                               Reject
                             </button>
+                            {!isDeposit && canLock && (
+                              <button type="button" className="btn btn--ghost adm__lock" disabled={busy}
+                                      onClick={() => { setLockFor(r.id); setReason(''); }}>
+                                Lock
+                              </button>
+                            )}
                           </div>
                         </div>
                       ) : (

@@ -35,6 +35,16 @@ export const DEFAULT_LOCK_REASON = 'সন্দেহজনক কার্য�
 
 export const APPEAL_MAX = 500;
 
+/** One tap fills the lock reason — the player reads it word for word on
+    their My Account screen, so these are in Bangla. Shared by /admin/users
+    and the withdrawal queue. */
+export const LOCK_PRESETS = [
+  'সন্দেহজনক গেমপ্লে / হ্যাকিং কার্যকলাপ সনাক্ত হয়েছে',
+  'একাধিক অ্যাকাউন্ট ব্যবহারের সন্দেহ',
+  'ডিপোজিট যাচাই করা হচ্ছে',
+  'বোনাস অপব্যবহারের সন্দেহ',
+];
+
 const UNLOCKED: LockStatus = { locked: false, reason: null, lockedAt: null, appeal: null };
 
 /** Postgres has no such column/table yet, or PostgREST's cache is stale. */
