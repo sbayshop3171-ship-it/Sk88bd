@@ -74,8 +74,12 @@ export default function DepositPage() {
   const trxPattern = useMemo(() => {
     try { return cfg.trxPattern ? new RegExp(cfg.trxPattern) : null; } catch { return null; }
   }, [cfg.trxPattern]);
-  const trxClean = trx.trim();
-  const trxOk = trxClean.length > 0 && (!trxPattern || trxPattern.test(trxClean));
+  // stored the way the database stores it (migration 015): letters and
+  // digits, upper case — so a space or a lower-case letter is not a new ID
+  const trxClean = trx.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  const trxShapeOk = trxClean.length >= 6 && trxClean.length <= 20 && !/^(.)\1+$/.test(trxClean)
+    && (method?.channelId !== 'bkash' || trxClean.length === 10);
+  const trxOk = trxClean.length > 0 && trxShapeOk && (!trxPattern || trxPattern.test(trxClean));
 
   // One operator number per visit to the pay screen; a re-entry asks again
   // so players spread across the numbers the admin added.
@@ -166,7 +170,12 @@ export default function DepositPage() {
     setBusy(false);
 
     if (error) {
-      setErr('Could not send the request — try again');
+      // the database's own answers (migration 015), in the player's words
+      const m = error.message;
+      if (/txn used/i.test(m)) setErr('এই TrxID আগেই ব্যবহার করা হয়েছে — একই TrxID দুইবার দেওয়া যায় না');
+      else if (/txn format/i.test(m)) setErr('TrxID সঠিক নয় — মেসেজ থেকে পুরো TrxID দেখে লিখুন');
+      else if (/too many pending/i.test(m)) setErr('আপনার ৩টি ডিপোজিট অপেক্ষায় আছে — আগে সেগুলো শেষ হোক');
+      else setErr('Could not send the request — try again');
       return;
     }
     await refresh();
@@ -315,7 +324,11 @@ export default function DepositPage() {
           />
           {trxClean && (
             <p className={`cz-trx__state${trxOk ? ' ok' : ' bad'}`}>
-              {trxOk ? '✓ TrxID format looks right' : 'That TrxID format is not right'}
+              {trxOk
+                ? '✓ TrxID format looks right'
+                : method?.channelId === 'bkash' && trxShapeOk === false && trxClean.length !== 10
+                  ? 'বিকাশের TrxID ১০ অক্ষরের হয়'
+                  : 'That TrxID format is not right'}
             </p>
           )}
           {err && <p className="cz-err">{err}</p>}
