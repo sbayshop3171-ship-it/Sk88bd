@@ -143,7 +143,7 @@ export default function MemberPage() {
             <div className="mc__acts">
               <Link href="/deposit"><DepositIcon />{t.deposit}</Link>
               <Link href="/withdraw"><WithdrawIcon />{t.withdraw}</Link>
-              <Link href="/withdraw"><BankIcon />Bank Account</Link>
+              <Link href="/link-ewallet"><BankIcon />Bank Account</Link>
             </div>
           ) : (
             <div className="mc__acts">
