@@ -37,3 +37,6 @@ laravel/bootstrap/cache/*
 laravel/public/build
 laravel/public/hot
 laravel/.phpunit.result.cache
+
+# signal APKs are uploaded to the server, never committed
+/public/downloads/

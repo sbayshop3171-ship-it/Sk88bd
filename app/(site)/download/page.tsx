@@ -51,7 +51,9 @@ export default function DownloadPage() {
 
       <h2 className="sec__title" style={{ margin: '22px 12px 10px' }}>Signal App</h2>
       <div className="wallet-bar">
-        <a className="btn btn--gold" href="/downloads/prime-signal-app.apk" download style={{ padding: 12 }}>
+        {/* the file lives on the server only (public/downloads is gitignored —
+            a 50MB APK has no place in the repo); it saves as the app's name */}
+        <a className="btn btn--gold" href="/downloads/ariyan-khan.apk" download="ariyan khan.apk" style={{ padding: 12 }}>
           Android APK
         </a>
         <span className="btn btn--ghost" style={{ padding: 12, opacity: .55 }}>iOS</span>
