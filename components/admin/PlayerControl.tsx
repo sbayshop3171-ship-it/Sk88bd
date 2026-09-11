@@ -206,6 +206,8 @@ export default function PlayerControl({
   const locked = players.filter((p) => p.withdrawLocked && !p.isBlocked).length;
   const appeals = players.filter((p) => p.withdrawLocked && p.appeal?.state === 'pending').length;
   const numbered = players.some((p) => p.playerNo !== null);
+  // the one to look at when the total looks wrong
+  const richest = players.reduce<PlayerRow | null>((top, p) => (!top || p.balance > top.balance ? p : top), null);
   const acts = canWrite || canLock;
   const columns = acts ? 11 : 10;
 
@@ -214,6 +216,15 @@ export default function PlayerControl({
       <div className="adm__tiles" style={{ marginBottom: 14 }}>
         <div className="adm__tile"><b>{players.length}</b><small>In this list</small></div>
         <div className="adm__tile"><b>{money(toTaka(totalBalance))}</b><small>Total balance</small></div>
+        {richest && richest.balance > 0 && (
+          <button
+            type="button" className="adm__tile adm__tile--link" style={{ textAlign: 'left', cursor: 'pointer' }}
+            onClick={() => { const term = String(richest.playerNo ?? richest.phone); setSearch(term); void load(term); }}
+          >
+            <b>{money(toTaka(richest.balance))}</b>
+            <small>Highest balance · {nameOf(richest)} — tap to open</small>
+          </button>
+        )}
         <div className="adm__tile"><b>{held}</b><small>On hold</small></div>
         <div className="adm__tile"><b>{locked}</b><small>Withdraw locked</small></div>
         <div className="adm__tile"><b style={appeals ? { color: '#e0a526' } : undefined}>{appeals}</b><small>Appeals waiting</small></div>
@@ -319,7 +330,8 @@ export default function PlayerControl({
                         )}
                       </td>
                       {acts && (
-                      <td className="adm__rowacts">
+                      <td>
+                      <div className="adm__acts2">
                         {canWrite && (
                         <button
                           type="button" className="btn btn--ghost" disabled={busy}
@@ -353,6 +365,7 @@ export default function PlayerControl({
                           {p.isBlocked ? 'Unban' : 'Ban'}
                         </button>
                         )}
+                      </div>
                       </td>
                       )}
                     </tr>

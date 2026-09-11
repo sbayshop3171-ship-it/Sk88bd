@@ -1104,7 +1104,7 @@ ul{margin:0;padding:0;list-style:none}
   font-size:12px;color:#ffdb8a;line-height:1.7;
 }
 .adm__warn code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px}
-.adm__body{padding:18px;max-width:1100px}
+.adm__body{padding:18px;max-width:1320px}
 .adm__h1{margin:0 0 4px;font-size:21px;font-weight:900}
 .adm__h2{margin:26px 0 6px;font-size:15px;font-weight:800;color:var(--mint)}
 .adm__sub{margin:0 0 14px;font-size:12.5px;color:var(--muted);line-height:1.7;max-width:70ch}
@@ -1119,7 +1119,7 @@ ul{margin:0;padding:0;list-style:none}
   background:linear-gradient(180deg,var(--surface),rgba(15,74,68,.5));
   border:1px solid var(--line);
 }
-.adm__tile b{display:block;font-size:22px;color:var(--gold);font-variant-numeric:tabular-nums}
+.adm__tile b{display:block;font-size:22px;color:var(--gold);font-variant-numeric:tabular-nums;overflow-wrap:anywhere;line-height:1.25}
 .adm__tile small{font-size:11px;color:var(--muted)}
 .adm__tile--link{display:block;transition:border-color .15s,transform .15s}
 .adm__tile--link:hover{border-color:rgba(63,224,189,.45);transform:translateY(-1px)}
@@ -1176,6 +1176,10 @@ ul{margin:0;padding:0;list-style:none}
 .adm__hint{margin:11px 0 0;font-size:11.5px;color:var(--muted);line-height:1.7}
 .adm__rowacts{display:flex;gap:5px;white-space:nowrap}
 .adm__rowacts .btn{font-size:11px;padding:5px 11px}
+/* the player table's action cell: two buttons a row, so all four stay in
+   view instead of running off the right edge */
+.adm__acts2{display:grid;grid-template-columns:repeat(2,minmax(62px,auto));gap:5px;white-space:nowrap}
+.adm__acts2 .btn{font-size:11px;padding:5px 10px}
 .adm__danger{color:#ff9d9d;border-color:rgba(255,90,90,.35)}
 .adm__seg{display:flex;gap:6px;margin:0 0 14px;flex-wrap:wrap}
 .adm__seg button{
