@@ -200,7 +200,8 @@ String _countdown(UpcomingSignal signal, DateTime now) {
       : signal.flyInMs;
   if (ms <= 0) return 'উড়ছে এখনই';
 
-  final total = ms ~/ 1000;
+  // rounded up, the way the dial counts, so the two never disagree by one
+  final total = (ms / 1000).ceil();
   final minutes = total ~/ 60;
   final seconds = total % 60;
   if (minutes > 0) return '$minutes মিঃ ${seconds.toString().padLeft(2, '0')} সেঃ পরে';
