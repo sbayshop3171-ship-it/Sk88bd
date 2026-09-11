@@ -127,11 +127,11 @@ export default function CashierControl({
       >
         <div className="adm__formgrid">
           <label className="adm__f adm__f--wide">
-            <span>Search by player ID or phone number</span>
+            <span>Search by player ID, phone number or TxnID</span>
             <input
-              value={search} inputMode="numeric"
+              value={search} autoCapitalize="characters" autoCorrect="off" spellCheck={false}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="100023 or 01XXXXXXXXX"
+              placeholder="100023, 01XXXXXXXXX or a TxnID"
             />
           </label>
         </div>
@@ -144,7 +144,10 @@ export default function CashierControl({
           )}
         </div>
         {applied && (
-          <p className="adm__hint">Showing only player {applied}. The tabs below keep this filter.</p>
+          <p className="adm__hint">
+            Showing only requests matching “{applied}”
+            {isDeposit ? ' (player ID, phone or TxnID)' : ' (player ID, phone or charge TrxID)'}. The tabs below keep this filter.
+          </p>
         )}
       </form>
 

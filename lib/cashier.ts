@@ -87,8 +87,9 @@ export type CashierResult<T> =
 
 const NO_BACKEND = { ok: false, reason: 'no-backend' } as const;
 
-/** Rows joined to the player's profile, newest first. `search` narrows to
-    one player: their ID (all digits, up to 9) or part of their phone. */
+/** Rows joined to the player's profile, newest first. `search` narrows the
+    list: a player's ID (all digits, up to 9), part of their phone, or part of
+    a TxnID — the deposit's, or the withdrawal charge's. */
 export async function listCashier(
   table: 'deposits' | 'withdrawals',
   state: RequestState | 'all' = 'pending',
@@ -98,17 +99,23 @@ export async function listCashier(
   const db = adminClient();
   if (!db) return NO_BACKEND;
 
-  // Who the search names, as user ids. Digits only — a phone or an ID — so
-  // nothing typed can reach the filter as PostgREST syntax.
-  const term = search.replace(/\D/g, '').slice(0, 14);
-  let only: string[] | null = null;
+  // Letters and digits only, so nothing typed can reach the filter as
+  // PostgREST syntax. A TxnID matches on the request itself; an all-digit
+  // term may also be a player's ID or phone, which name user ids.
+  const term = search.replace(/[^A-Za-z0-9]/g, '').slice(0, 40);
+  const txnCol = table === 'deposits' ? 'txn_id' : 'charge_trx_id';
+  let filter: string | null = null;
   if (term) {
-    const match = [`phone.ilike.%${term}%`];
-    if (term.length <= 9) match.unshift(`player_no.eq.${Number(term)}`);
-    const found = await db.from('profiles').select('id').or(match.join(',')).limit(50);
-    if (found.error) return { ok: false, reason: 'db-error', message: found.error.message };
-    only = (found.data ?? []).map((r) => String((r as { id: string }).id));
-    if (!only.length) return { ok: true, data: [] };
+    const match = [`${txnCol}.ilike.%${term}%`];
+    if (/^\d+$/.test(term)) {
+      const who = [`phone.ilike.%${term}%`];
+      if (term.length <= 9) who.unshift(`player_no.eq.${Number(term)}`);
+      const found = await db.from('profiles').select('id').or(who.join(',')).limit(50);
+      if (found.error) return { ok: false, reason: 'db-error', message: found.error.message };
+      const ids = (found.data ?? []).map((r) => String((r as { id: string }).id));
+      if (ids.length) match.push(`user_id.in.(${ids.join(',')})`);
+    }
+    filter = match.join(',');
   }
 
   // The columns differ by table, so the select string cannot be a literal —
@@ -130,7 +137,7 @@ export async function listCashier(
       .order('created_at', { ascending: false })
       .limit(limit);
     if (state !== 'all') query = query.eq('state', state);
-    if (only) query = query.in('user_id', only);
+    if (filter) query = query.or(filter);
     return query.returns<Record<string, unknown>[]>();
   };
 
