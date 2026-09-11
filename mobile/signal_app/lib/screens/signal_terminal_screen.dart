@@ -17,6 +17,12 @@ import '../widgets/signal_gauge.dart';
 import '../widgets/stat_grid.dart';
 import '../widgets/status_alert.dart';
 
+
+/// How long after a burst the dial may still show it, while the next
+/// round's number is not out yet. The real gap is ~2.5 s (3.5 s hold +
+/// 6 s betting − 7 s reveal); this only has to outlast it.
+const _burstHold = Duration(seconds: 8);
+
 class SignalTerminalScreen extends StatefulWidget {
   const SignalTerminalScreen({
     super.key,
@@ -150,6 +156,20 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
         ? null
         : (next.flyAt != null ? next.flyAt!.difference(_now).inMilliseconds : next.flyInMs);
     final revealed = msToFly == null || msToFly <= signalRevealLead.inMilliseconds;
+    /* The signal stays up through the flight and bursts with the plane
+       (2026-09-12). Burst: the round shown has passed its crashAt (the next
+       poll has not moved us on yet), or the next round is still hidden and
+       the last one went down moments ago — the gap between a burst and the
+       next reveal is about 2.5 s. */
+    final crashAt = next?.crashAt;
+    final last = _snapshot.recentRounds.isEmpty ? null : _snapshot.recentRounds.first;
+    final double? burstX = crashAt != null && !_now.isBefore(crashAt)
+        ? (next!.targetX ?? _snapshot.targetMultiplier)
+        : (!revealed &&
+                last?.happenedAt != null &&
+                _now.difference(last!.happenedAt!) < _burstHold)
+            ? last.multiplier
+            : null;
 
     return Scaffold(
       extendBody: true,
@@ -210,7 +230,8 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
                           )
                         else
                           SignalGauge(
-                            multiplier: _snapshot.targetMultiplier,
+                            multiplier: burstX ?? _snapshot.targetMultiplier,
+                            burst: burstX != null,
                             timestamp: _now,
                             msToFly: msToFly,
                             revealed: revealed,
@@ -229,6 +250,7 @@ class _SignalTerminalScreenState extends State<SignalTerminalScreen>
                                 signals: _snapshot.upcoming,
                                 now: _now,
                                 revealed: revealed,
+                                burstX: burstX,
                                 scale: layout.scale,
                               ),
                               SizedBox(height: layout.gapSm),

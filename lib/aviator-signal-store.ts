@@ -44,6 +44,9 @@ export interface AviatorSignalState {
   settings: AviatorSignalSettings;
   currentRound: StoredAviatorRound;
   appSignalRound: StoredAviatorRound;
+  /** what the app's dial shows: the round in the air while it flies, so the
+      signal stays up until the plane bursts; otherwise appSignalRound */
+  appDisplayRound: StoredAviatorRound;
   previewRounds: StoredAviatorRound[];
   /** the app's queue: appSignalRound first, then the ones behind it */
   upcomingSignalRounds: StoredAviatorRound[];
@@ -88,7 +91,7 @@ export async function getSignalTerminalSnapshot(game: SignalGame = 'aviator') {
   const state = await getAviatorSignalState();
   const now = Date.parse(state.serverTime);
   const websiteRound = state.currentRound;
-  const round = state.appSignalRound;
+  const round = state.appDisplayRound;
   const flyAt = Date.parse(round.fly_at);
   const bettingAt = Date.parse(round.betting_at);
   const signalVisible = state.settings.signal_active;
@@ -128,7 +131,10 @@ export async function getSignalTerminalSnapshot(game: SignalGame = 'aviator') {
        one (2026-09-11), so the rest never leave the server — an app build
        that still draws a list draws a single row. `revealed` is false while
        the signal is switched off, so the row shows without the number. */
-    upcoming: state.upcomingSignalRounds.slice(0, 1).map((item, i) => ({
+    /* Since 2026-09-12 the signal stays up through the flight and goes at
+       the burst ("avator a plan jokhon fatbe amar apps o fatbe"), so the one
+       row is the round in the air while it flies, and carries its crashAt. */
+    upcoming: [round].map((item, i) => ({
       position: i + 1,
       roundId: item.round_id,
       targetX: signalVisible ? item.target_x : null,
@@ -137,6 +143,7 @@ export async function getSignalTerminalSnapshot(game: SignalGame = 'aviator') {
       flyAt: item.fly_at,
       bettingInMs: Math.max(0, Date.parse(item.betting_at) - now),
       flyInMs: Math.max(0, Date.parse(item.fly_at) - now),
+      crashAt: item.crash_at,
       serverSeedHash: item.server_seed_hash,
     })),
     recentRounds: state.history.map((item) => ({
@@ -351,6 +358,8 @@ function buildState(store: SignalStore, now: number): AviatorSignalState {
   const currentRound = getCurrentRound(store, now);
   const upcoming = upcomingSignalRounds(store, now, UPCOMING_SIGNAL_COUNT);
   const appSignalRound = upcoming[0];
+  const flying = Date.parse(currentRound.fly_at) <= now && Date.parse(currentRound.crash_at) > now;
+  const appDisplayRound = flying ? currentRound : appSignalRound;
   const previewRounds = store.rounds
     .filter((round) => Date.parse(round.fly_at) >= now || round.round_id === currentRound.round_id)
     .sort((a, b) => a.round_id - b.round_id)
@@ -365,6 +374,7 @@ function buildState(store: SignalStore, now: number): AviatorSignalState {
     settings: { ...store.settings },
     currentRound: { ...currentRound },
     appSignalRound: { ...appSignalRound },
+    appDisplayRound: { ...appDisplayRound },
     previewRounds: previewRounds.map((round) => ({ ...round })),
     upcomingSignalRounds: upcoming.map((round) => ({ ...round })),
     history: history.map((round) => ({ ...round })),

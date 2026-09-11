@@ -89,6 +89,7 @@ class UpcomingSignal {
     required this.flyAt,
     required this.flyInMs,
     required this.serverSeedHash,
+    this.crashAt,
   });
 
   final int position;
@@ -97,6 +98,10 @@ class UpcomingSignal {
   final DateTime? flyAt;
   final int flyInMs;
   final String serverSeedHash;
+
+  /// when the plane bursts, on the server's clock; null from a server
+  /// older than 2026-09-12
+  final DateTime? crashAt;
 
   bool get revealed => targetX != null;
 
@@ -110,6 +115,7 @@ class UpcomingSignal {
       flyAt: DateTime.tryParse('${map['flyAt'] ?? ''}'),
       flyInMs: map['flyInMs'] is num ? (map['flyInMs'] as num).round() : 0,
       serverSeedHash: _readString(map['serverSeedHash'], ''),
+      crashAt: DateTime.tryParse('${map['crashAt'] ?? ''}'),
     );
   }
 }

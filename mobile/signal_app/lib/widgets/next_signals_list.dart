@@ -15,11 +15,15 @@ class NextSignalsList extends StatelessWidget {
     required this.signals,
     required this.now,
     this.revealed = true,
+    this.burstX,
     this.scale = 1,
   });
 
   /// false until the reveal lead — the row waits, without its number
   final bool revealed;
+
+  /// set while the plane has just burst: the row shows that number in red
+  final double? burstX;
   final List<UpcomingSignal> signals;
   final DateTime now;
   final double scale;
@@ -58,7 +62,7 @@ class NextSignalsList extends StatelessWidget {
             ],
           ),
         ),
-        _SignalRow(signal: signal, lead: true, now: now, scale: scale, revealed: revealed),
+        _SignalRow(signal: signal, lead: true, now: now, scale: scale, revealed: revealed, burstX: burstX),
       ],
     );
   }
@@ -71,18 +75,22 @@ class _SignalRow extends StatelessWidget {
     required this.now,
     required this.scale,
     this.revealed = true,
+    this.burstX,
   });
 
   final UpcomingSignal signal;
   final bool revealed;
+  final double? burstX;
   final bool lead;
   final DateTime now;
   final double scale;
 
   @override
   Widget build(BuildContext context) {
-    final target = revealed ? signal.targetX : null;
-    final colour = target == null ? NeonPalette.cyanSoft : _colourFor(target);
+    final target = burstX ?? (revealed ? signal.targetX : null);
+    final colour = burstX != null
+        ? NeonPalette.red
+        : target == null ? NeonPalette.cyanSoft : _colourFor(target);
     // the row fades back down the queue, so the eye lands on the next one
     final depth = lead ? 1.0 : (1 - (signal.position - 1) * 0.13).clamp(0.5, 1.0);
 
@@ -129,7 +137,7 @@ class _SignalRow extends StatelessWidget {
                   ),
                   SizedBox(height: 3 * scale),
                   Text(
-                    _status(signal, now, revealed),
+                    burstX != null ? 'ফেটে গেছে' : _status(signal, now, revealed),
                     style: TextStyle(
                       color: NeonPalette.text.withValues(alpha: 0.8),
                       fontSize: 11 * scale,
