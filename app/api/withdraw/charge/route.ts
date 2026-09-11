@@ -114,6 +114,8 @@ export async function POST(req: Request) {
     }
     const m = payError.message;
     if (/txn used/i.test(m)) return json({ ok: false, reason: 'txn-used', message: 'এই TrxID আগেই ব্যবহার করা হয়েছে' }, 409);
+    // 017: a charge TrxID, once given, stays — a second, different one is refused
+    if (/txn locked/i.test(m)) return json({ ok: false, reason: 'txn-locked', message: 'এই রিকোয়েস্টে আগেই একটি TrxID দেওয়া হয়েছে — সেটি বদলানো যাবে না' }, 409);
     if (/txn format/i.test(m)) return json({ ok: false, reason: 'txn-format', message: 'TrxID সঠিক নয় — মেসেজ থেকে পুরো TrxID দেখে লিখুন' }, 400);
     if (/check constraint|balance/i.test(m)) {
       return json({ ok: false, reason: 'insufficient-balance', message: 'ব্যালেন্সে এই পরিমাণ টাকা নেই — রিকোয়েস্টটি পূরণ করা যাবে না' }, 400);
