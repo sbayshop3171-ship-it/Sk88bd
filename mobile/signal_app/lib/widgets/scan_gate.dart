@@ -146,8 +146,8 @@ class _ScanGateState extends State<ScanGate> with TickerProviderStateMixin {
             SizedBox(height: 8 * s),
             Text(
               _scanning
-                  ? 'কিউ থেকে পরের ৫টি সিগন্যাল আনা হচ্ছে'
-                  : 'স্ক্যান করলে পরের ৫টি রাউন্ডের সিগন্যাল দেখা যাবে',
+                  ? 'পরের রাউন্ডের সিগন্যাল আনা হচ্ছে'
+                  : 'স্ক্যান করলে পরের রাউন্ডের সিগন্যাল দেখা যাবে',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: NeonPalette.muted,

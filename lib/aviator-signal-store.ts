@@ -123,10 +123,12 @@ export async function getSignalTerminalSnapshot(game: SignalGame = 'aviator') {
     },
     round: publicRound(round),
     websiteRound: publicRound(websiteRound),
-    /* The queue the app shows: what is coming, in order, each with the hash
-       it is committed to. `revealed` is false while the signal is switched
-       off, so the app can show the row without giving the number away. */
-    upcoming: state.upcomingSignalRounds.map((item, i) => ({
+    /* The one signal the app shows: the next round to fly, with the hash it
+       is committed to. It used to be the next five; the operator asked for
+       one (2026-09-11), so the rest never leave the server — an app build
+       that still draws a list draws a single row. `revealed` is false while
+       the signal is switched off, so the row shows without the number. */
+    upcoming: state.upcomingSignalRounds.slice(0, 1).map((item, i) => ({
       position: i + 1,
       roundId: item.round_id,
       targetX: signalVisible ? item.target_x : null,

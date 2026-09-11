@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import '../models/signal_snapshot.dart';
 import '../theme/neon_theme.dart';
 
-/// The queue: the next few rounds, in the order they will fly.
+/// The next round's signal, and how long until it flies.
 ///
-/// The first row is the one being played for, so it is drawn large and lit;
-/// the rest sit behind it as a ladder. A round whose number is not revealed
-/// yet still shows — the player can see something is queued without being
-/// told what it pays.
+/// It was a ladder of the next five; the operator wants one (2026-09-11) —
+/// the round about to be played, shown a little before it takes off. The
+/// server sends only that one now, and this takes the first either way. A
+/// round whose number is not revealed yet still shows, without the number.
 class NextSignalsList extends StatelessWidget {
   const NextSignalsList({
     super.key,
@@ -24,6 +24,7 @@ class NextSignalsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (signals.isEmpty) return const SizedBox.shrink();
+    final signal = signals.first;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -33,7 +34,7 @@ class NextSignalsList extends StatelessWidget {
           child: Row(
             children: [
               Text(
-                'NEXT ${signals.length} SIGNALS',
+                'NEXT SIGNAL',
                 style: TextStyle(
                   color: NeonPalette.muted,
                   fontSize: 10 * scale,
@@ -43,7 +44,7 @@ class NextSignalsList extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                'IN ORDER',
+                'ROUND #${signal.roundId}',
                 style: TextStyle(
                   color: NeonPalette.cyanSoft,
                   fontSize: 9 * scale,
@@ -54,15 +55,7 @@ class NextSignalsList extends StatelessWidget {
             ],
           ),
         ),
-        for (var i = 0; i < signals.length; i++) ...[
-          if (i > 0) SizedBox(height: 6 * scale),
-          _SignalRow(
-            signal: signals[i],
-            lead: i == 0,
-            now: now,
-            scale: scale,
-          ),
-        ],
+        _SignalRow(signal: signal, lead: true, now: now, scale: scale),
       ],
     );
   }
