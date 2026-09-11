@@ -282,11 +282,12 @@ async function payDepositBonus(
   const bonus = Math.floor((Number(deposit.amount) * percent) / 100);
   if (bonus <= 0) return { ok: true };
 
-  const credit = await db.rpc('wallet_apply', {
-    p_user: deposit.user_id,
-    p_kind: 'bonus',
-    p_amount: bonus,
-    p_ref: `deposit-bonus:${id}`,
+  const { creditBonus } = await import('./bonus-credit');
+  const credit = await creditBonus(db, {
+    user: deposit.user_id,
+    kind: 'bonus',
+    amount: bonus,
+    ref: `deposit-bonus:${id}`,
   });
   if (credit.error) {
     if (credit.error.code === '23505') return { ok: true }; // paid already

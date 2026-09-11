@@ -19,6 +19,15 @@
 --   • request_withdrawal took no password, so a signed-in session could
 --     empty the wallet without knowing one
 --
+-- And two rules the operator set on 2026-09-11:
+--   • bonus money cannot be withdrawn until its turnover has been bet —
+--     every bonus adds (amount × the multiplier set at /admin/bonus) to
+--     wallets.turnover_need, every stake counts toward turnover_done, and a
+--     withdrawal is refused while need > done
+--   • withdrawals go through the server (/api/withdraw/request), which holds
+--     the per-method min/max and the daily count from /admin/cashier; the
+--     database function can no longer be called from a browser at all
+--
 -- Safe to run more than once. The last statement lists any profile whose
 -- role is not 'player' — nobody should be there; if somebody is, they
 -- promoted themselves through the old hole.
@@ -98,8 +107,12 @@ begin
     end if;
   end if;
 
+  -- every stake counts toward bonus turnover; a refunded stake takes it back
   update wallets
-     set balance = balance + p_amount, updated_at = now()
+     set balance = balance + p_amount,
+         turnover_done = case when p_kind = 'bet' then greatest(0, turnover_done - p_amount)
+                              else turnover_done end,
+         updated_at = now()
    where user_id = p_user
   returning balance into new_balance;
 
@@ -123,22 +136,28 @@ revoke all on function wallet_apply(uuid, txn_kind, bigint, text) from public, a
 drop policy if exists "raise withdrawal" on withdrawals;
 revoke insert, update, delete on withdrawals from anon, authenticated;
 
--- The password is checked here and not only on the screen: a session lifted
--- from an unlocked phone can call this function directly. It is the
+-- Only the server calls this now (/api/withdraw/request, with the service
+-- role), after checking the method's min/max and the daily count from the
+-- cashier config — limits a browser skipped when it called the function
+-- itself. The server names the player from their session.
+--
+-- The password is still checked here, not only on the screen: it is the
 -- transaction password when the player has set one (migration 010), the
--- login password otherwise.
+-- login password otherwise. And any bonus turnover must be finished.
 create or replace function request_withdrawal(
-  p_channel text, p_amount bigint, p_account_no text, p_password text
+  p_user uuid, p_channel text, p_amount bigint, p_account_no text, p_password text
 ) returns bigint language plpgsql security definer set search_path = public, extensions as $$
 declare
-  uid        uuid := auth.uid();
+  uid        uuid := p_user;
   blk        text;
   txn        text;
   login_hash text;
+  t_need     bigint;
+  t_done     bigint;
   new_id     bigint;
 begin
   if uid is null then
-    raise exception 'not signed in' using errcode = 'insufficient_privilege';
+    raise exception 'no player' using errcode = 'insufficient_privilege';
   end if;
   blk := account_block(uid);
   if blk is not null then
@@ -149,6 +168,11 @@ begin
   end if;
   if coalesce(btrim(p_account_no), '') = '' then
     raise exception 'account number required' using errcode = 'invalid_parameter_value';
+  end if;
+
+  select turnover_need, turnover_done into t_need, t_done from wallets where user_id = uid;
+  if coalesce(t_need, 0) > coalesce(t_done, 0) then
+    raise exception 'turnover left %', t_need - t_done using errcode = 'invalid_parameter_value';
   end if;
 
   select txn_password into txn from security_settings where user_id = uid;
@@ -174,11 +198,35 @@ begin
 end;
 $$;
 
--- the old three-argument version asked for no password; it goes
+-- the browser-callable versions go: the old one asked for no password, and
+-- neither could see the cashier limits
 drop function if exists request_withdrawal(text, bigint, text);
+drop function if exists request_withdrawal(text, bigint, text, text);
 
-revoke all on function request_withdrawal(text, bigint, text, text) from public, anon;
-grant execute on function request_withdrawal(text, bigint, text, text) to authenticated;
+revoke all on function request_withdrawal(uuid, text, bigint, text, text) from public, anon, authenticated;
+
+-- ---------- a bonus, and the turnover it brings ----------
+-- The server passes the turnover (bonus × the multiplier set at
+-- /admin/bonus). Stakes placed before the bonus do not count toward it:
+-- when the last requirement was already met, the count starts again.
+create or replace function credit_bonus(
+  p_user uuid, p_kind txn_kind, p_amount bigint, p_ref text, p_turnover bigint
+) returns bigint language plpgsql security definer set search_path = public as $$
+declare new_balance bigint;
+begin
+  new_balance := wallet_apply(p_user, p_kind, p_amount, p_ref);
+  if coalesce(p_turnover, 0) > 0 then
+    update wallets
+       set turnover_done = case when turnover_done >= turnover_need then 0 else turnover_done end,
+           turnover_need = case when turnover_done >= turnover_need then p_turnover
+                                else turnover_need + p_turnover end
+     where user_id = p_user;
+  end if;
+  return new_balance;
+end;
+$$;
+
+revoke all on function credit_bonus(uuid, txn_kind, bigint, text, bigint) from public, anon, authenticated;
 
 -- ============================================================
 -- 5. Deposits: a player raises a pending request and says nothing else
@@ -235,7 +283,8 @@ $$;
 do $$ begin
   if exists (select 1 from pg_roles where rolname = 'service_role') then
     grant execute on function wallet_apply(uuid, txn_kind, bigint, text)          to service_role;
-    grant execute on function request_withdrawal(text, bigint, text, text)       to service_role;
+    grant execute on function request_withdrawal(uuid, text, bigint, text, text) to service_role;
+    grant execute on function credit_bonus(uuid, txn_kind, bigint, text, bigint) to service_role;
     grant execute on function account_block(uuid)                                to service_role;
   end if;
 end $$;

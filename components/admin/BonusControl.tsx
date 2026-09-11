@@ -334,6 +334,26 @@ export default function BonusControl({ initial }: { initial: BonusConfig }) {
         </div>
       </div>
 
+      {/* --------------------------------------------------- turnover ---- */}
+      <div className="adm__card">
+        <h2 className="adm__cardh">Turnover before withdrawal</h2>
+        <p className="adm__hint">
+          Bonus money has to be bet before it can be withdrawn. Every sign-in bonus, spin,
+          mission, promo code, rescue, rebate and deposit bonus adds this many times its
+          amount to the player&apos;s turnover, and a withdrawal is refused until that much has
+          been staked. 0 turns the rule off.
+        </p>
+        <div className="adm__formgrid">
+          <label className="adm__f">
+            <span>Turnover (× the bonus)</span>
+            <input
+              type="number" min={0} max={50} step={0.5} value={num(form.turnover.multiplier)} disabled={busy}
+              onChange={(e) => setForm((f) => ({ ...f, turnover: { multiplier: Number(e.target.value) } }))}
+            />
+          </label>
+        </div>
+      </div>
+
       {/* ----------------------------------------------------- rebate ---- */}
       <div className="adm__card">
         <h2 className="adm__cardh">Rebate</h2>

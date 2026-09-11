@@ -3,6 +3,7 @@ import PlayerControl from '@/components/admin/PlayerControl';
 import { getCurrentAdminSession } from '@/lib/admin-auth-next';
 import { can } from '@/lib/admin-roles';
 import { listPlayers } from '@/lib/cashier';
+import { playerScope } from '@/lib/player-scope';
 import { isBackendReady } from '@/lib/supabase';
 
 export const runtime = 'nodejs';
@@ -13,7 +14,7 @@ export default async function AdminUsers() {
   if (!session) return null;
   if (!can(session.role, 'players.read')) return <NoAccess role={session.role} what="The player list" />;
 
-  const players = await listPlayers();
+  const players = await listPlayers('', 100, await playerScope(session));
 
   return (
     <>
@@ -24,6 +25,7 @@ export default async function AdminUsers() {
         reason and who set it.
       </p>
       <PlayerControl
+        scopedToAgent={!can(session.role, 'agents.read')}
         initialPlayers={players.ok ? players.data : []}
         initialError={players.ok ? '' : players.message ?? `Could not load the players (${players.reason})`}
         backendReady={isBackendReady()}

@@ -25,6 +25,7 @@ export default function PlayerControl({
   initialError = '',
   backendReady,
   canWrite,
+  scopedToAgent = false,
 }: {
   initialPlayers: PlayerRow[];
   /** the first load failed: say so, rather than drawing "No players" */
@@ -33,6 +34,8 @@ export default function PlayerControl({
   /** false for an agent: they look players up while answering a cashier
       request, they do not move balances, hold or ban anybody. */
   canWrite: boolean;
+  /** an agent: the list holds only the players who came through their link */
+  scopedToAgent?: boolean;
 }) {
   const [players, setPlayers] = useState(initialPlayers);
   const [search, setSearch] = useState('');
@@ -179,6 +182,9 @@ export default function PlayerControl({
             </button>
           )}
         </div>
+        {scopedToAgent && (
+          <p className="adm__hint">You see only the players who signed up through your own link.</p>
+        )}
         {!numbered && players.length > 0 && (
           <p className="adm__hint">
             Player IDs appear once <code>supabase/012_player_ids_hold_ban.sql</code> has been run in

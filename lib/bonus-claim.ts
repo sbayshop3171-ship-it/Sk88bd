@@ -22,6 +22,7 @@ import {
   type BonusKind,
   type ClaimReason,
 } from './bonus-config';
+import { creditBonus } from './bonus-credit';
 import { accountBlock } from './player-status';
 import { adminClient, serverClient } from './supabase';
 
@@ -361,11 +362,12 @@ export async function claimBonus(
 
   if (amount <= 0) return { ok: false, reason: 'nothing-to-claim' };
 
-  const credit = await who.db.rpc('wallet_apply', {
-    p_user: who.uid,
-    p_kind: kind === 'rebate' ? 'rebate' : 'bonus',
-    p_amount: amount,
-    p_ref: ref,
+  // paid with its turnover: bonus money is bet before it can be withdrawn
+  const credit = await creditBonus(who.db, {
+    user: who.uid,
+    kind: kind === 'rebate' ? 'rebate' : 'bonus',
+    amount,
+    ref,
   });
 
   if (credit.error) {

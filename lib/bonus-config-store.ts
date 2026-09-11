@@ -122,6 +122,12 @@ export async function updateBonusConfig(patch: unknown): Promise<BonusMutationRe
       };
     }
 
+    if (record.turnover && typeof record.turnover === 'object') {
+      const t = record.turnover as Record<string, unknown>;
+      const multiplier = num(t.multiplier, current.turnover.multiplier);
+      next.turnover = { multiplier: Math.min(Math.max(multiplier, 0), 50) };
+    }
+
     if (record.rebate && typeof record.rebate === 'object') {
       const r = record.rebate as Record<string, unknown>;
       const percent = num(r.percent, current.rebate.percent);
@@ -183,6 +189,7 @@ function merge(saved: Partial<BonusConfig>): BonusConfig {
     signIn: { ...BONUS_DEFAULTS.signIn, ...(saved.signIn ?? {}) },
     rescue: { ...BONUS_DEFAULTS.rescue, ...(saved.rescue ?? {}) },
     rebate: { ...BONUS_DEFAULTS.rebate, ...(saved.rebate ?? {}) },
+    turnover: { ...BONUS_DEFAULTS.turnover, ...(saved.turnover ?? {}) },
     promo: { ...BONUS_DEFAULTS.promo, ...(saved.promo ?? {}) },
   };
 }

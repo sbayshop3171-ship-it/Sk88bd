@@ -85,6 +85,12 @@ export type MissionConfig = {
   list: Mission[];
 };
 
+/** How much of a bonus must be bet before any of the wallet can be
+    withdrawn: the bonus times this. 0 turns the rule off. */
+export type TurnoverConfig = {
+  multiplier: number;
+};
+
 export type BonusConfig = {
   wheel: WheelConfig;
   missions: MissionConfig;
@@ -92,6 +98,7 @@ export type BonusConfig = {
   rescue: RescueConfig;
   rebate: RebateConfig;
   promo: PromoConfig;
+  turnover: TurnoverConfig;
 };
 
 export const BONUS_DEFAULTS: BonusConfig = {
@@ -135,6 +142,7 @@ export const BONUS_DEFAULTS: BonusConfig = {
     percent: 0.5,
     minClaim: 1,
   },
+  turnover: { multiplier: 1 },
   promo: {
     active: true,
     codes: [],

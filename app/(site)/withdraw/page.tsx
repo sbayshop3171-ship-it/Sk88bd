@@ -131,6 +131,8 @@ export default function WithdrawPage() {
     const { count } = await supabase
       .from('withdrawals')
       .select('id', { count: 'exact', head: true })
+      // counted the way the server counts: a rejected request is not one used
+      .in('state', ['pending', 'approved'])
       .gte('created_at', start.toISOString());
     setTodayCount(count ?? 0);
   }, [supabase, session]);
@@ -220,6 +222,9 @@ export default function WithdrawPage() {
     else if (n > method.max) next.amount = `Up to ${money(method.max)} in a single request`;
     if (session && n > balance) next.amount = `Your balance is ${money(balance)}`;
     if (remaining !== null && remaining <= 0) next.amount = 'Today’s withdrawal limit is used up — try again tomorrow';
+    // bonus money is bet before it can leave (the database refuses otherwise)
+    const owed = (wallet?.turnover_need ?? 0) - (wallet?.turnover_done ?? 0);
+    if (owed > 0) next.amount = `Bonus turnover first: bet ${money(toTaka(owed))} more, then you can withdraw`;
     if (!password) next.password = cfg.passwordHint || 'Enter your password';
     setErr(next);
     if (Object.keys(next).length) return;
@@ -266,33 +271,34 @@ export default function WithdrawPage() {
     /* request_withdrawal debits the wallet inside the same statement that
        raises the request, so the amount cannot be gambled away while it waits
        in the queue. A rejection puts it back. */
-    // The password goes to the database too (migration 012), which checks it
-    // again — a check made only on this screen could be skipped by calling
-    // the function directly. Before 012 there is only the older version.
-    const args = {
-      p_channel: method.channelId,
-      p_amount: toPaisa(raised.amount),
-      p_account_no: raised.account,
-    };
-    let { data, error } = await supabase.rpc('request_withdrawal', { ...args, p_password: password });
-    if (error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message))) {
-      ({ data, error } = await supabase.rpc('request_withdrawal', args));
+    // Raised through our own route: it holds the method's min/max and the
+    // daily count from the cashier config, which the database cannot see.
+    // The database then checks the password again, the hold/ban, bonus
+    // turnover and the balance — so none of it rests on this screen.
+    let reply: { ok?: boolean; id?: number | null; message?: string } = {};
+    try {
+      const res = await fetch('/api/withdraw/request', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          methodId: method.id,
+          amount: raised.amount,
+          accountNo: raised.account,
+          password,
+        }),
+      });
+      reply = await res.json();
+    } catch {
+      reply = { ok: false, message: 'Could not reach the server — try again' };
     }
     setBusy(false);
 
-    if (error) {
-      const m = error.message;
-      setErr({
-        apply: /account banned/i.test(m) ? 'This account has been banned. Contact support.'
-          : /account held/i.test(m) ? 'This account is on hold. Contact support.'
-          : /wrong password/i.test(m) ? 'Wrong password — go back and enter it again'
-          : /balance|check/i.test(m) ? 'Not enough balance'
-          : 'Could not send the request — try again',
-      });
+    if (!reply.ok) {
+      setErr({ apply: reply.message ?? 'Could not send the request — try again' });
       return;
     }
 
-    const id = typeof data === 'number' ? data : null;
+    const id = typeof reply.id === 'number' ? reply.id : null;
     setRaised({ ...raised, id });
     setErr({});
     setPassword('');

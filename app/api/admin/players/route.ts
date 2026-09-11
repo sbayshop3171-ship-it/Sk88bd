@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth-next';
 import { adjustBalance, listPlayers, setBlocked, setHeld } from '@/lib/cashier';
+import { playerScope } from '@/lib/player-scope';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -13,7 +14,8 @@ export async function GET(req: Request) {
   if (!gate.ok) return gate.response;
 
   const search = new URL(req.url).searchParams.get('search') ?? '';
-  const result = await listPlayers(search);
+  // an agent's search runs over their own players only
+  const result = await listPlayers(search, 100, await playerScope(gate.session));
   return result.ok
     ? json({ ok: true, players: result.data })
     : json(result, result.reason === 'no-backend' ? 503 : 500);
@@ -60,7 +62,7 @@ export async function POST(req: Request) {
     return json({ ok: false, reason: 'invalid-action' }, 400);
   }
 
-  const players = await listPlayers(String(record.search ?? ''));
+  const players = await listPlayers(String(record.search ?? ''), 100, await playerScope(session));
   // saved either way; an empty list would look like the player vanished
   return players.ok
     ? json({ ok: true, players: players.data })
