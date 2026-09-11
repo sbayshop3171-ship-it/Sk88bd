@@ -12,7 +12,7 @@ const ERROR_LABEL: Record<string, string> = {
   'wheel-weights': 'At least one slice has to be able to come up — give one of them a weight above 0.',
   'sign-in-days': 'The sign-in ladder needs between 1 and 30 days, none of them negative.',
   'rescue-percent': 'The rescue share must be between 0 and 100.',
-  'rebate-percent': 'The rebate share must be between 0 and 100.',
+  'rebate-percent': 'The rebate must be below 3% — every game keeps 3%, so 3% or more pays players to bet.',
   'empty-code': 'A promo code cannot be blank.',
   'duplicate-code': 'That promo code is listed twice.',
   'too-many-codes': 'That is more promo codes than this screen will hold (50).',

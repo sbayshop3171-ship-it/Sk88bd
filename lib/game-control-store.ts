@@ -3,6 +3,7 @@
     never has to be reconciled with it. */
 
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
 import { CATALOGUE, HOME_SECTIONS } from './catalogue';
 import type {
@@ -185,7 +186,7 @@ async function readStore(): Promise<ControlStore> {
 
 async function writeStore(store: ControlStore) {
   await mkdir(path.dirname(STORE_FILE), { recursive: true });
-  await writeFile(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
+  await writeFileAtomic(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
 }
 
 function iso(ms: number) {

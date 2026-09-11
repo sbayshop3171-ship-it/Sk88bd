@@ -102,11 +102,13 @@ export default function LinkEWallet({
   const [holder, setHolder] = useState('');
   const [pass, setPass] = useState('');
   const [confirm, setConfirm] = useState('');
+  /** the login password — asked for once, when the fund password is first set */
+  const [loginPass, setLoginPass] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [hasTxnPassword, setHasTxnPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
-  const closeForm = () => { setGroup(null); setNo(''); setPass(''); setConfirm(''); setErr(''); };
+  const closeForm = () => { setGroup(null); setNo(''); setPass(''); setConfirm(''); setLoginPass(''); setErr(''); };
   // the phone's Back leaves the add-wallet form the way its header arrow does
   useBackLayer(group !== null, closeForm);
 
@@ -155,6 +157,7 @@ export default function LinkEWallet({
         setErr(`Transaction password: ${TXN_MIN} - ${TXN_MAX} letters or numbers`); return;
       }
       if (confirm !== pass) { setErr('The two passwords do not match'); return; }
+      if (!loginPass) { setErr('Enter your login password'); return; }
     }
 
     setBusy(true);
@@ -166,8 +169,12 @@ export default function LinkEWallet({
       const { data } = await supabase.rpc('verify_transaction_password', { p_password: pass });
       if (data !== true) { setBusy(false); setErr('Wrong transaction password'); return; }
     } else {
-      const { error } = await supabase.rpc('set_transaction_password', { p_new: pass, p_old: null });
+      // the first fund password is proven with the login password (018)
+      const { data, error } = await supabase.rpc('set_transaction_password', { p_new: pass, p_old: loginPass });
       if (error) { setBusy(false); setErr('Could not set the transaction password — try again'); return; }
+      if (data === 'wrong') { setBusy(false); setErr('Your login password is wrong'); return; }
+      if (data === 'locked') { setBusy(false); setErr('Too many wrong passwords — try again in 15 minutes'); return; }
+      setLoginPass('');
       setHasTxnPassword(true);
       setConfirm('');
     }
@@ -272,11 +279,22 @@ export default function LinkEWallet({
               </label>
             )}
 
+            {!hasTxnPassword && (
+              <label className="ms-field">
+                <span className="ms-field__ico"><LockMarkIcon /></span>
+                <input
+                  type={showPass ? 'text' : 'password'} placeholder="＊ Your login password"
+                  autoComplete="current-password" value={loginPass}
+                  onChange={(e) => { setLoginPass(e.target.value); setErr(''); }}
+                />
+              </label>
+            )}
+
             {err && <p className="ms-err" style={{ marginTop: 10 }}>{err}</p>}
 
             <button
               type="submit" className="ms-submit"
-              disabled={busy || clean.length < 4 || !pass || (!hasTxnPassword && !confirm)}
+              disabled={busy || clean.length < 4 || !pass || (!hasTxnPassword && (!confirm || !loginPass))}
             >
               {busy ? '…' : 'Submit'}
             </button>

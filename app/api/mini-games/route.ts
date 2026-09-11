@@ -16,7 +16,12 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: Request) {
   const game = new URL(req.url).searchParams.get('game') ?? '';
   if (!isFlight(game)) return json({ ok: false, reason: 'unknown-game' }, 400);
-  return reply(await flightState(await cookieAdapter(), game));
+  const state = await flightState(await cookieAdapter(), game);
+  // a visitor who is not signed in has nothing in the air — not an error
+  if (!state.ok && (state as { reason?: string }).reason === 'unauthorized') {
+    return json({ ok: true, round: null, serverNow: Date.now() });
+  }
+  return reply(state);
 }
 
 /**

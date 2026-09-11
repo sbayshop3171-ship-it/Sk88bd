@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth-next';
 import {
+  adminAviatorState,
   getAviatorSignalState,
-  publicAviatorState,
   updateAviatorSignal,
 } from '@/lib/aviator-signal-store';
 
@@ -14,7 +14,7 @@ export async function GET() {
   if (!gate.ok) return gate.response;
 
   const state = await getAviatorSignalState();
-  return json(publicAviatorState(state));
+  return json(adminAviatorState(state));
 }
 
 export async function POST(req: Request) {
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   if (!input) return json({ ok: false, reason: 'invalid-action' }, 400);
 
   const state = await updateAviatorSignal(input);
-  return json(publicAviatorState(state));
+  return json(adminAviatorState(state));
 }
 
 function json(data: unknown, status = 200) {

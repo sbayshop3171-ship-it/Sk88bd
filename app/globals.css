@@ -211,9 +211,11 @@ ul{margin:0;padding:0;list-style:none}
 .wallet-bar a{
   display:flex;align-items:center;justify-content:center;gap:8px;
   padding:12px 6px;border-radius:var(--r-md);font-size:14px;font-weight:800;
-  background:linear-gradient(180deg,var(--surface),rgba(15,74,68,.55));
   border:1px solid var(--line);
 }
+/* the teal tile is for plain links; a .btn keeps its own colours — the gold
+   Register / Android APK buttons on /vip and /download were brown on teal */
+.wallet-bar a:not(.btn){background:linear-gradient(180deg,var(--surface),rgba(15,74,68,.55))}
 .wallet-bar a svg{width:20px;height:20px;color:var(--gold)}
 .wallet-bar a:active{transform:translateY(2px)}
 

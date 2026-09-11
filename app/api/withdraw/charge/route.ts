@@ -79,6 +79,14 @@ export async function POST(req: Request) {
 
   const trx = String(record.trxId ?? '').trim().slice(0, 64);
   const channel = String(record.channelId ?? '').trim().slice(0, 40);
+  /* The fee is paid by a method the cashier offers for it — anything else
+     would let "any channel" dodge the bKash 10-character TrxID rule. */
+  if (channel) {
+    const offered = (await getCashierConfig()).deposit.methods
+      .filter((m) => m.active && m.payType !== 'transfer')
+      .map((m) => m.channelId);
+    if (!offered.includes(channel)) return json({ ok: false, reason: 'unknown-channel' }, 400);
+  }
 
   /* A quote is a quote: once written it is the number the player owes, so a
      second call cannot move it. Only the proof is still open. */
@@ -101,18 +109,14 @@ export async function POST(req: Request) {
   });
 
   if (payError) {
-    // before 016 there is no such function: write the proof as before
-    if (payError.code === 'PGRST202' || /could not find the function/i.test(payError.message)) {
-      const { error: writeError } = await asService
-        .from('withdrawals')
-        .update(patch)
-        .eq('id', id)
-        .eq('user_id', uid)
-        .eq('state', 'pending');
-      if (writeError) return json({ ok: false, reason: 'db-error' }, 500);
-      return json({ ok: true, charge: Number(patch.charge_amount) / 100 });
-    }
+    // 016/017 are applied: a missing function is a fault to report, not a
+    // reason to write the proof around every check they make
     const m = payError.message;
+    if (/turnover left (\d+)/i.test(m)) {
+      const left = Number(/turnover left (\d+)/i.exec(m)![1]) / 100;
+      return json({ ok: false, reason: 'turnover', message: `বোনাস টার্নওভার বাকি: আরও ৳${left.toLocaleString('en-IN')} বাজি ধরতে হবে` }, 400);
+    }
+    if (/account (locked|held|banned)/i.test(m)) return json({ ok: false, reason: 'account-stopped', message: 'এই অ্যাকাউন্টে এখন উইথড্র বন্ধ' }, 403);
     if (/txn used/i.test(m)) return json({ ok: false, reason: 'txn-used', message: 'এই TrxID আগেই ব্যবহার করা হয়েছে' }, 409);
     // 017: a charge TrxID, once given, stays — a second, different one is refused
     if (/txn locked/i.test(m)) return json({ ok: false, reason: 'txn-locked', message: 'এই রিকোয়েস্টে আগেই একটি TrxID দেওয়া হয়েছে — সেটি বদলানো যাবে না' }, 409);

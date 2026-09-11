@@ -1,5 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
+import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
 
 export type SignalAppKeyStatus = 'active' | 'disabled' | 'revoked';
@@ -141,6 +142,8 @@ const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000;
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const FAILED_LIMIT = 5;
 const LOCKOUT_MS = 10 * 60 * 1000;
+/** the most failure buckets kept at once; the oldest go first */
+const MAX_LOCKOUT_ROWS = 2000;
 const KEY_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 let writeQueue = Promise.resolve();
@@ -557,9 +560,16 @@ function pruneSessions(store: SignalAppAccessStore, now: number) {
   store.sessions = store.sessions.filter((session) => (
     !session.revoked_at && Date.parse(session.expires_at) > now - 60_000
   ));
-  store.lockouts = store.lockouts.filter((lockout) => (
-    lockout.locked_until ? Date.parse(lockout.locked_until) > now : lockout.attempts > 0
-  ));
+  /* A failure bucket nobody has touched for a lockout's length is spent.
+     They used to be kept for ever: a stream of wrong keys, each from a fresh
+     made-up device id, grew the file every request rewrites without end. */
+  store.lockouts = store.lockouts
+    .filter((lockout) => (
+      lockout.locked_until
+        ? Date.parse(lockout.locked_until) > now
+        : lockout.attempts > 0 && now - Date.parse(lockout.updated_at) < LOCKOUT_MS
+    ))
+    .slice(-MAX_LOCKOUT_ROWS);
 }
 
 function publicAdminState(store: SignalAppAccessStore, generatedKey?: string): SignalAppKeyAdminState {
@@ -662,7 +672,7 @@ async function readStore(): Promise<SignalAppAccessStore> {
 
 async function writeStore(store: SignalAppAccessStore) {
   await mkdir(path.dirname(STORE_FILE), { recursive: true });
-  await writeFile(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
+  await writeFileAtomic(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
 }
 
 function createInitialStore(now: number): SignalAppAccessStore {

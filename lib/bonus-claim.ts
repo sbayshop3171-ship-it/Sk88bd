@@ -115,6 +115,44 @@ async function ledger(db: Db, uid: string, limit = 1000): Promise<Txn[]> {
 const claimedRefs = (rows: Txn[], prefix: string) =>
   new Set(rows.filter((r) => r.ref?.startsWith(`${prefix}:`)).map((r) => r.ref!));
 
+type Facts = { deposited: number; staked: number; won: number };
+
+/** Lifetime deposits, and yesterday's stakes and wins, from the database
+    (018). Before 018 the function is missing and the fetched rows answer. */
+async function bonusFacts(db: Db, uid: string, day: string, rows: Txn[]): Promise<Facts> {
+  const [from, to] = spanOf(day);
+  const { data, error } = await db.rpc('bonus_facts', { p_user: uid, p_from: from, p_to: to });
+  if (!error && data && typeof data === 'object') {
+    const f = data as Record<string, unknown>;
+    return { deposited: Number(f.deposited) || 0, staked: Number(f.staked) || 0, won: Number(f.won) || 0 };
+  }
+  const t = dayTotals(rows, day);
+  return {
+    deposited: rows.filter((r) => r.kind === 'deposit').reduce((n, r) => n + r.amount, 0),
+    staked: t.staked,
+    won: t.won,
+  };
+}
+
+/** A promo payout, its limit counted under the same lock (018). */
+async function claimPromo(db: Db, input: { user: string; amount: number; ref: string; limit: number }) {
+  const { getBonusConfig: cfgOf } = await import('./bonus-config-store');
+  const { turnover } = await cfgOf();
+  const need = Math.round(input.amount * Math.max(0, Number(turnover.multiplier) || 0));
+  const paid = await db.rpc('claim_promo', {
+    p_user: input.user, p_ref: input.ref, p_amount: input.amount, p_turnover: need, p_limit: input.limit,
+  });
+  if (paid.error && (paid.error.code === 'PGRST202' || /could not find the function/i.test(paid.error.message))) {
+    // before 018: the old count-then-pay
+    if (input.limit > 0) {
+      const { count } = await db.from('transactions').select('id', { count: 'exact', head: true }).eq('ref', input.ref);
+      if ((count ?? 0) >= input.limit) return { data: null, error: { message: 'code used up' } };
+    }
+    return creditBonus(db, { user: input.user, kind: 'bonus', amount: input.amount, ref: input.ref });
+  }
+  return paid;
+}
+
 /** What was staked, and what came back, on one Bangladesh day. */
 function dayTotals(rows: Txn[], day: string) {
   const [from, to] = spanOf(day);
@@ -289,10 +327,15 @@ export async function claimBonus(
   const rows = await ledger(who.db, who.uid);
   const today = bdDay();
   const yesterday = dayBefore(today);
+  /* The sums a claim turns on, over the whole ledger (migration 018). The
+     1,000 newest rows used to stand in for it, and a busy player's older
+     deposit or yesterday's early bets fell out of the window. */
+  const facts = await bonusFacts(who.db, who.uid, yesterday, rows);
 
   let amount = 0;
   let ref = '';
   let slot: number | undefined;
+  let promoLimit = 0;
 
   if (kind === 'signin') {
     if (!cfg.signIn.active) return { ok: false, reason: 'inactive' };
@@ -300,8 +343,7 @@ export async function claimBonus(
     const signRefs = claimedRefs(rows, 'signin');
     if (signRefs.has(ref)) return { ok: false, reason: 'already-claimed' };
 
-    const deposited = rows.filter((r) => r.kind === 'deposit').reduce((n, r) => n + r.amount, 0);
-    if (deposited < toPaisaFloor(cfg.signIn.minDeposited)) return { ok: false, reason: 'needs-deposit' };
+    if (facts.deposited < toPaisaFloor(cfg.signIn.minDeposited)) return { ok: false, reason: 'needs-deposit' };
 
     const index = Math.min(streakOf(signRefs, today), cfg.signIn.days.length - 1);
     amount = toPaisaFloor(cfg.signIn.days[index] ?? 0);
@@ -310,7 +352,7 @@ export async function claimBonus(
     ref = claimRef('rescue', yesterday);
     if (claimedRefs(rows, 'rescue').has(ref)) return { ok: false, reason: 'already-claimed' };
 
-    const loss = -dayTotals(rows, yesterday).net;
+    const loss = facts.staked - facts.won;
     if (loss < toPaisaFloor(cfg.rescue.minLoss)) return { ok: false, reason: 'nothing-to-claim' };
     amount = Math.min(Math.round((loss * cfg.rescue.percent) / 100), toPaisaFloor(cfg.rescue.maxPayout));
   } else if (kind === 'rebate') {
@@ -318,7 +360,7 @@ export async function claimBonus(
     ref = claimRef('rebate', yesterday);
     if (claimedRefs(rows, 'rebate').has(ref)) return { ok: false, reason: 'already-claimed' };
 
-    amount = Math.round((dayTotals(rows, yesterday).staked * cfg.rebate.percent) / 100);
+    amount = Math.round((facts.staked * cfg.rebate.percent) / 100);
     if (amount < toPaisaFloor(cfg.rebate.minClaim)) return { ok: false, reason: 'below-minimum' };
   } else if (kind === 'mission') {
     if (!cfg.missions.active) return { ok: false, reason: 'inactive' };
@@ -336,8 +378,7 @@ export async function claimBonus(
     ref = claimRef('spin', SPIN_KEY);
     if (claimedRefs(rows, 'spin').has(ref)) return { ok: false, reason: 'no-spin-left' };
 
-    const deposited = rows.filter((r) => r.kind === 'deposit').reduce((n, r) => n + r.amount, 0);
-    if (deposited < toPaisaFloor(cfg.wheel.minDeposited)) return { ok: false, reason: 'needs-deposit' };
+    if (facts.deposited < toPaisaFloor(cfg.wheel.minDeposited)) return { ok: false, reason: 'needs-deposit' };
 
     slot = pickSlice(cfg.wheel.segments.map((seg) => seg.weight));
     amount = toPaisaFloor(cfg.wheel.segments[slot]?.amount ?? 0);
@@ -349,27 +390,29 @@ export async function claimBonus(
 
     ref = claimRef('promo', found.code);
     if (claimedRefs(rows, 'promo').has(ref)) return { ok: false, reason: 'already-claimed' };
-
-    if (found.limit > 0) {
-      const { count } = await who.db
-        .from('transactions')
-        .select('id', { count: 'exact', head: true })
-        .eq('ref', ref);
-      if ((count ?? 0) >= found.limit) return { ok: false, reason: 'code-used-up' };
-    }
+    /* A code is for a player who has paid in. Without this, fresh accounts
+       could each take it, bet the turnover off at the lowest odds and cash
+       out nearly all of it. */
+    if (facts.deposited <= 0) return { ok: false, reason: 'needs-deposit' };
     amount = toPaisaFloor(found.amount);
+    promoLimit = found.limit;
   }
 
   if (amount <= 0) return { ok: false, reason: 'nothing-to-claim' };
 
-  // paid with its turnover: bonus money is bet before it can be withdrawn
-  const credit = await creditBonus(who.db, {
-    user: who.uid,
-    kind: kind === 'rebate' ? 'rebate' : 'bonus',
-    amount,
-    ref,
-  });
+  // paid with its turnover: bonus money is bet before it can be withdrawn.
+  // A promo's limit is counted and paid under one lock (018): counting here
+  // and paying after let fifty claims at once all see "49 used".
+  const credit = kind === 'promo'
+    ? await claimPromo(who.db, { user: who.uid, amount, ref, limit: promoLimit })
+    : await creditBonus(who.db, {
+      user: who.uid,
+      kind: kind === 'rebate' ? 'rebate' : 'bonus',
+      amount,
+      ref,
+    });
 
+  if (credit.error && /code used up/i.test(credit.error.message)) return { ok: false, reason: 'code-used-up' };
   if (credit.error) {
     /* The unique index refusing a second write is not a fault — it is the
        guard doing its job on two taps that arrived together. */

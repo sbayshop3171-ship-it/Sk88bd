@@ -6,7 +6,8 @@
     A bad field is refused rather than clamped — an operator who typed 500
     where they meant 5 should be told, not quietly obeyed. */
 
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
+import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
 import {
   BONUS_DEFAULTS,
@@ -131,7 +132,9 @@ export async function updateBonusConfig(patch: unknown): Promise<BonusMutationRe
     if (record.rebate && typeof record.rebate === 'object') {
       const r = record.rebate as Record<string, unknown>;
       const percent = num(r.percent, current.rebate.percent);
-      if (percent < 0 || percent > 100) return bad('rebate-percent');
+      // Every house game keeps 3% of what is staked. A rebate of 3% or more
+      // pays a player to bet — stake anything, lose nothing, claim the rest.
+      if (percent < 0 || percent >= 3) return bad('rebate-percent');
       next.rebate = {
         active: bool(r.active, current.rebate.active),
         percent,
@@ -212,7 +215,7 @@ async function mutateStore(
     if (!result.ok) return result;
 
     await mkdir(path.dirname(STORE_FILE), { recursive: true });
-    await writeFile(STORE_FILE, JSON.stringify(result.store, null, 2), 'utf8');
+    await writeFileAtomic(STORE_FILE, JSON.stringify(result.store, null, 2));
     return { ok: true, config: result.config };
   });
 

@@ -15,11 +15,15 @@ export default function PasswordForm({
   /** false on the fund password before one exists — there is no current one
       to ask for, and a box that can only be wrong is worse than no box */
   askCurrent = true,
+  /** what the first box asks for — the fund password's first setting asks
+      for the login password there instead */
+  currentPlaceholder = 'Enter your current password.',
   submit,
 }: {
   min: number;
   max: number;
   askCurrent?: boolean;
+  currentPlaceholder?: string;
   submit: (current: string, next: string) => Promise<string | null>;
 }) {
   const [current, setCurrent] = useState('');
@@ -74,7 +78,7 @@ export default function PasswordForm({
 
   return (
     <form className="ms-pad ms-pw" onSubmit={onSubmit} noValidate>
-      {askCurrent && field('current', <LockFillIcon />, 'Enter your current password.', current, setCurrent)}
+      {askCurrent && field('current', <LockFillIcon />, currentPlaceholder, current, setCurrent)}
       {field('next', <LockPlusFillIcon />, 'Please enter a new password', next, setNext)}
       {field('confirm', <CardCheckFillIcon />, 'Confirm new password', confirm, setConfirm)}
 

@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
+import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
 import { timeToReach } from './aviator';
 
@@ -245,7 +246,7 @@ function normalizeLiveLabels(store: SignalStore) {
 
 async function writeStore(store: SignalStore) {
   await mkdir(path.dirname(STORE_FILE), { recursive: true });
-  await writeFile(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
+  await writeFileAtomic(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
 }
 
 function createInitialStore(now: number): SignalStore {
@@ -512,7 +513,17 @@ function publicRound(round: StoredAviatorRound) {
   };
 }
 
+/** What anyone may read at /api/aviator/current: the round in play and the
+    history. The rounds queued after it and the audit log ("Signal #N locked
+    at X") are the admin's — the signal app is held to one round, and the
+    public endpoint was giving away five. */
 export function publicAviatorState(state: AviatorSignalState) {
+  const { previewRounds: _preview, auditLogs: _logs, ...open } = adminAviatorState(state);
+  return open;
+}
+
+/** Everything, for /admin/aviator-signal. */
+export function adminAviatorState(state: AviatorSignalState) {
   return {
     ok: true,
     serverTime: state.serverTime,

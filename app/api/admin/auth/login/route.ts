@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { clientIp } from '@/lib/client-ip';
 import { adminSessionCookieOptions, ADMIN_SESSION_COOKIE, loginAdmin } from '@/lib/admin-auth';
 
 export const runtime = 'nodejs';
@@ -43,12 +44,8 @@ export async function POST(req: Request) {
    original client. Both headers are attacker-controlled on a server exposed
    directly, which is why this only ever feeds the lockout: a forged value
    costs the attacker their own bucket, never somebody else's session. */
-function callerOf(req: Request) {
-  const forwarded = req.headers.get('cf-connecting-ip')
-    ?? req.headers.get('x-forwarded-for')?.split(',')[0]
-    ?? req.headers.get('x-real-ip');
-  return forwarded?.trim().slice(0, 64) || 'unknown';
-}
+/** see lib/client-ip.ts — the header a caller cannot forge comes first */
+const callerOf = clientIp;
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, {

@@ -7,6 +7,7 @@
 
 import { randomBytes } from 'node:crypto';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
 import {
   ART_CLASSES,
@@ -249,7 +250,7 @@ function createInitialStore(): ContentStore {
 
 async function writeStore(store: ContentStore) {
   await mkdir(path.dirname(STORE_FILE), { recursive: true });
-  await writeFile(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
+  await writeFileAtomic(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
 }
 
 function iso(ms: number) {

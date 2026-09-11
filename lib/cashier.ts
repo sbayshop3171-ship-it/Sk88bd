@@ -296,6 +296,13 @@ export async function reviewRequest(
         message: `Request #${id}: the player's balance no longer covers it — they have played the money since asking. Reject it.`,
       };
     }
+    const left = fn === 'approve_withdrawal' ? /turnover left (\d+)/i.exec(error.message) : null;
+    if (left) {
+      return { ok: false, reason: 'db-error', message: `Request #${id}: bonus turnover is not finished — ৳${(Number(left[1]) / 100).toLocaleString('en-IN')} still to bet. Reject it, or wait.` };
+    }
+    if (fn === 'approve_withdrawal' && /account locked/i.test(error.message)) {
+      return { ok: false, reason: 'db-error', message: `Request #${id}: the player's withdrawals are locked — unlock them first, or reject it.` };
+    }
     if (fn === 'approve_withdrawal' && /account (held|banned)/i.test(error.message)) {
       return { ok: false, reason: 'db-error', message: `Request #${id}: the account is on hold or banned — lift that first, or reject it.` };
     }
@@ -330,18 +337,27 @@ async function payDepositBonus(
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const { data: row, error } = await db
     .from('deposits')
-    .select('user_id, amount, method_id')
+    .select('user_id, amount, method_id, channel_id')
     .eq('id', id)
     .maybeSingle();
   if (error) return isMissingColumn(error.message) ? { ok: true } : { ok: false, message: error.message };
 
-  const deposit = row as { user_id: string; amount: number; method_id: string | null } | null;
+  const deposit = row as { user_id: string; amount: number; method_id: string | null; channel_id: string } | null;
   if (!deposit?.method_id) return { ok: true };
 
   // loaded here rather than at the top: this module's types are imported by
   // client components, and the store reads the disk
   const { getCashierConfig } = await import('./cashier-config-store');
   const method = (await getCashierConfig()).deposit.methods.find((m) => m.id === deposit.method_id);
+  /* The player writes method_id themselves. A Nagad deposit filed under the
+     bKash method used to be paid bKash's bonus once the admin had checked
+     the Nagad money — so the method has to be the channel the money came
+     by, still on offer, and the amount inside its limits. */
+  const taka = Number(deposit.amount) / 100;
+  if (!method || method.channelId !== deposit.channel_id || !method.active
+      || taka < method.min || taka > method.max) {
+    return { ok: true };
+  }
   const percent = Math.min(Math.max(Number(method?.bonusPercent ?? 0), 0), 100);
   const bonus = Math.floor((Number(deposit.amount) * percent) / 100);
   if (bonus <= 0) return { ok: true };

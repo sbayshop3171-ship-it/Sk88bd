@@ -5,7 +5,8 @@
     writes it. */
 
 import { randomBytes } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
+import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
 import type { AviatorBet } from './aviator-bets';
 
@@ -49,7 +50,11 @@ export function mutateBets<T>(fn: (bets: AviatorBet[]) => T): Promise<T> {
     const store = await readStore();
     const result = fn(store.bets);
 
-    store.bets = store.bets.slice(-KEEP);
+    // trim settled bets only: dropping an open one lost a stake still riding
+    // and freed its seat for a second charge
+    const open = store.bets.filter((b) => b.settledAt === null);
+    const settled = store.bets.filter((b) => b.settledAt !== null);
+    store.bets = [...settled.slice(-Math.max(0, KEEP - open.length)), ...open];
     store.updatedAt = iso(Date.now());
     await writeStore(store);
     return result;
@@ -84,7 +89,7 @@ async function readStore(): Promise<BetStore> {
 
 async function writeStore(store: BetStore) {
   await mkdir(path.dirname(STORE_FILE), { recursive: true });
-  await writeFile(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
+  await writeFileAtomic(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
 }
 
 function iso(ms: number) {

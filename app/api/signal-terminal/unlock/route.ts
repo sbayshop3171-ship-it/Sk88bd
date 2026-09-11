@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { clientIp } from '@/lib/client-ip';
 import { unlockSignalApp } from '@/lib/signal-app-access';
 
 export const runtime = 'nodejs';
@@ -27,15 +28,9 @@ export async function OPTIONS() {
   return new Response(null, { status: 204, headers: corsHeaders() });
 }
 
-/* Behind nginx and Cloudflare the socket address is the proxy, so the
-   forwarded chain is read first. A forged header only costs the sender their
-   own lockout bucket, never anybody else's access. */
-function callerOf(req: Request) {
-  const forwarded = req.headers.get('cf-connecting-ip')
-    ?? req.headers.get('x-forwarded-for')?.split(',')[0]
-    ?? req.headers.get('x-real-ip');
-  return forwarded?.trim().slice(0, 64) || 'unknown';
-}
+/* Behind nginx and Cloudflare the socket address is the proxy. X-Real-IP is
+   the one forwarded header nobody can write — see lib/client-ip.ts. */
+const callerOf = clientIp;
 
 function json(data: unknown, status = 200) {
   return NextResponse.json(data, {

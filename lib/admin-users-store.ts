@@ -12,8 +12,9 @@
     Same file-store shape as the other .data/ stores: a serialised write
     queue and a fresh empty store on first run. */
 
-import { randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { createHash, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
+import { mkdir, readFile } from 'node:fs/promises';
+import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
 import { generateAgentCode, normalizeAgentCode } from './agent-links';
 import {
@@ -115,7 +116,17 @@ export async function verifyStaffPassword(record: StaffRecord, password: string)
     the account already had stops verifying — a disabled agent is out of the
     panel the moment the switch is flipped, not when their cookie expires. */
 export function staffFingerprint(record: StaffRecord) {
-  return `${record.passwordHash.slice(-16)}.${record.role}.${record.active ? 'on' : 'off'}`;
+  /* hashed again, so the cookie — readable by whoever holds it — carries no
+     piece of the password hash itself */
+  const pw = createHash('sha256').update(record.passwordHash).digest('hex').slice(0, 16);
+  return `${pw}.${record.role}.${record.active ? 'on' : 'off'}`;
+}
+
+/** The same scrypt a real check costs, for a name nobody has — so a wrong
+    username takes as long to refuse as a wrong password, and timing the
+    login cannot tell which staff names exist. */
+export async function burnPasswordCheck(password: string) {
+  await derive(password, 'no-such-user-00000000000000000000');
 }
 
 export async function markStaffLogin(id: string) {
@@ -267,7 +278,7 @@ async function readStore(): Promise<StaffStore> {
 
 async function writeStore(store: StaffStore) {
   await mkdir(path.dirname(STORE_FILE), { recursive: true });
-  await writeFile(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`, { mode: 0o600 });
+  await writeFileAtomic(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`, { mode: 0o600 });
 }
 
 function iso(ms: number) {

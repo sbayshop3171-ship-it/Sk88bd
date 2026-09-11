@@ -28,14 +28,20 @@ export default function TransactionPasswordPage() {
 
   const submit = async (current: string, next: string) => {
     if (!supabase || !session) return 'Log in first';
-    const { error } = await supabase.rpc('set_transaction_password', {
-      p_new: next, p_old: has ? current : null,
+    /* The first one is proven with the login password (migration 018): a
+       session left open on a shared phone must not be able to set a fund
+       password and withdraw with it. 'wrong' and 'locked' come back as the
+       answer, not an error, so each wrong guess is counted. */
+    const { data, error } = await supabase.rpc('set_transaction_password', {
+      p_new: next, p_old: current,
     });
     if (error) {
       return /wrong/i.test(error.message)
         ? 'Your current password is wrong'
         : 'Could not save it — try again';
     }
+    if (data === 'locked') return 'Too many wrong passwords — try again in 15 minutes';
+    if (data === 'wrong') return has ? 'Your current password is wrong' : 'Your login password is wrong';
     toast(has ? 'Transaction password changed' : 'Transaction password set');
     router.push('/security');
     return null;
@@ -46,7 +52,10 @@ export default function TransactionPasswordPage() {
       <PageHeader title="Transaction Password" />
       <div className="msheet ms--txn">
         {has !== null && (
-          <PasswordForm min={6} max={16} askCurrent={has} submit={submit} />
+          <PasswordForm
+            min={6} max={16} submit={submit}
+            currentPlaceholder={has ? 'Enter your current password.' : 'Enter your login password.'}
+          />
         )}
       </div>
     </>

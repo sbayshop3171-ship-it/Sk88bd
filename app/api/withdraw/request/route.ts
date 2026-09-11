@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { getCashierConfig } from '@/lib/cashier-config-store';
+import { chargeBase, withdrawCharge } from '@/lib/cashier-config';
 import { accountBlock } from '@/lib/player-status';
 import { adminClient, serverClient } from '@/lib/supabase';
 import { lockStatus } from '@/lib/withdraw-lock';
@@ -75,23 +76,28 @@ export async function POST(req: Request) {
     }
   }
 
+  /* Password guesses are counted (migration 018): five wrong in a row shut
+     this for 15 minutes, so a stolen session cannot grind the fund
+     password. Before 018 the function is missing and this is skipped. */
+  const pwLock = await asService.rpc('password_lock_left', { p_user: uid });
+  if (!pwLock.error && Number(pwLock.data) > 0) {
+    return fail('password-locked', `Too many wrong passwords — try again in ${Math.ceil(Number(pwLock.data) / 60)} min`, 429);
+  }
+
+  // what the player holds right now: nothing is taken at request time
+  // (014), so this is also what the charge is worked out on
+  const { data: wallet } = await asService.from('wallets').select('balance').eq('user_id', uid).maybeSingle();
+
   const amount = Math.round(taka * 100);
-  let { data, error } = await asService.rpc('request_withdrawal', {
+  // The pre-012 browser-side fallback is gone: it took no password and
+  // checked no turnover, and 012+ are applied.
+  const { data, error } = await asService.rpc('request_withdrawal', {
     p_user: uid,
     p_channel: method.channelId,
     p_amount: amount,
     p_account_no: accountNo,
     p_password: String(record.password ?? ''),
   });
-  // Before migration 012 only the browser-side version exists; call it as
-  // the player so auth.uid() is theirs. The limits above still held.
-  if (error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message))) {
-    ({ data, error } = await asUser.rpc('request_withdrawal', {
-      p_channel: method.channelId,
-      p_amount: amount,
-      p_account_no: accountNo,
-    }));
-  }
 
   if (error) {
     const m = error.message;
@@ -102,12 +108,30 @@ export async function POST(req: Request) {
     if (/account banned/i.test(m)) return fail('account-banned', 'This account has been banned. Contact support.', 403);
     if (/account held/i.test(m)) return fail('account-held', 'This account is on hold. Contact support.', 403);
     if (/account locked/i.test(m)) return fail('account-locked', 'উইথড্র বন্ধ — অ্যাকাউন্টটি পর্যালোচনাধীন', 403);
-    if (/wrong password/i.test(m)) return fail('wrong-password', 'Wrong password — go back and enter it again', 400);
+    if (/wrong password/i.test(m)) {
+      await asService.rpc('password_attempt', { p_user: uid, p_ok: false });
+      return fail('wrong-password', 'Wrong password — go back and enter it again', 400);
+    }
     if (/balance|check/i.test(m)) return fail('insufficient-balance', 'Not enough balance', 400);
     return fail('db-error', 'Could not send the request — try again', 500);
   }
 
-  return json({ ok: true, id: typeof data === 'number' ? data : Number(data) || null });
+  const id = typeof data === 'number' ? data : Number(data) || null;
+  await asService.rpc('password_attempt', { p_user: uid, p_ok: true });
+
+  /* The handling fee is quoted now, on the balance the player has as they
+     ask. It used to be quoted when the charge screen first opened — a player
+     could open it with a bet in the air, balance down, and freeze a lower
+     fee for good. A quote is frozen once written (007/016). */
+  if (id && cfg.chargePerThousand > 0) {
+    const held = Number(wallet?.balance ?? 0) / 100;
+    const charge = withdrawCharge(chargeBase(cfg.chargeBasis, taka, held), cfg.chargePerThousand);
+    await asService.from('withdrawals')
+      .update({ charge_amount: Math.round(charge * 100) })
+      .eq('id', id).eq('user_id', uid).or('charge_amount.is.null,charge_amount.eq.0');
+  }
+
+  return json({ ok: true, id });
 }
 
 /** Start of today in Bangladesh (UTC+6), as an ISO instant. */

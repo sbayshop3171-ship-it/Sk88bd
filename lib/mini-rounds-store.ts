@@ -9,7 +9,8 @@
     over one JSON file in .data/, which is all a single-instance app needs
     and keeps the games off the critical path of a Supabase migration. */
 
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
+import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
 
 export interface FlightRound {
@@ -81,5 +82,5 @@ async function readStore(): Promise<Store> {
 
 async function writeStore(store: Store) {
   await mkdir(path.dirname(STORE_FILE), { recursive: true });
-  await writeFile(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
+  await writeFileAtomic(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
 }

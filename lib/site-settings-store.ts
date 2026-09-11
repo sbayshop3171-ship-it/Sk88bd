@@ -2,7 +2,8 @@
     handles. Stored as overrides on top of SITE_SETTINGS_DEFAULTS, so a
     missing key always falls back to what the code shipped with. */
 
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile } from 'node:fs/promises';
+import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
 import {
   isSupportEmail,
@@ -141,5 +142,5 @@ async function readStore(): Promise<SettingsStore> {
 
 async function writeStore(store: SettingsStore) {
   await mkdir(path.dirname(STORE_FILE), { recursive: true });
-  await writeFile(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
+  await writeFileAtomic(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
 }
