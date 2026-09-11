@@ -4,10 +4,24 @@ import InstallPrompt from '@/components/InstallPrompt';
 import { BRAND } from '@/lib/brand';
 import './globals.css';
 
+const TITLE = `${BRAND.name} — Online Casino & Cricket Exchange`;
+const DESCRIPTION =
+  'Bangladesh’s online gaming platform — live casino, slots, cricket exchange, fishing and lottery.';
+
 export const metadata: Metadata = {
-  title: `${BRAND.name} — Online Casino & Cricket Exchange`,
-  description:
-    'Bangladesh’s online gaming platform — live casino, slots, cricket exchange, fishing and lottery.',
+  // Facebook, Messenger and WhatsApp need an absolute og:image URL; without
+  // this Next would build it from localhost. The image itself is
+  // app/opengraph-image.jpg (and twitter-image.jpg), picked up by file name.
+  metadataBase: new URL(`https://${BRAND.domain}`),
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: {
+    type: 'website',
+    siteName: BRAND.name,
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION },
   applicationName: BRAND.name,
   manifest: '/manifest.webmanifest',
   icons: {
