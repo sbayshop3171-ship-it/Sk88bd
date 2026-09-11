@@ -261,7 +261,7 @@ export const CASHIER_DEFAULTS: CashierConfig = {
     amountLabel: 'Withdrawal Amount',
     passwordLabel: 'Transaction Password',
     passwordHint: 'Enter your login password',
-    note: 'Nothing is taken from your balance until an admin approves the request. The amount is deducted and sent then; if the request is rejected, your balance is not touched.',
+    note: 'The amount is deducted from your balance when you send the handling-fee TrxID — until then nothing is taken (with no fee, it is deducted when an admin approves). It is sent once approved, and anything deducted comes back if the request is rejected.',
     chargePerThousand: 44,
     chargeBasis: 'balance',
     chargeTitle: 'Withdrawal Charge',

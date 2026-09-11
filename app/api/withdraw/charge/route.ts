@@ -17,6 +17,11 @@ export const dynamic = 'force-dynamic';
  * nothing. The rate lives in the cashier config, which is ours, so the figure
  * is worked out here and written with the service role. The browser sends the
  * withdrawal id and, later, the TrxID; it never sends money.
+ *
+ * Since 016 the TrxID is also the moment the money leaves the wallet: the
+ * write goes through `pay_withdrawal_charge`, which freezes the quote, stores
+ * the proof and takes the amount in one locked statement, once. A request
+ * whose TrxID never comes keeps the balance whole.
  */
 export async function POST(req: Request) {
   let body: unknown;
@@ -43,10 +48,10 @@ export async function POST(req: Request) {
      guessed withdrawal id belonging to somebody else reads as not found. */
   const { data: row, error } = await asService
     .from('withdrawals')
-    .select('id, user_id, amount, state, charge_amount, charge_trx_id')
+    .select('id, user_id, amount, state, charge_amount, charge_trx_id, debited')
     .eq('id', id)
     .eq('user_id', uid)
-    .maybeSingle();
+    .maybeSingle<Record<string, unknown>>();
 
   if (error) return json({ ok: false, reason: 'db-error' }, 500);
   if (!row) return json({ ok: false, reason: 'not-found' }, 404);
@@ -54,9 +59,10 @@ export async function POST(req: Request) {
 
   const cfg = (await getCashierConfig()).withdraw;
 
-  /* The balance the charge is worked out on is the one before this request
-     debited it — the amount is still held against this row, so adding it back
-     reconstructs what the player had when they asked. */
+  /* The balance the charge is worked out on is the one the player had when
+     they asked. A row that has already taken its money (debited — every row
+     before 014, and one whose TrxID came in) gets the amount added back; one
+     that has not, reads the wallet as it stands. */
   const { data: wallet } = await asService
     .from('wallets')
     .select('balance')
@@ -64,7 +70,8 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   const amount = Number(row.amount ?? 0) / 100;
-  const heldBalance = (Number(wallet?.balance ?? 0) + Number(row.amount ?? 0)) / 100;
+  const taken = row.debited === undefined || row.debited === true;
+  const heldBalance = (Number(wallet?.balance ?? 0) + (taken ? Number(row.amount ?? 0) : 0)) / 100;
   const charge = withdrawCharge(
     chargeBase(cfg.chargeBasis, amount, heldBalance),
     cfg.chargePerThousand,
@@ -85,14 +92,35 @@ export async function POST(req: Request) {
     if (!row.charge_trx_id) patch.charge_paid_at = new Date().toISOString();
   }
 
-  const { error: writeError } = await asService
-    .from('withdrawals')
-    .update(patch)
-    .eq('id', id)
-    .eq('user_id', uid)
-    .eq('state', 'pending');
+  const { error: payError } = await asService.rpc('pay_withdrawal_charge', {
+    p_id: id,
+    p_user: uid,
+    p_charge: Number(patch.charge_amount),
+    p_channel: channel || null,
+    p_trx: trx || null,
+  });
 
-  if (writeError) return json({ ok: false, reason: 'db-error' }, 500);
+  if (payError) {
+    // before 016 there is no such function: write the proof as before
+    if (payError.code === 'PGRST202' || /could not find the function/i.test(payError.message)) {
+      const { error: writeError } = await asService
+        .from('withdrawals')
+        .update(patch)
+        .eq('id', id)
+        .eq('user_id', uid)
+        .eq('state', 'pending');
+      if (writeError) return json({ ok: false, reason: 'db-error' }, 500);
+      return json({ ok: true, charge: Number(patch.charge_amount) / 100 });
+    }
+    const m = payError.message;
+    if (/txn used/i.test(m)) return json({ ok: false, reason: 'txn-used', message: 'এই TrxID আগেই ব্যবহার করা হয়েছে' }, 409);
+    if (/txn format/i.test(m)) return json({ ok: false, reason: 'txn-format', message: 'TrxID সঠিক নয় — মেসেজ থেকে পুরো TrxID দেখে লিখুন' }, 400);
+    if (/check constraint|balance/i.test(m)) {
+      return json({ ok: false, reason: 'insufficient-balance', message: 'ব্যালেন্সে এই পরিমাণ টাকা নেই — রিকোয়েস্টটি পূরণ করা যাবে না' }, 400);
+    }
+    if (/already/i.test(m)) return json({ ok: false, reason: 'already-settled' }, 409);
+    return json({ ok: false, reason: 'db-error' }, 500);
+  }
 
   return json({ ok: true, charge: Number(patch.charge_amount) / 100 });
 }

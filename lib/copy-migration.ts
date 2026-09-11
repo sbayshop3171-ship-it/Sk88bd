@@ -56,9 +56,11 @@ export const BANGLA_COPY: Record<string, string> = {
   "উত্তোলন পরিমাণ": "Withdrawal Amount",
   "লেনদেন পাসওয়ার্ড": "Transaction Password",
   "আপনার লগইন পাসওয়ার্ডটি দিন": "Enter your login password",
-  "রিকোয়েস্ট করার সাথে সাথে টাকা ব্যালেন্স থেকে সরিয়ে রাখা হবে। অ্যাডমিন অনুমোদন করলে পাঠানো হবে, বাতিল করলে ব্যালেন্সে ফেরত আসবে।": "Nothing is taken from your balance until an admin approves the request. The amount is deducted and sent then; if the request is rejected, your balance is not touched.",
+  "রিকোয়েস্ট করার সাথে সাথে টাকা ব্যালেন্স থেকে সরিয়ে রাখা হবে। অ্যাডমিন অনুমোদন করলে পাঠানো হবে, বাতিল করলে ব্যালেন্সে ফেরত আসবে।": "The amount is deducted from your balance when you send the handling-fee TrxID — until then nothing is taken (with no fee, it is deducted when an admin approves). It is sent once approved, and anything deducted comes back if the request is rejected.",
+  // the English default of 014, before the TrxID became the moment of debit (016)
+  "Nothing is taken from your balance until an admin approves the request. The amount is deducted and sent then; if the request is rejected, your balance is not touched.": "The amount is deducted from your balance when you send the handling-fee TrxID — until then nothing is taken (with no fee, it is deducted when an admin approves). It is sent once approved, and anything deducted comes back if the request is rejected.",
   // the earlier English default, from before withdrawals waited for approval to debit (014)
-  "The amount is held aside the moment you request it. It is sent once an admin approves, and returned to your balance if the request is rejected.": "Nothing is taken from your balance until an admin approves the request. The amount is deducted and sent then; if the request is rejected, your balance is not touched.",
+  "The amount is held aside the moment you request it. It is sent once an admin approves, and returned to your balance if the request is rejected.": "The amount is deducted from your balance when you send the handling-fee TrxID — until then nothing is taken (with no fee, it is deducted when an admin approves). It is sent once approved, and anything deducted comes back if the request is rejected.",
   "উত্তোলন চার্জ": "Withdrawal Charge",
   "প্রতি ১,০০০ টাকায় {rate} হারে এজেন্ট ক্যাশআউট চার্জ দিতে হবে।": "An agent cash-out charge of {rate} per ৳1,000 applies.",
   "চার্জ পরিশোধ না করলে উত্তোলনের টাকা ছাড় করা হবে না।": "The withdrawal is not released until the charge is paid.",

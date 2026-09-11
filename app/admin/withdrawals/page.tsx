@@ -19,11 +19,11 @@ export default async function AdminWithdrawals() {
     <>
       <h1 className="adm__h1">Withdrawal Requests</h1>
       <p className="adm__sub">
-        Nothing leaves the player's balance until you approve — approving takes the
-        amount then. If they have played the money away while the request waited, the
-        approval is refused and you reject it instead. Rejecting leaves the balance as it
-        is. Lock rejects too, and also stops the player's withdrawals, with the reason you
-        give shown on their My Account.
+        The money leaves the player's balance when they send the handling-fee TrxID. A
+        request with no TrxID keeps the balance whole until you approve, and approving
+        takes it then — refused if they have played it away meanwhile, so reject it
+        instead. Rejecting gives back whatever was taken. Lock rejects too, and also stops
+        the player's withdrawals, with the reason you give shown on their My Account.
       </p>
       <CashierControl
         table="withdrawals"

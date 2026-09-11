@@ -351,17 +351,17 @@ export default function WithdrawPage() {
   const quoteCharge = async (
     id: number,
     extra: { channelId?: string; trxId?: string },
-  ): Promise<boolean> => {
+  ): Promise<{ ok: boolean; message?: string }> => {
     try {
       const res = await fetch('/api/withdraw/charge', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ id, ...extra }),
       });
-      const data = (await res.json()) as { ok?: boolean };
-      return Boolean(data?.ok);
+      const data = (await res.json()) as { ok?: boolean; message?: string };
+      return { ok: Boolean(data?.ok), message: data?.message };
     } catch {
-      return false;
+      return { ok: false };
     }
   };
 
@@ -374,17 +374,19 @@ export default function WithdrawPage() {
     setBusy(true);
     // no id, nowhere to attach the TrxID — say so rather than show "done"
     const saved = raised.id === null
-      ? false
+      ? { ok: false }
       : await quoteCharge(raised.id, {
         channelId: chargeMethod?.channelId,
         trxId: trx,
       });
     setBusy(false);
 
-    if (!saved) {
-      setErr({ trx: 'Could not submit the TrxID — try again' });
+    if (!saved.ok) {
+      setErr({ trx: saved.message ?? 'Could not submit the TrxID — try again' });
       return;
     }
+    // the TrxID is when the amount leaves the wallet (migration 016)
+    await refresh();
     setErr({});
     setStep('done');
     window.scrollTo({ top: 0 });

@@ -105,9 +105,9 @@ export default function CashierControl({
           ? 'Player locked and the request turned down — My Account shows them the reason.'
           : decision === 'approve'
           ? isDeposit ? 'Deposit approved — the money is in the player’s balance.'
-                      : 'Withdrawal approved — the amount is taken from the player’s balance.'
+                      : 'Withdrawal approved — the money is out of the player’s balance.'
           : isDeposit ? 'Deposit rejected.'
-                      : 'Withdrawal rejected — the player’s balance is untouched.',
+                      : 'Withdrawal rejected — anything taken from the player’s balance is back.',
       );
     } catch {
       setError('Could not reach the server.');
