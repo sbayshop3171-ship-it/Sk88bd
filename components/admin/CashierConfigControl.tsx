@@ -92,7 +92,7 @@ const CHARGE_TEXTS: [keyof CashierConfig['withdraw'], string, boolean][] = [
 
 const blankDeposit = (channelId: string): DepositMethod => ({
   id: '', name: '', channelId, payType: 'transfer', bonusLabel: '', bonusPercent: 0,
-  icon: '💳', color: '#0f766e', tag: 'GATEWAY', min: 300, max: 30000, trxRequired: true, note: '', active: true,
+  icon: '💳', color: '#0f766e', channelLabel: '', tag: 'GATEWAY', min: 300, max: 30000, trxRequired: true, note: '', active: true,
 });
 
 const blankWithdraw = (channelId: string): WithdrawMethod => ({
@@ -173,7 +173,7 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
                 <thead>
                   <tr>
                     <th>Order</th><th>Name</th><th>Channel (number)</th><th>Menu</th><th>Bonus %</th><th>Shown on tile</th>
-                    <th>Icon</th><th>Colour</th><th>Tag</th><th>Min</th><th>Max</th><th>TrxID</th><th>Active</th><th></th>
+                    <th>Icon</th><th>Colour</th><th>Channel label</th><th>Tag</th><th>Min</th><th>Max</th><th>TrxID</th><th>Active</th><th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -210,6 +210,7 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
                       </td>
                       <td><input className="adm__mini" style={{ width: 70 }} value={m.icon} placeholder="🅱️ or /path.png" disabled={busy} onChange={(e) => patchDepMethod(i, { icon: e.target.value })} /></td>
                       <td><input className="adm__mini" type="color" style={{ width: 44, padding: 2 }} value={/^#[0-9a-f]{6}$/i.test(m.color) ? m.color : '#0f766e'} disabled={busy} onChange={(e) => patchDepMethod(i, { color: e.target.value })} /></td>
+                      <td><input className="adm__mini" style={{ width: 110 }} value={m.channelLabel} placeholder={m.name || 'Bkash VIP'} disabled={busy} onChange={(e) => patchDepMethod(i, { channelLabel: e.target.value })} /></td>
                       <td><input className="adm__mini" style={{ width: 84 }} value={m.tag} placeholder="GATEWAY" disabled={busy} onChange={(e) => patchDepMethod(i, { tag: e.target.value })} /></td>
                       <td><input className="adm__mini" type="number" min={0} style={{ width: 80 }} value={num(m.min)} disabled={busy} onChange={(e) => patchDepMethod(i, { min: Number(e.target.value) })} /></td>
                       <td><input className="adm__mini" type="number" min={0} style={{ width: 96 }} value={num(m.max)} disabled={busy} onChange={(e) => patchDepMethod(i, { max: Number(e.target.value) })} /></td>

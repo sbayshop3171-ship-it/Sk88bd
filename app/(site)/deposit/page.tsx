@@ -395,7 +395,7 @@ export default function DepositPage() {
               <button
                 key={m.id}
                 type="button"
-                className={`cz-method${m.id === method.id ? ' on' : ''}`}
+                className={`cz-method${m.payType === 'cashout' || m.payType === 'payment' ? ' cz-method--em' : ''}${m.id === method.id ? ' on' : ''}`}
                 onClick={() => pickMethod(m)}
                 aria-pressed={m.id === method.id}
               >
@@ -415,14 +415,14 @@ export default function DepositPage() {
               line the reference prints so the channel below is read as
               belonging to the tile that was just tapped */}
           <p className="cz-chtitle">
-            {method.name}
+            {method.channelLabel || method.name}
             {method.tag && <><em>|</em><i>{method.tag}</i></>}
           </p>
           <h2 className="cz-sec__h"><i className="cz-dot cz-dot--mint" />{cfg.channelTitle}</h2>
           <div className="cz-channels">
             <div className="cz-channel on">
               <span>
-                {method.name}
+                {method.channelLabel || method.name}
                 {method.tag && <><em>|</em><i>{method.tag}</i></>}
               </span>
             </div>

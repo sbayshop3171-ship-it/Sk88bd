@@ -88,6 +88,7 @@ function cleanDeposit(
         bonusPercent: clampInt(m.bonusPercent, 0, 100, 0),
         icon: text(m.icon, 400) || '💳',
         color: color(m.color) ?? '#0f766e',
+        channelLabel: text(m.channelLabel, 30),
         tag: text(m.tag, 20),
         min,
         max,
@@ -282,7 +283,9 @@ function merge(partial: Partial<CashierConfig>): CashierConfig {
   return {
     deposit: {
       ...deposit,
-      methods: freshenIcons(deposit.methods, CASHIER_DEFAULTS.deposit.methods),
+      // a method saved before the channel label existed has none
+      methods: freshenIcons(deposit.methods, CASHIER_DEFAULTS.deposit.methods)
+        .map((m) => ({ ...m, channelLabel: m.channelLabel ?? '' })),
       amounts: supersededDefault(
         deposit.amounts,
         LEGACY_QUICK_AMOUNTS,

@@ -3698,6 +3698,9 @@ body.cz-light .cz-method__name{
   font-size:10.5px;font-weight:700;line-height:1.25;letter-spacing:0;
   text-transform:none;color:#1a1a1a;
 }
+/* the reference sets its cash-out and fast-payment tiles in italic capitals
+   and leaves the send-money ones upright */
+body.cz-light .cz-method--em .cz-method__name{font-style:italic}
 body.cz-light .cz-method .cz-icon{width:auto;height:34px;max-width:56px;border-radius:4px}
 body.cz-light .cz-method__bonus{font-size:9.5px;font-weight:700;color:#ec2529}
 /* the folded corner sits where the bonus line ends — give it room */

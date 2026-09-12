@@ -44,6 +44,9 @@ export type DepositMethod = {
   icon: string;
   /** tile colour, any CSS colour */
   color: string;
+  /** the channel card's name, e.g. "Bkash VIP" under "BKASH VIP CASH OUT";
+      blank reuses the tile name */
+  channelLabel: string;
   /** shown as the "Payment channels" card subtitle, e.g. GATEWAY / AGENT */
   tag: string;
   /** taka */
@@ -196,24 +199,53 @@ const CHANNEL_ICON: Record<string, string> = {
   usdt: '/payments/usdt.svg',
 };
 
+/* The five tiles CK44 offers, in its order, so a player can pay by whichever
+   bKash or Nagad menu they like: the pay type decides which kind of operator
+   number is handed out (cash out → agent, send money → personal, payment →
+   merchant). The ids `bkash` and `nagad` are the methods that stood here
+   before, kept so a deposit filed under them still finds its bonus. */
+const CK_METHODS: { id: string; name: string; channelId: string; payType: PayType; channelLabel: string; icon: string }[] = [
+  { id: 'nagad-vip', name: 'NAGAD VIP CASH OUT', channelId: 'nagad', payType: 'cashout', channelLabel: 'Nagad VIP', icon: '/payments/nagad-vip.png' },
+  { id: 'bkash-send', name: 'Bkash SEND MONEY', channelId: 'bkash', payType: 'sendmoney', channelLabel: 'Bkash Send Money', icon: '/payments/bkash-send.png' },
+  { id: 'nagad', name: 'NAGAD SEND MONEY', channelId: 'nagad', payType: 'sendmoney', channelLabel: 'Nagad Send Money', icon: '/payments/nagad-send.png' },
+  { id: 'nagad-fast', name: 'NAGAD FAST PAYMENT', channelId: 'nagad', payType: 'payment', channelLabel: 'Nagad Fast', icon: '/payments/nagad-vip.png' },
+  { id: 'bkash', name: 'BKASH VIP CASH OUT', channelId: 'bkash', payType: 'cashout', channelLabel: 'Bkash VIP', icon: '/payments/bkash-vip.png' },
+];
+
 export const CASHIER_DEFAULTS: CashierConfig = {
   deposit: {
-    methods: DEPOSIT_CHANNELS.map((c, i) => ({
-      id: c.id,
-      name: c.name.toUpperCase(),
-      channelId: c.id,
-      payType: c.id === 'bank' || c.id === 'usdt' ? 'transfer' : 'sendmoney',
-      bonusLabel: '',
-      bonusPercent: i === 0 ? 5 : 0,
-      icon: CHANNEL_ICON[c.id] ?? c.glyph,
-      color: CHANNEL_COLOR[c.id] ?? '#0f766e',
-      tag: c.id === 'bank' ? 'BANK' : c.id === 'usdt' ? 'CRYPTO' : 'GATEWAY',
-      min: c.min,
-      max: c.max,
-      trxRequired: true,
-      note: `Send the money to this ${c.name} number and enter the transaction ID. It is credited to your balance once an admin verifies it.`,
-      active: true,
-    })),
+    methods: [
+      ...CK_METHODS.map((m) => ({
+        ...m,
+        bonusLabel: '',
+        bonusPercent: 0,
+        color: CHANNEL_COLOR[m.channelId],
+        tag: 'SK88PAY',
+        min: 300,
+        max: 30_000,
+        trxRequired: true,
+        note: '',
+        active: true,
+      })),
+      // the other channels stay on the list, switched off, for the admin to bring back
+      ...DEPOSIT_CHANNELS.filter((c) => c.id !== 'bkash' && c.id !== 'nagad').map((c) => ({
+        id: c.id,
+        name: c.name.toUpperCase(),
+        channelId: c.id,
+        payType: (c.id === 'bank' || c.id === 'usdt' ? 'transfer' : 'sendmoney') as PayType,
+        bonusLabel: '',
+        bonusPercent: 0,
+        icon: CHANNEL_ICON[c.id] ?? c.glyph,
+        color: CHANNEL_COLOR[c.id] ?? '#0f766e',
+        channelLabel: '',
+        tag: c.id === 'bank' ? 'BANK' : c.id === 'usdt' ? 'CRYPTO' : 'GATEWAY',
+        min: c.min,
+        max: c.max,
+        trxRequired: true,
+        note: '',
+        active: false,
+      })),
+    ],
     amounts: QUICK_AMOUNTS.map((amount) => ({ amount, bonusLabel: '' })),
     methodTitle: 'Deposit Method',
     channelTitle: 'Payment Channel',
