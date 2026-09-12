@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { mkdir, readFile } from 'node:fs/promises';
 import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
-import { timeToReach } from './aviator';
+import { HOUSE_EDGE, timeToReach } from './aviator';
 
 export type SignalGame = 'aviator' | 'crash';
 export type AviatorRoundStatus = 'scheduled' | 'revealed' | 'betting' | 'flying' | 'crashed';
@@ -71,7 +71,8 @@ const SCHEDULE_DRIFT_MS = 500;
 
 const STORE_FILE = path.join(process.cwd(), '.data', 'aviator-signal-store.json');
 const CLIENT_SEED = 'prime-vai-devx-LIVE';
-const AUTO_TARGETS = [2.64, 3.02, 2.18, 6.44, 1.21, 3.03, 12.34, 1.83, 4.78, 8.92, 1.55, 15.76];
+const MIN_TARGET = 1.01;
+const MAX_TARGET = 150;
 const HISTORY_TARGETS = [3.03, 2.38, 1.83, 2.64, 3.02, 2.18, 6.44, 1.21];
 
 let writeQueue = Promise.resolve();
@@ -192,7 +193,7 @@ export async function updateAviatorSignal(input: {
 
     if (input.action === 'regenerate') {
       const signal = getEditableSignalRound(store, now);
-      const targetX = autoTarget(store.next_round_id + signal.round_id);
+      const targetX = autoTarget();
       const round = applyTargetToSignalRound(store, targetX, now, 'auto');
       store.settings.active_mode = store.settings.auto_mode ? 'AUTO' : 'BASS';
       store.settings.updated_at = iso(now);
@@ -412,7 +413,7 @@ function findPlayableRound(store: SignalStore, now: number) {
 }
 
 function scheduleNextRound(store: SignalStore, flyAt: number, now: number) {
-  const round = makeRound(store.next_round_id, autoTarget(store.next_round_id), flyAt, 'auto', now);
+  const round = makeRound(store.next_round_id, autoTarget(), flyAt, 'auto', now);
   store.next_round_id += 1;
   store.rounds.push(round);
   addLog(store, 'schedule', `Round #${round.round_id} scheduled for ${round.target_x.toFixed(2)}x`, now);
@@ -563,14 +564,19 @@ function addLog(store: SignalStore, action: string, message: string, now: number
   ].slice(0, 50);
 }
 
-function autoTarget(roundId: number) {
-  return AUTO_TARGETS[(roundId - 1) % AUTO_TARGETS.length];
+/** A fresh random crash point between 1.01x and 150x. Drawn so that
+    P(crash ≥ m) = (1 − HOUSE_EDGE)/m — most rounds bust low, a few run
+    long — which keeps the 97% return; a flat 1–150 draw would average ~75x
+    and pay out many times the stake. The 150x cap only trims the tail. */
+function autoTarget() {
+  const r = randomBytes(6).readUIntBE(0, 6) / 2 ** 48;
+  return clampTarget(Math.floor(((1 - HOUSE_EDGE) / (1 - r)) * 100) / 100);
 }
 
 function clampTarget(value: unknown) {
   const num = Number(value);
   if (!Number.isFinite(num)) return 2;
-  return Math.round(Math.min(99.99, Math.max(1.01, num)) * 100) / 100;
+  return Math.round(Math.min(MAX_TARGET, Math.max(MIN_TARGET, num)) * 100) / 100;
 }
 
 function sha256(input: string) {
