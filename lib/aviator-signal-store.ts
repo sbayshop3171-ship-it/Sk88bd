@@ -514,13 +514,67 @@ function publicRound(round: StoredAviatorRound) {
   };
 }
 
-/** What anyone may read at /api/aviator/current: the round in play and the
-    history. The rounds queued after it and the audit log ("Signal #N locked
-    at X") are the admin's — the signal app is held to one round, and the
-    public endpoint was giving away five. */
+/** The round as a player may see it. Until the plane has gone its crash
+    point stays on the server, and so does the time it busts — timeToReach
+    inverts, so the bust time gives the multiplier away just as surely. Both
+    arrive with the seed once the round has crashed. */
+function openRound(round: StoredAviatorRound) {
+  const done = round.status === 'crashed';
+  return {
+    round_id: round.round_id,
+    id: round.round_id,
+    betting_at: round.betting_at,
+    bettingAt: round.betting_at,
+    fly_at: round.fly_at,
+    flyAt: round.fly_at,
+    status: round.status,
+    serverSeedHash: round.server_seed_hash,
+    server_seed_hash: round.server_seed_hash,
+    clientSeed: round.client_seed,
+    nonce: round.nonce,
+    ...(done
+      ? {
+          target_x: round.target_x,
+          targetX: round.target_x,
+          crash_at: round.crash_at,
+          crashAtTime: round.crash_at,
+          serverSeed: round.server_seed,
+        }
+      : {}),
+  };
+}
+
+/** What anyone may read at /api/aviator/current: the round in play, without
+    its crash point until it busts, and the history. It used to carry the
+    live round's target and the app's next signal (`appSignalRound`) in the
+    clear, so anyone with DevTools knew where the plane would go. The signal
+    app has its own keyed snapshot and keeps seeing the number there. */
 export function publicAviatorState(state: AviatorSignalState) {
-  const { previewRounds: _preview, auditLogs: _logs, ...open } = adminAviatorState(state);
-  return open;
+  return {
+    ok: true,
+    serverTime: state.serverTime,
+    timeline: {
+      signalLeadMs: SIGNAL_LEAD_MS,
+      bettingLeadMs: BETTING_LEAD_MS,
+      crashedHoldMs: CRASHED_HOLD_MS,
+    },
+    round: openRound(state.currentRound),
+    history: historyRows(state),
+    demoControlled: true,
+  };
+}
+
+function historyRows(state: AviatorSignalState) {
+  return state.history.map((round) => ({
+    id: round.round_id,
+    round_id: round.round_id,
+    crashAt: round.target_x,
+    target_x: round.target_x,
+    serverSeed: round.server_seed,
+    clientSeed: round.client_seed,
+    nonce: round.nonce,
+    happenedAt: round.crash_at,
+  }));
 }
 
 /** Everything, for /admin/aviator-signal. */
@@ -537,16 +591,7 @@ export function adminAviatorState(state: AviatorSignalState) {
     round: publicRound(state.currentRound),
     appSignalRound: publicRound(state.appSignalRound),
     previewRounds: state.previewRounds.map(publicRound),
-    history: state.history.map((round) => ({
-      id: round.round_id,
-      round_id: round.round_id,
-      crashAt: round.target_x,
-      target_x: round.target_x,
-      serverSeed: round.server_seed,
-      clientSeed: round.client_seed,
-      nonce: round.nonce,
-      happenedAt: round.crash_at,
-    })),
+    history: historyRows(state),
     auditLogs: state.auditLogs,
     demoControlled: true,
   };
