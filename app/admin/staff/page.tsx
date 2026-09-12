@@ -14,16 +14,16 @@ export const dynamic = 'force-dynamic';
 export default async function AdminStaff() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'staff.manage')) return <NoAccess role={session.role} what="Staff accounts" />;
+  if (!can(session, 'staff.manage')) return <NoAccess what="Staff accounts" />;
 
   return (
     <>
       <h1 className="adm__h1">Staff Accounts</h1>
       <p className="adm__sub">
-        Logins for admins and agents. An agent can only approve deposits and withdrawals
-        and view players — <b>they cannot change payment numbers</b>. An admin also handles
-        games, banners, balances and the payment numbers; settings, app keys and staff
-        accounts stay with the super admin alone.
+        Logins for admins and agents. The role sets where an account starts; press{' '}
+        <b>Access</b> on any row to tick exactly what that account may do — deposits,
+        withdrawals, payment numbers, banners and the rest, one box each. Staff accounts
+        themselves stay with the super admin alone.
       </p>
       <p className="adm__sub">
         Every account gets its own <b>link code</b>. When somebody registers through that

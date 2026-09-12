@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminAppKeysPage() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'app-keys.write')) return <NoAccess role={session.role} what="App keys" />;
+  if (!can(session, 'app-keys.write')) return <NoAccess what="App keys" />;
 
   const state = await getSignalAppKeyAdminState();
   return <AppKeysControl initialState={state} />;

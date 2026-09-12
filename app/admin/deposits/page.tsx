@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminDeposits() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'cashier.review')) return <NoAccess role={session.role} what="Deposit requests" />;
+  if (!can(session, 'deposits.review')) return <NoAccess what="Deposit requests" />;
 
   const rows = await listCashier('deposits', 'pending');
 

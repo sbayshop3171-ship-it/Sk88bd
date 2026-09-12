@@ -4,9 +4,13 @@ import { useState } from 'react';
 import {
   ASSIGNABLE_ROLES,
   MIN_PASSWORD_LENGTH,
+  PERMISSION_GROUPS,
   ROLE_HELP,
   ROLE_LABEL,
   STAFF_ERROR_LABEL,
+  cleanPermissions,
+  permissionsFor,
+  type AdminPermission,
   type AdminRole,
   type AdminStaff,
   type StaffMutationReason,
@@ -24,6 +28,10 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<AdminRole>('agent');
+  const [perms, setPerms] = useState<AdminPermission[]>(() => permissionsFor('agent'));
+  /** the account whose boxes are being edited, and the boxes as ticked */
+  const [accessId, setAccessId] = useState('');
+  const [accessPerms, setAccessPerms] = useState<AdminPermission[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -63,7 +71,7 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
   async function create(e: React.FormEvent) {
     e.preventDefault();
     const made = await send(
-      { action: 'create', username, password, role },
+      { action: 'create', username, password, role, permissions: perms },
       `${username} — ${ROLE_LABEL[role]} account created.`,
     );
     if (made) {
@@ -125,7 +133,15 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
 
           <label className="adm__f">
             <span>Role</span>
-            <select value={role} onChange={(e) => setRole(e.target.value as AdminRole)} disabled={busy}>
+            <select
+              value={role}
+              onChange={(e) => {
+                const next = e.target.value as AdminRole;
+                setRole(next);
+                setPerms(permissionsFor(next));
+              }}
+              disabled={busy}
+            >
               {ASSIGNABLE_ROLES.map((r) => (
                 <option key={r} value={r}>{ROLE_LABEL[r]}</option>
               ))}
@@ -133,6 +149,9 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
             <em className="adm__hint">{ROLE_HELP[role]}</em>
           </label>
         </div>
+
+        <h3 className="adm__permh">What this account may do</h3>
+        <PermissionPicker value={perms} onChange={setPerms} disabled={busy} />
 
         {error && <p className="adm__err">{error}</p>}
         {notice && <p className="adm__note">{notice}</p>}
@@ -146,6 +165,42 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
           forgotten one has to be replaced from here.
         </p>
       </form>
+
+      {accessId && (() => {
+        const member = staff.find((s) => s.id === accessId);
+        if (!member) return null;
+        return (
+          <div className="adm__card">
+            <h2 className="adm__cardh">
+              Access — {member.username} <small className="adm__muted">({ROLE_LABEL[member.role]})</small>
+            </h2>
+            <PermissionPicker value={accessPerms} onChange={setAccessPerms} disabled={busy} />
+            <div className="adm__actions">
+              <button
+                type="button" className="btn btn--gold" disabled={busy}
+                onClick={async () => {
+                  const done = await send(
+                    { action: 'set-permissions', id: member.id, permissions: accessPerms },
+                    `${member.username}'s access saved — it takes effect on their next click.`,
+                  );
+                  if (done) setAccessId('');
+                }}
+              >
+                Save
+              </button>
+              <button
+                type="button" className="btn btn--ghost" disabled={busy}
+                onClick={() => setAccessPerms(permissionsFor(member.role))}
+              >
+                {ROLE_LABEL[member.role]} defaults
+              </button>
+              <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => setAccessId('')}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {resetId && (
         <form className="adm__card" onSubmit={resetSubmit}>
@@ -183,14 +238,14 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
         <table className="adm__table">
           <thead>
             <tr>
-              <th>Username</th><th>Role</th><th>Link code</th><th>Status</th>
+              <th>Username</th><th>Role</th><th>Access</th><th>Link code</th><th>Status</th>
               <th>Last login</th><th>Added by</th><th></th>
             </tr>
           </thead>
           <tbody>
             {staff.length === 0 ? (
               <tr>
-                <td colSpan={7} className="adm__empty">
+                <td colSpan={8} className="adm__empty">
                   No staff accounts yet — add one with the form above.
                 </td>
               </tr>
@@ -212,6 +267,10 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
                       ))}
                     </select>
                   </td>
+                  <td className="adm__muted">
+                    {permissionsFor(s.role, s.permissions).length} of {GRANTABLE_COUNT}
+                    {s.permissions ? ' · custom' : ''}
+                  </td>
                   <td><code>{s.refCode}</code></td>
                   <td>
                     {s.active
@@ -223,6 +282,12 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
                   </td>
                   <td className="adm__muted">{s.createdBy}</td>
                   <td className="adm__rowacts">
+                    <button
+                      type="button" className="btn btn--ghost" disabled={busy}
+                      onClick={() => { setAccessId(s.id); setAccessPerms(permissionsFor(s.role, s.permissions)); }}
+                    >
+                      Access
+                    </button>
                     <button
                       type="button" className="btn btn--ghost" disabled={busy}
                       onClick={() => { setResetId(s.id); setResetPassword(''); }}
@@ -260,5 +325,58 @@ export default function StaffControl({ initialStaff }: { initialStaff: AdminStaf
         no waiting for a cookie to expire.
       </p>
     </>
+  );
+}
+
+const GRANTABLE_COUNT = PERMISSION_GROUPS.reduce((n, g) => n + g.items.length, 0);
+
+/** A box that needs another box: changing a number is no use on a screen
+    that will not show the numbers. Unticking the one unticks the other;
+    ticking it ticks both (cleanPermissions). */
+const NEEDS: Partial<Record<AdminPermission, AdminPermission>> = {
+  'payments.write': 'payments.read',
+  'players.write': 'players.read',
+  'players.lock': 'players.read',
+};
+
+function PermissionPicker({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: AdminPermission[];
+  onChange: (next: AdminPermission[]) => void;
+  disabled: boolean;
+}) {
+  function toggle(key: AdminPermission) {
+    if (value.includes(key)) {
+      onChange(value.filter((p) => p !== key && NEEDS[p] !== key));
+    } else {
+      onChange(cleanPermissions([...value, key]));
+    }
+  }
+
+  return (
+    <div className="adm__perms">
+      {PERMISSION_GROUPS.map((group) => (
+        <fieldset key={group.title} className="adm__permgroup">
+          <legend>{group.title}</legend>
+          {group.items.map((item) => (
+            <label key={item.key} className="adm__perm">
+              <input
+                type="checkbox"
+                checked={value.includes(item.key)}
+                disabled={disabled}
+                onChange={() => toggle(item.key)}
+              />
+              <span>
+                <b>{item.label}</b>
+                <small>{item.help}</small>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      ))}
+    </div>
   );
 }

@@ -15,10 +15,10 @@ export const dynamic = 'force-dynamic';
 export default async function AdminAgents() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'agents.self')) return <NoAccess role={session.role} what="The agent list" />;
+  if (!can(session, 'agents.self')) return <NoAccess what="The agent list" />;
 
   const staff = await listStaff();
-  const seesEveryone = can(session.role, 'agents.read');
+  const seesEveryone = can(session, 'agents.read');
   const scoped = seesEveryone
     ? staff.filter((s) => s.role === 'agent' || s.id === session.uid)
     : staff.filter((s) => s.id === session.uid);

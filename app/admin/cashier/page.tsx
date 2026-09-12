@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminCashier() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'cashier.config')) return <NoAccess role={session.role} what="Cashier setup" />;
+  if (!can(session, 'cashier.config')) return <NoAccess what="Cashier setup" />;
 
   return (
     <>

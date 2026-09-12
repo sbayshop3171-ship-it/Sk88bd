@@ -20,7 +20,9 @@ import { generateAgentCode, normalizeAgentCode } from './agent-links';
 import {
   MAX_STAFF,
   MIN_PASSWORD_LENGTH,
+  cleanPermissions,
   isAdminRole,
+  type AdminPermission,
   type AdminRole,
   type AdminStaff,
   type StaffMutationReason,
@@ -142,6 +144,8 @@ export async function createStaff(input: {
   username: string;
   password: string;
   role: AdminRole;
+  /** the boxes ticked on the form; absent = the role's defaults */
+  permissions?: unknown;
   createdBy: string;
   /** the environment super admin's name, which nobody else may take */
   reserved: string;
@@ -172,6 +176,7 @@ export async function createStaff(input: {
       username,
       refCode: freshCode(new Set(store.users.map((u) => u.refCode))),
       role: input.role,
+      ...(input.permissions !== undefined ? { permissions: cleanPermissions(input.permissions) } : {}),
       active: true,
       createdBy: input.createdBy,
       createdAt: now,
@@ -186,7 +191,8 @@ export async function createStaff(input: {
 
 export async function updateStaff(
   id: string,
-  patch: { role?: AdminRole; active?: boolean },
+  /** permissions: a ticked list, or null to go back to the role's defaults */
+  patch: { role?: AdminRole; active?: boolean; permissions?: AdminPermission[] | null },
 ): Promise<{ ok: true; staff: AdminStaff[] } | { ok: false; reason: StaffMutationReason }> {
   if (patch.role !== undefined && (!isAdminRole(patch.role) || patch.role === 'super_admin')) {
     return { ok: false, reason: 'invalid-role' };
@@ -196,7 +202,13 @@ export async function updateStaff(
     const user = store.users.find((u) => u.id === id);
     if (!user) return { ok: false, reason: 'not-found' as const };
 
-    if (patch.role !== undefined) user.role = patch.role;
+    // a new role starts from that role's defaults; the boxes can be re-ticked after
+    if (patch.role !== undefined && patch.role !== user.role) {
+      user.role = patch.role;
+      delete user.permissions;
+    }
+    if (patch.permissions === null) delete user.permissions;
+    else if (patch.permissions !== undefined) user.permissions = cleanPermissions(patch.permissions);
     if (patch.active !== undefined) user.active = patch.active;
     user.updatedAt = iso(Date.now());
     store.updatedAt = user.updatedAt;

@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminUsers() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'players.read')) return <NoAccess role={session.role} what="The player list" />;
+  if (!can(session, 'players.read')) return <NoAccess what="The player list" />;
 
   const players = await listPlayers('', 100, await playerScope(session));
 
@@ -26,12 +26,12 @@ export default async function AdminUsers() {
         Account — their appeal waits here under “Locked &amp; appeals”.
       </p>
       <PlayerControl
-        scopedToAgent={!can(session.role, 'agents.read')}
+        scopedToAgent={!can(session, 'agents.read')}
         initialPlayers={players.ok ? players.data : []}
         initialError={players.ok ? '' : players.message ?? `Could not load the players (${players.reason})`}
         backendReady={isBackendReady()}
-        canWrite={can(session.role, 'players.write')}
-        canLock={can(session.role, 'players.lock')}
+        canWrite={can(session, 'players.write')}
+        canLock={can(session, 'players.lock')}
       />
     </>
   );

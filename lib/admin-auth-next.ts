@@ -24,7 +24,7 @@ export async function requireAdmin(permission?: AdminPermission): Promise<AdminG
   if (!(await sameSiteRequest())) return { ok: false, response: deny('cross-site', 403) };
   const session = await getCurrentAdminSession();
   if (!session) return { ok: false, response: deny('unauthorized', 401) };
-  if (permission && !can(session.role, permission)) {
+  if (permission && !can(session, permission)) {
     return { ok: false, response: deny('forbidden', 403) };
   }
   return { ok: true, session };
@@ -35,7 +35,7 @@ export async function requireAdmin(permission?: AdminPermission): Promise<AdminG
 export async function adminSessionWith(permission: AdminPermission): Promise<AdminSession | null> {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  return can(session.role, permission) ? session : null;
+  return can(session, permission) ? session : null;
 }
 
 /* Cross-site request forgery. The session cookie is SameSite=Lax, which

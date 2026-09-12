@@ -13,8 +13,12 @@ export const dynamic = 'force-dynamic';
 const TABLES = ['deposits', 'withdrawals'] as const;
 const STATES = ['pending', 'approved', 'rejected', 'cancelled', 'all'];
 
+/** Deposits and withdrawals are separate boxes on the staff screen, so the
+    queue a request names decides which one it needs. */
+const REVIEW = { deposits: 'deposits.review', withdrawals: 'withdrawals.review' } as const;
+
 export async function GET(req: Request) {
-  const gate = await requireAdmin('cashier.review');
+  const gate = await requireAdmin();
   if (!gate.ok) return gate.response;
 
   const url = new URL(req.url);
@@ -22,6 +26,7 @@ export async function GET(req: Request) {
   const state = url.searchParams.get('state') ?? 'pending';
 
   if (!isTable(table)) return json({ ok: false, reason: 'invalid-table' }, 400);
+  if (!can(gate.session, REVIEW[table])) return json({ ok: false, reason: 'forbidden' }, 403);
   if (!STATES.includes(state)) return json({ ok: false, reason: 'invalid-state' }, 400);
 
   const search = url.searchParams.get('search') ?? '';
@@ -32,7 +37,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const gate = await requireAdmin('cashier.review');
+  const gate = await requireAdmin();
   if (!gate.ok) return gate.response;
   const { session } = gate;
 
@@ -51,6 +56,7 @@ export async function POST(req: Request) {
   const id = Number(record.id);
 
   if (!isTable(table)) return json({ ok: false, reason: 'invalid-table' }, 400);
+  if (!can(session, REVIEW[table])) return json({ ok: false, reason: 'forbidden' }, 403);
   if (decision !== 'approve' && decision !== 'reject' && decision !== 'lock') {
     return json({ ok: false, reason: 'invalid-decision' }, 400);
   }
@@ -94,7 +100,7 @@ async function lockFromRequest(
   typedReason: string,
 ): Promise<{ ok: true } | { ok: false; status: number; message: string }> {
   if (table !== 'withdrawals') return { ok: false, status: 400, message: 'Only a withdrawal can be locked.' };
-  if (!can(session.role, 'players.lock')) return { ok: false, status: 403, message: 'You cannot lock players.' };
+  if (!can(session, 'players.lock')) return { ok: false, status: 403, message: 'You cannot lock players.' };
 
   const db = adminClient();
   if (!db) return { ok: false, status: 503, message: 'The database is not connected.' };

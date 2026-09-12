@@ -45,7 +45,7 @@ export default async function AdminDashboard() {
 
   // An agent's dashboard counts only their own signups; an admin's counts
   // every agent. Same query, scoped the same way the agent screen scopes it.
-  const seesEveryAgent = can(session.role, 'agents.read');
+  const seesEveryAgent = can(session, 'agents.read');
   const agentScope = seesEveryAgent
     ? staff.filter((s) => s.role === 'agent' || s.id === session.uid)
     : staff.filter((s) => s.id === session.uid);
@@ -58,7 +58,7 @@ export default async function AdminDashboard() {
   const activeAccounts = accounts.filter((a) => a.status === 'active');
   const deposits = activeAccounts.filter((a) => a.use !== 'withdraw');
 
-  const mine = (tiles: Tile[]) => tiles.filter(([, , , need]) => can(session.role, need));
+  const mine = (tiles: Tile[]) => tiles.filter(([, , , need]) => can(session, need));
 
   const live = mine([
     ['Active payment numbers', String(activeAccounts.length), '/admin/payments', 'payments.read'],
@@ -71,10 +71,10 @@ export default async function AdminDashboard() {
 
   const cashier = stats.ok
     ? mine([
-        ['Pending deposits', String(stats.data.pendingDeposits), '/admin/deposits', 'cashier.review'],
-        ['Pending withdrawals', String(stats.data.pendingWithdrawals), '/admin/withdrawals', 'cashier.review'],
-        ['Deposited today', money(toTaka(stats.data.todayDeposited)), '/admin/deposits', 'cashier.review'],
-        ['Withdrawn today', money(toTaka(stats.data.todayWithdrawn)), '/admin/withdrawals', 'cashier.review'],
+        ['Pending deposits', String(stats.data.pendingDeposits), '/admin/deposits', 'deposits.review'],
+        ['Pending withdrawals', String(stats.data.pendingWithdrawals), '/admin/withdrawals', 'withdrawals.review'],
+        ['Deposited today', money(toTaka(stats.data.todayDeposited)), '/admin/deposits', 'deposits.review'],
+        ['Withdrawn today', money(toTaka(stats.data.todayWithdrawn)), '/admin/withdrawals', 'withdrawals.review'],
         ['Total players', String(stats.data.totalPlayers), '/admin/users', 'players.read'],
       ])
     : [];
@@ -95,7 +95,7 @@ export default async function AdminDashboard() {
         </div>
       )}
 
-      {can(session.role, 'agents.self') && (
+      {can(session, 'agents.self') && (
         <>
           <h2 className="adm__h2">{seesEveryAgent ? 'Agents' : 'My link'}</h2>
           <p className="adm__sub">

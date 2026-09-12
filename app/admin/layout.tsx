@@ -49,7 +49,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <AdminNav role={session.role} base={base} />
+      <AdminNav permissions={session.permissions} base={base} />
 
       {!isBackendReady() && (
         <div className="adm__warn">

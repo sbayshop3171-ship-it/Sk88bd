@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminSettings() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'settings.write')) return <NoAccess role={session.role} what="Settings" />;
+  if (!can(session, 'settings.write')) return <NoAccess what="Settings" />;
 
   const settings = await getSiteSettings();
 

@@ -25,7 +25,7 @@ export async function GET(req: Request) {
   const { session } = gate;
 
   const staff = await listStaff();
-  const seesEveryone = can(session.role, 'agents.read');
+  const seesEveryone = can(session, 'agents.read');
   const mine = staff.filter((s) => s.id === session.uid);
   const scoped = seesEveryone ? staff.filter((s) => s.role === 'agent' || s.id === session.uid) : mine;
 

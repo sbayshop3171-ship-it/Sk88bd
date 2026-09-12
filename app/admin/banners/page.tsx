@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminBanners() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'content.write')) return <NoAccess role={session.role} what="Banners and announcements" />;
+  if (!can(session, 'content.write')) return <NoAccess what="Banners and announcements" />;
 
   return (
     <>

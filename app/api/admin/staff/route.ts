@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth-next';
 import { superAdminUsername } from '@/lib/admin-auth';
-import { isAdminRole, type AdminRole, type StaffMutationResult } from '@/lib/admin-roles';
+import { cleanPermissions, isAdminRole, type AdminRole, type StaffMutationResult } from '@/lib/admin-roles';
 import {
   createStaff,
   listStaff,
@@ -45,6 +45,7 @@ export async function POST(req: Request) {
         username: String(record.username ?? ''),
         password: String(record.password ?? ''),
         role: record.role as AdminRole,
+        permissions: Array.isArray(record.permissions) ? record.permissions : undefined,
         createdBy: session.username,
         reserved: superAdminUsername(),
       });
@@ -53,6 +54,16 @@ export async function POST(req: Request) {
     case 'set-role':
       if (!isAdminRole(record.role)) return json({ ok: false, reason: 'invalid-role' }, 400);
       result = await updateStaff(id, { role: record.role });
+      break;
+
+    case 'set-permissions':
+      if (record.permissions === null) {
+        result = await updateStaff(id, { permissions: null });
+      } else if (Array.isArray(record.permissions)) {
+        result = await updateStaff(id, { permissions: cleanPermissions(record.permissions) });
+      } else {
+        return json({ ok: false, reason: 'invalid-permissions' }, 400);
+      }
       break;
 
     case 'set-active':

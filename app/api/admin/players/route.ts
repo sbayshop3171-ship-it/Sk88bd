@@ -51,7 +51,7 @@ export async function POST(req: Request) {
   if (LOCK_ACTIONS.has(action)) {
     // an agent's own players only — asked again here, the id came from the body
     if (!(await inScope(scope, userId))) return json({ ok: false, reason: 'forbidden' }, 403);
-  } else if (!can(session.role, 'players.write')) {
+  } else if (!can(session, 'players.write')) {
     return json({ ok: false, reason: 'forbidden' }, 403);
   }
 

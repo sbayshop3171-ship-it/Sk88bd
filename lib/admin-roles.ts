@@ -14,8 +14,10 @@
 export type AdminRole = 'super_admin' | 'admin' | 'agent';
 
 export type AdminPermission =
-  /** approve or reject deposits and withdrawals */
-  | 'cashier.review'
+  /** approve or reject deposit requests */
+  | 'deposits.review'
+  /** approve, reject or lock withdrawal requests */
+  | 'withdrawals.review'
   /** the deposit/withdraw flow itself: steps, charges, channels */
   | 'cashier.config'
   | 'players.read'
@@ -45,7 +47,13 @@ export type AdminPermission =
    Nothing they touch changes where money lands. They may lock one of their
    own players' withdrawals, which moves nothing — the operator's call,
    2026-09-11. */
-const AGENT: AdminPermission[] = ['cashier.review', 'players.read', 'players.lock', 'agents.self'];
+const AGENT: AdminPermission[] = [
+  'deposits.review',
+  'withdrawals.review',
+  'players.read',
+  'players.lock',
+  'agents.self',
+];
 
 /* An admin runs the day: the cashier, the players, the games, the front
    page — and, since 2026-09-10, the wallet numbers a deposit lands in. That
@@ -89,8 +97,8 @@ export const ROLE_LABEL: Record<AdminRole, string> = {
 
 export const ROLE_HELP: Record<AdminRole, string> = {
   super_admin: 'Everything — payment numbers, settings and staff accounts included.',
-  admin: 'Cashier, payment numbers, users, games and site content. Cannot change settings, app keys or staff accounts.',
-  agent: 'Only deposit/withdraw approvals, viewing users and their own referral link. Cannot change payment numbers.',
+  admin: 'By default: cashier, payment numbers, users, games and site content. The super admin can tick more or fewer.',
+  agent: 'By default: deposit/withdraw approvals, their own players and their own link. The super admin can tick more or fewer.',
 };
 
 /** What a super admin may hand out. The super admin login itself comes from
@@ -102,8 +110,94 @@ export function isAdminRole(value: unknown): value is AdminRole {
   return value === 'super_admin' || value === 'admin' || value === 'agent';
 }
 
-export function can(role: AdminRole, permission: AdminPermission): boolean {
-  return ROLE_PERMISSIONS[role]?.includes(permission) ?? false;
+/* ---- per-account permissions ----
+   A role is only the starting point. Since 2026-09-12 the super admin can
+   tick exactly which screens each admin or agent gets — one agent on
+   deposits only, another on withdrawals, an admin who may change banners
+   but never a payment number. An account with no list of its own keeps its
+   role's defaults, which is every account created before this. */
+
+export const ALL_PERMISSIONS: readonly AdminPermission[] = SUPER_ADMIN;
+
+/** What the super admin may hand out. 'staff.manage' is not on it: whoever
+    holds it could tick every box on their own row and become a second super
+    admin, so staff accounts stay with the operator alone. */
+export const GRANTABLE_PERMISSIONS: readonly AdminPermission[] = ALL_PERMISSIONS.filter(
+  (p) => p !== 'staff.manage',
+);
+
+export const PERMISSION_GROUPS: { title: string; items: { key: AdminPermission; label: string; help: string }[] }[] = [
+  {
+    title: 'Cashier',
+    items: [
+      { key: 'deposits.review', label: 'Deposits', help: 'Approve or reject deposit requests' },
+      { key: 'withdrawals.review', label: 'Withdrawals', help: 'Approve or reject withdrawal requests' },
+      { key: 'cashier.config', label: 'Cashier & bonus setup', help: 'Deposit/withdraw steps, charges, channels and bonus rules' },
+    ],
+  },
+  {
+    title: 'Payment numbers',
+    items: [
+      { key: 'payments.read', label: 'See payment numbers', help: 'View the wallet numbers deposits land in' },
+      { key: 'payments.write', label: 'Change payment numbers', help: 'Add, edit, turn off or delete a number' },
+    ],
+  },
+  {
+    title: 'Players',
+    items: [
+      { key: 'players.read', label: 'View players', help: 'The player list and their details' },
+      { key: 'players.lock', label: 'Lock withdrawals', help: "Lock a player's withdrawals and answer their appeal" },
+      { key: 'players.write', label: 'Balance, hold & ban', help: 'Adjust balances, hold or ban a player' },
+    ],
+  },
+  {
+    title: 'Agents',
+    items: [
+      { key: 'agents.self', label: 'Own invite link', help: 'Their own link and the players who joined through it' },
+      { key: 'agents.read', label: 'All agents & all players', help: "Every agent's link and every player — without it they see only their own players" },
+    ],
+  },
+  {
+    title: 'Site',
+    items: [
+      { key: 'content.write', label: 'Banners', help: 'Home banners, announcements and marquee cards' },
+      { key: 'games.write', label: 'Games', help: 'Show, hide and edit games' },
+      { key: 'signal.write', label: 'Signal', help: 'The Aviator signal control' },
+      { key: 'settings.write', label: 'Settings', help: 'Site settings — contact links, site name and the like' },
+      { key: 'app-keys.write', label: 'App keys', help: 'Keys for the signal app' },
+    ],
+  },
+];
+
+export function isAdminPermission(value: unknown): value is AdminPermission {
+  return typeof value === 'string' && (ALL_PERMISSIONS as readonly string[]).includes(value);
+}
+
+/** A ticked list made safe: unknown names and 'staff.manage' dropped, and
+    the read a write needs added — a "change payment numbers" box without
+    "see payment numbers" would open a screen that refuses them. */
+export function cleanPermissions(input: unknown): AdminPermission[] {
+  const picked = new Set(
+    (Array.isArray(input) ? input : []).filter(
+      (p): p is AdminPermission => isAdminPermission(p) && GRANTABLE_PERMISSIONS.includes(p),
+    ),
+  );
+  if (picked.has('payments.write')) picked.add('payments.read');
+  if (picked.has('players.write') || picked.has('players.lock')) picked.add('players.read');
+  return GRANTABLE_PERMISSIONS.filter((p) => picked.has(p));
+}
+
+/** What an account may actually do: its own ticked list, else its role's. */
+export function permissionsFor(role: AdminRole, custom?: readonly AdminPermission[] | null): AdminPermission[] {
+  if (role === 'super_admin') return [...SUPER_ADMIN];
+  return custom ? cleanPermissions(custom) : [...ROLE_PERMISSIONS[role]];
+}
+
+/** Anything that carries a resolved permission list — a session, usually. */
+export type PermissionHolder = { permissions: readonly AdminPermission[] };
+
+export function can(who: PermissionHolder, permission: AdminPermission): boolean {
+  return who.permissions.includes(permission);
 }
 
 /** The admin tabs, each with the permission that earns it. The nav filters
@@ -111,8 +205,8 @@ export function can(role: AdminRole, permission: AdminPermission): boolean {
     a hidden link is a courtesy, the check on the page is the lock. */
 export const ADMIN_TABS: { href: string; label: string; permission?: AdminPermission }[] = [
   { href: '/admin', label: 'Dashboard' },
-  { href: '/admin/deposits', label: 'Deposits', permission: 'cashier.review' },
-  { href: '/admin/withdrawals', label: 'Withdrawals', permission: 'cashier.review' },
+  { href: '/admin/deposits', label: 'Deposits', permission: 'deposits.review' },
+  { href: '/admin/withdrawals', label: 'Withdrawals', permission: 'withdrawals.review' },
   { href: '/admin/users', label: 'Users', permission: 'players.read' },
   { href: '/admin/agents', label: 'Agents', permission: 'agents.self' },
   { href: '/admin/payments', label: 'Payments', permission: 'payments.read' },
@@ -126,8 +220,8 @@ export const ADMIN_TABS: { href: string; label: string; permission?: AdminPermis
   { href: '/admin/settings', label: 'Settings', permission: 'settings.write' },
 ];
 
-export function tabsFor(role: AdminRole) {
-  return ADMIN_TABS.filter((tab) => !tab.permission || can(role, tab.permission));
+export function tabsFor(who: PermissionHolder) {
+  return ADMIN_TABS.filter((tab) => !tab.permission || can(who, tab.permission));
 }
 
 /* ---- the staff list, as a screen sees it ---- */
@@ -138,6 +232,8 @@ export type AdminStaff = {
   /** the code in this account's invite link — see lib/agent-links.ts */
   refCode: string;
   role: AdminRole;
+  /** the boxes the super admin ticked; absent = the role's defaults */
+  permissions?: AdminPermission[];
   active: boolean;
   createdBy: string;
   createdAt: string;
@@ -151,6 +247,7 @@ export type StaffMutationReason =
   | 'reserved-username'
   | 'weak-password'
   | 'invalid-role'
+  | 'invalid-permissions'
   | 'not-found'
   | 'staff-full';
 
@@ -164,6 +261,7 @@ export const STAFF_ERROR_LABEL: Record<StaffMutationReason, string> = {
   'reserved-username': 'That username belongs to the super admin — pick another.',
   'weak-password': 'Use a password of at least 8 characters.',
   'invalid-role': 'That role was not recognised.',
+  'invalid-permissions': 'That permission list was not recognised.',
   'not-found': 'Account not found — refresh the page.',
   'staff-full': 'The staff account limit has been reached.',
 };

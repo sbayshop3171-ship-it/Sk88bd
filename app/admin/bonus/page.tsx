@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminBonus() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'cashier.config')) return <NoAccess role={session.role} what="bonus rules" />;
+  if (!can(session, 'cashier.config')) return <NoAccess what="bonus rules" />;
 
   return (
     <>

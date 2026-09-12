@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminWithdrawals() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'cashier.review')) return <NoAccess role={session.role} what="Withdrawal requests" />;
+  if (!can(session, 'withdrawals.review')) return <NoAccess what="Withdrawal requests" />;
 
   const rows = await listCashier('withdrawals', 'pending');
 
@@ -30,7 +30,7 @@ export default async function AdminWithdrawals() {
         initialRows={rows.ok ? rows.data : []}
         initialError={rows.ok ? '' : rows.message ?? `Could not load the requests (${rows.reason})`}
         backendReady={isBackendReady()}
-        canLock={can(session.role, 'players.lock')}
+        canLock={can(session, 'players.lock')}
       />
     </>
   );

@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminGames() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'games.write')) return <NoAccess role={session.role} what="Game control" />;
+  if (!can(session, 'games.write')) return <NoAccess what="Game control" />;
 
   // 35 of the 209 games sit in more than one category (Aviator is both hot and
   // jackpot). An override applies to the game, not to one of its listings, so

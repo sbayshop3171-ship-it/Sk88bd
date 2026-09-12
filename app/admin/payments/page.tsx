@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export default async function AdminPayments() {
   const session = await getCurrentAdminSession();
   if (!session) return null;
-  if (!can(session.role, 'payments.read')) return <NoAccess role={session.role} what="Payment accounts" />;
+  if (!can(session, 'payments.read')) return <NoAccess what="Payment accounts" />;
 
   const seen = new Set<string>();
   const channels = [...DEPOSIT_CHANNELS, ...WITHDRAW_CHANNELS]
@@ -32,7 +32,7 @@ export default async function AdminPayments() {
       <PaymentAccountsControl
         channels={channels}
         initialAccounts={await listAccounts()}
-        canWrite={can(session.role, 'payments.write')}
+        canWrite={can(session, 'payments.write')}
       />
     </>
   );
