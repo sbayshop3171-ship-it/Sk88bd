@@ -132,8 +132,35 @@ export async function approveDeposit(id: number, note: string | null) {
     if (!d) throw new DbFail(`deposit ${id} not found`, 'P0002');
     if (d.state !== 'pending') throw new DbFail(`deposit ${id} already ${String(d.state)}`, '22023');
     await run(c, "UPDATE deposits SET state = 'approved', admin_note = ?, reviewed_at = NOW(3) WHERE id = ?", [note, id]);
-    return walletApply(c, String(d.user_id), 'deposit', Number(d.amount), `deposit:${id}`);
+    const balance = await walletApply(c, String(d.user_id), 'deposit', Number(d.amount), `deposit:${id}`);
+    await maybeUnlockAfterDeposit(c, String(d.user_id));
+    return balance;
   });
+}
+
+/** A locked player the admin asked to deposit ৳X to unlock: once their
+    approved deposits since the lock reach that target, the withdraw lock
+    lifts itself and any waiting appeal is granted. Runs inside the approving
+    transaction, and the just-approved deposit counts toward the target. */
+async function maybeUnlockAfterDeposit(c: Conn, uid: string) {
+  const p = await one(c,
+    'SELECT withdraw_locked, verification_deposit_amount, locked_at FROM profiles WHERE id = ? FOR UPDATE', [uid]);
+  const target = Number(p?.verification_deposit_amount ?? 0);
+  if (!p || !p.withdraw_locked || target <= 0) return;
+
+  const since = p.locked_at ? String(p.locked_at) : null;
+  const sum = await one(c,
+    `SELECT COALESCE(SUM(amount), 0) AS total FROM deposits
+       WHERE user_id = ? AND state = 'approved'${since ? ' AND created_at >= ?' : ''}`,
+    since ? [uid, since] : [uid]);
+  if (Number(sum?.total ?? 0) < target) return;
+
+  await run(c,
+    `UPDATE profiles SET withdraw_locked = 0, lock_reason = NULL, locked_at = NULL, locked_by = NULL,
+       verification_deposit_amount = 0 WHERE id = ? AND withdraw_locked = 1`, [uid]);
+  await run(c,
+    "UPDATE account_appeals SET state = 'approved', reviewed_at = NOW(3), reviewed_by = 'auto-verify' WHERE user_id = ? AND state = 'pending'",
+    [uid]);
 }
 
 export async function rejectDeposit(id: number, note: string | null) {

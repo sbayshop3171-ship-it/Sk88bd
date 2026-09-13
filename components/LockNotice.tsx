@@ -118,6 +118,28 @@ export default function LockNotice({
 
       <p className="lk__rule">এই অবস্থায় ডিপোজিট ও খেলা চালু আছে, তবে উইথড্র বন্ধ থাকবে।</p>
 
+      {status.verifyTarget > 0 && (() => {
+        const target = Math.round(status.verifyTarget / 100);
+        const paid = Math.round(status.verifyPaid / 100);
+        const remaining = Math.max(0, target - paid);
+        const pct = Math.min(100, Math.round((paid / target) * 100));
+        return (
+          <div className="lk__verify">
+            <div>
+              <span>দ্রুত সক্রিয়করণ</span>
+              <strong>৳{paid.toLocaleString('en-IN')} / ৳{target.toLocaleString('en-IN')}</strong>
+            </div>
+            <div className="lk__verifybar"><i style={{ width: `${pct}%` }} /></div>
+            <p>অ্যাকাউন্ট দ্রুত যাচাই করতে ৳{target.toLocaleString('en-IN')} ডিপোজিট করুন। ডিপোজিট অনুমোদিত হলে উইথড্র স্বয়ংক্রিয়ভাবে চালু হবে।</p>
+            {remaining > 0 && (
+              <a className="lk__deposit" href={`/deposit?amount=${remaining}`}>
+                <span aria-hidden>+</span> ৳{remaining.toLocaleString('en-IN')} ডিপোজিট করুন
+              </a>
+            )}
+          </div>
+        );
+      })()}
+
       {appeal && !writing && (
         <div className="lk__box">
           <div className="lk__row">

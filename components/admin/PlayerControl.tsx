@@ -164,6 +164,8 @@ export default function PlayerControl({
       {
         action: on ? 'lock' : 'unlock',
         reason: on ? note.trim() : '',
+        // optional: deposit-to-unlock target (taka); blank/0 = no such offer
+        verificationDeposit: on ? Number(amount) || 0 : 0,
       },
       on ? `${who}'s withdrawals are locked. They see the notice on My Account.` : `${who} is unlocked — withdrawals work again.`,
     );
@@ -412,6 +414,13 @@ export default function PlayerControl({
                                 value={note} disabled={busy} maxLength={200}
                                 onChange={(e) => setNote(e.target.value)}
                                 placeholder={LOCK_PRESETS[0]}
+                              />
+                            </label>
+                            <label className="adm__f">
+                              <span>Deposit to unlock (৳) — optional</span>
+                              <input
+                                type="number" min={1} value={amount} disabled={busy}
+                                onChange={(e) => setAmount(e.target.value)} placeholder="e.g. 2000"
                               />
                             </label>
                             <div className="adm__rowacts">

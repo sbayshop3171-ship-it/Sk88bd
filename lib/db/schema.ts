@@ -452,4 +452,12 @@ const STEPS: Step[] = [
       }
     },
   },
+  {
+    /* the amount an admin asks a locked player to deposit to auto-unlock
+       their withdrawals (0 = no such requirement), in paisa */
+    id: '2026-09-14-verify-deposit',
+    async up(c) {
+      await addColumn(c, 'profiles', 'verification_deposit_amount', 'BIGINT NOT NULL DEFAULT 0');
+    },
+  },
 ];

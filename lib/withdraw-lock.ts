@@ -28,6 +28,10 @@ export type LockStatus = {
   lockedAt: string | null;
   /** the latest appeal sent since this lock was set, if any */
   appeal: Appeal | null;
+  /** paisa the admin asks the player to deposit to auto-unlock; 0 = none */
+  verifyTarget: number;
+  /** paisa the player has deposited (approved) since this lock was set */
+  verifyPaid: number;
 };
 
 /** What the player reads when the admin left the reason blank. */
@@ -45,7 +49,7 @@ export const LOCK_PRESETS = [
   'বোনাস অপব্যবহারের সন্দেহ',
 ];
 
-const UNLOCKED: LockStatus = { locked: false, reason: null, lockedAt: null, appeal: null };
+const UNLOCKED: LockStatus = { locked: false, reason: null, lockedAt: null, appeal: null, verifyTarget: 0, verifyPaid: 0 };
 
 /** Postgres has no such column/table yet, or PostgREST's cache is stale. */
 const missing = (message: string) => /column|schema cache|relation|does not exist/i.test(message);
@@ -53,21 +57,37 @@ const missing = (message: string) => /column|schema cache|relation|does not exis
 export async function lockStatus(db: SupabaseClient, uid: string): Promise<LockStatus> {
   const { data, error } = await db
     .from('profiles')
-    .select('withdraw_locked, lock_reason, locked_at')
+    .select('withdraw_locked, lock_reason, locked_at, verification_deposit_amount')
     .eq('id', uid)
     .maybeSingle();
   // before 013 nobody can be locked; a read that fails says nothing either
   // way, and the database checks again inside request_withdrawal
   if (error || !data) return UNLOCKED;
 
-  const row = data as { withdraw_locked: boolean; lock_reason: string | null; locked_at: string | null };
+  const row = data as {
+    withdraw_locked: boolean; lock_reason: string | null; locked_at: string | null;
+    verification_deposit_amount?: number | null;
+  };
   if (!row.withdraw_locked) return UNLOCKED;
+
+  // how much the player has paid in since the lock, if a target was set —
+  // the same figure the auto-unlock in approveDeposit counts against
+  const verifyTarget = Number(row.verification_deposit_amount ?? 0);
+  let verifyPaid = 0;
+  if (verifyTarget > 0) {
+    let q = db.from('deposits').select('amount').eq('user_id', uid).eq('state', 'approved');
+    if (row.locked_at) q = q.gte('created_at', row.locked_at);
+    const { data: deps } = await q;
+    verifyPaid = ((deps as { amount: number }[] | null) ?? []).reduce((n, d) => n + Number(d.amount ?? 0), 0);
+  }
 
   return {
     locked: true,
     reason: row.lock_reason || DEFAULT_LOCK_REASON,
     lockedAt: row.locked_at,
     appeal: await latestAppeal(db, uid, row.locked_at),
+    verifyTarget,
+    verifyPaid,
   };
 }
 
@@ -119,6 +139,8 @@ export async function setWithdrawLock(
   locked: boolean,
   reason: string,
   by: string,
+  /** paisa the player must deposit to auto-unlock; 0 = no such offer */
+  verifyAmount = 0,
 ): Promise<LockWrite> {
   const now = new Date().toISOString();
   const { error } = await db
@@ -128,6 +150,8 @@ export async function setWithdrawLock(
       lock_reason: locked ? reason || null : null,
       locked_at: locked ? now : null,
       locked_by: locked ? by || null : null,
+      // the deposit-to-unlock target lives only while locked
+      verification_deposit_amount: locked ? Math.max(0, Math.round(verifyAmount)) : 0,
     })
     .eq('id', userId);
   if (error) {

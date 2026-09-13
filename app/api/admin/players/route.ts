@@ -59,9 +59,12 @@ export async function POST(req: Request) {
     const db = adminClient();
     if (!db) return json({ ok: false, reason: 'no-backend' }, 503);
     const note = String(record.reason ?? '').trim().slice(0, 200);
+    // the deposit-to-unlock target the admin typed, taka → paisa
+    const verifyTaka = Number(record.verificationDeposit);
+    const verifyPaisa = Number.isFinite(verifyTaka) && verifyTaka > 0 ? Math.round(verifyTaka * 100) : 0;
     const result = action === 'reject-appeal'
       ? await rejectAppeal(db, userId, Number(record.appealId), note, session.username)
-      : await setWithdrawLock(db, userId, action === 'lock', note, session.username);
+      : await setWithdrawLock(db, userId, action === 'lock', note, session.username, verifyPaisa);
     if (!result.ok) return json({ ok: false, reason: 'db-error', message: result.message }, 400);
   } else if (record.action === 'adjust') {
     const amount = Math.round(Number(record.amount));
