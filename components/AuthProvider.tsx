@@ -3,7 +3,7 @@
 import {
   createContext, useCallback, useContext, useEffect, useMemo, useRef, useState,
 } from 'react';
-import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import type { Session, SupabaseClient } from '@/lib/supabase';
 import { browserClient, isBackendReady } from '@/lib/supabase';
 import { normalizeAgentCode } from '@/lib/agent-links';
 import { emailToPhone, normalizePhone, phoneToEmail } from '@/lib/auth';
@@ -87,22 +87,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .select('balance, bonus_balance, turnover_need, turnover_done')
       .eq('user_id', uid).maybeSingle();
     let row: Profile | null = null;
-    for (const cols of TIERS) {
-      const p = await supabase.from('profiles').select(cols).eq('id', uid).maybeSingle();
-      if (!p.error) { row = (p.data as Profile | null) ?? null; break; }
+    try {
+      for (const cols of TIERS) {
+        const p = await supabase.from('profiles').select(cols).eq('id', uid).maybeSingle();
+        if (!p.error) { row = (p.data as Profile | null) ?? null; break; }
+      }
+    } catch (error) {
+      console.warn('Profile hydration failed, falling back to a default profile state:', error);
+      row = null;
+    }
+
+    if (!row) {
+      row = {
+        id: uid,
+        phone: '',
+        display_name: null,
+        role: 'player',
+        vip_level: 0,
+        referral_code: '',
+      };
     }
 
     // A banned account is signed out here as well as at the auth server: an
     // access token issued before the ban is good for up to an hour, and the
     // screens should not keep offering a wallet that no longer works.
-    if (row?.is_blocked) {
+    if (row.is_blocked) {
       await supabase.auth.signOut();
       setProfile(null);
       setWallet(null);
       return;
     }
     setProfile(row);
-    setWallet(((await walletRead).data as Wallet) ?? null);
+    const walletData = ((await walletRead).data as unknown) as Partial<Wallet> | null;
+    setWallet(walletData ? {
+      balance: Number(walletData.balance ?? 0),
+      bonus_balance: Number(walletData.bonus_balance ?? 0),
+      turnover_need: Number(walletData.turnover_need ?? 0),
+      turnover_done: Number(walletData.turnover_done ?? 0),
+    } : null);
   }, [supabase]);
 
   useEffect(() => {

@@ -35,11 +35,21 @@ export default async function AdminDashboard() {
   if (!session) return null;
   const base = await panelBase();
 
-  const [accounts, overrides, content, stats, staff] = await Promise.all([
+  let stats: Awaited<ReturnType<typeof cashierStats>>;
+  try {
+    stats = await cashierStats();
+  } catch (error) {
+    stats = {
+      ok: false,
+      reason: 'db-error',
+      message: error instanceof Error ? error.message : 'Database error while fetching dashboard stats',
+    };
+  }
+
+  const [accounts, overrides, content, staff] = await Promise.all([
     listAccounts(),
     listOverrides(),
     getSiteContent(),
-    cashierStats(),
     listStaff(),
   ]);
 

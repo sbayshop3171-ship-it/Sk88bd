@@ -12,14 +12,13 @@
 import { multiplierAt } from './aviator';
 import { getAviatorSignalState } from './aviator-signal-store';
 import {
-  MAX_STAKE_PAISA,
   MIN_STAKE_PAISA,
   publicBet,
   type BetResult,
   type PublicBet,
 } from './aviator-bets';
 import { betsFor, mutateBets, newBet, settleBusted } from './aviator-bets-store';
-import { capPayout } from './mini-games';
+import { MAX_STAKE_PAISA, capPayout } from './mini-games';
 import { accountBlock } from './player-status';
 import { adminClient, serverClient } from './supabase';
 

@@ -13,7 +13,18 @@ export default async function AdminDeposits() {
   if (!session) return null;
   if (!can(session, 'deposits.review')) return <NoAccess what="Deposit requests" />;
 
-  const rows = await listCashier('deposits', 'pending');
+  let rows: Awaited<ReturnType<typeof listCashier>> = { ok: true, data: [] };
+
+  try {
+    rows = await listCashier('deposits', 'pending');
+  } catch (error) {
+    console.error('Deposits Page Load Error:', error);
+    rows = {
+      ok: false,
+      reason: 'db-error',
+      message: 'Could not load the requests. The database may be unavailable.',
+    };
+  }
 
   return (
     <>

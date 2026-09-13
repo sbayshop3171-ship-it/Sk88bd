@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 import LockNotice, { useWithdrawLock } from '@/components/LockNotice';
 import PageHeader from '@/components/PageHeader';
@@ -52,7 +52,14 @@ export default function MemberPage() {
   const { toast } = useUI();
   const { ready, session, profile, wallet, signOut, refresh } = useAuth();
   const [spinning, setSpinning] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const lock = useWithdrawLock();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   const signedIn = ready && Boolean(session);
   /* the player ID (migration 012) is the number support asks for; before it
@@ -84,17 +91,19 @@ export default function MemberPage() {
   };
 
   return (
-    <>
+    <div suppressHydrationWarning>
       <PageHeader title="My Account" />
 
-      <div className="mc">
+      <div className="mc" suppressHydrationWarning>
         <div className="mc__card">
           {/* the reference hangs the daily sign-in off the card's corner —
               it is the one thing on this screen that pays, so it does not
               wait its turn down in the grid */}
-          <Link href="/reward" className="mc__signin">
-            <span aria-hidden>☑</span> Sign In <i aria-hidden>›</i>
-          </Link>
+          {!signedIn && (
+            <Link href="/reward" className="mc__signin">
+              <span aria-hidden>☑</span> Sign In <i aria-hidden>›</i>
+            </Link>
+          )}
 
           <div className="mc__top">
             <span className="mc__av" aria-hidden><UserIcon /></span>
@@ -157,12 +166,12 @@ export default function MemberPage() {
           <LockNotice status={lock.status} onChange={lock.setStatus} />
         )}
 
-        <div className="mc__sechd">
+          {!lock.status?.locked && <div className="mc__sechd">
               <span>Member Center</span>
           <i aria-hidden />
-        </div>
+          </div>}
 
-        <div className="mc__grid">
+          {!lock.status?.locked && <div className="mc__grid">
           {TILES.map((tile) => (
             <Link className="mc__tile" key={tile.href + tile.label} href={tile.href}>
               <span className="mc__ico">
@@ -183,8 +192,8 @@ export default function MemberPage() {
               <span className="mc__lbl">{t.logout}</span>
             </button>
           )}
-        </div>
+        </div>}
       </div>
-    </>
+    </div>
   );
 }

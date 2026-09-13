@@ -112,7 +112,7 @@ export async function listCashier(
       if (term.length <= 9) who.unshift(`player_no.eq.${Number(term)}`);
       const found = await db.from('profiles').select('id').or(who.join(',')).limit(50);
       if (found.error) return { ok: false, reason: 'db-error', message: found.error.message };
-      const ids = (found.data ?? []).map((r) => String((r as { id: string }).id));
+      const ids = (found.data ?? []).map((r: Record<string, unknown>) => String((r as { id: string }).id));
       if (ids.length) match.push(`user_id.in.(${ids.join(',')})`);
     }
     filter = match.join(',');
@@ -237,38 +237,46 @@ export async function cashierStats(): Promise<CashierResult<CashierStats>> {
   const db = adminClient();
   if (!db) return NO_BACKEND;
 
-  // "Today" is the Bangladesh day (UTC+6), the one the operator is counting —
-  // the server's own clock is UTC and would roll over at 6am local.
-  const BD_OFFSET_MS = 6 * 60 * 60 * 1000;
-  const bd = new Date(Date.now() + BD_OFFSET_MS);
-  const since = new Date(
-    Date.UTC(bd.getUTCFullYear(), bd.getUTCMonth(), bd.getUTCDate()) - BD_OFFSET_MS,
-  ).toISOString();
+  try {
+    // "Today" is the Bangladesh day (UTC+6), the one the operator is counting —
+    // the server's own clock is UTC and would roll over at 6am local.
+    const BD_OFFSET_MS = 6 * 60 * 60 * 1000;
+    const bd = new Date(Date.now() + BD_OFFSET_MS);
+    const since = new Date(
+      Date.UTC(bd.getUTCFullYear(), bd.getUTCMonth(), bd.getUTCDate()) - BD_OFFSET_MS,
+    ).toISOString();
 
-  const [pendD, pendW, todayD, todayW, players] = await Promise.all([
-    db.from('deposits').select('id', { count: 'exact', head: true }).eq('state', 'pending'),
-    db.from('withdrawals').select('id', { count: 'exact', head: true }).eq('state', 'pending'),
-    db.from('deposits').select('amount').eq('state', 'approved').gte('reviewed_at', since),
-    db.from('withdrawals').select('amount').eq('state', 'approved').gte('reviewed_at', since),
-    db.from('profiles').select('id', { count: 'exact', head: true }),
-  ]);
+    const [pendD, pendW, todayD, todayW, players] = await Promise.all([
+      db.from('deposits').select('id', { count: 'exact', head: true }).eq('state', 'pending'),
+      db.from('withdrawals').select('id', { count: 'exact', head: true }).eq('state', 'pending'),
+      db.from('deposits').select('amount').eq('state', 'approved').gte('reviewed_at', since),
+      db.from('withdrawals').select('amount').eq('state', 'approved').gte('reviewed_at', since),
+      db.from('profiles').select('id', { count: 'exact', head: true }),
+    ]);
 
-  const failed = [pendD, pendW, todayD, todayW, players].find((r) => r.error);
-  if (failed?.error) return { ok: false, reason: 'db-error', message: failed.error.message };
+    const failed = [pendD, pendW, todayD, todayW, players].find((r) => r.error);
+    if (failed?.error) return { ok: false, reason: 'db-error', message: failed.error.message };
 
-  const sum = (rows: { amount: number }[] | null) =>
-    (rows ?? []).reduce((total, r) => total + Number(r.amount ?? 0), 0);
+    const sum = (rows: { amount: number }[] | null) =>
+      (rows ?? []).reduce((total: number, r: { amount: number }) => total + Number(r.amount ?? 0), 0);
 
-  return {
-    ok: true,
-    data: {
-      pendingDeposits: pendD.count ?? 0,
-      pendingWithdrawals: pendW.count ?? 0,
-      todayDeposited: sum(todayD.data as { amount: number }[] | null),
-      todayWithdrawn: sum(todayW.data as { amount: number }[] | null),
-      totalPlayers: players.count ?? 0,
-    },
-  };
+    return {
+      ok: true,
+      data: {
+        pendingDeposits: Number(pendD.count ?? 0),
+        pendingWithdrawals: Number(pendW.count ?? 0),
+        todayDeposited: sum(todayD.data as { amount: number }[] | null),
+        todayWithdrawn: sum(todayW.data as { amount: number }[] | null),
+        totalPlayers: Number(players.count ?? 0),
+      },
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: 'db-error',
+      message: error instanceof Error ? error.message : 'Database error while fetching dashboard stats',
+    };
+  }
 }
 
 /**
@@ -339,7 +347,7 @@ async function payDepositBonus(
     .from('deposits')
     .select('user_id, amount, method_id, channel_id')
     .eq('id', id)
-    .maybeSingle();
+    .maybeSingle<Record<string, unknown>>();
   if (error) return isMissingColumn(error.message) ? { ok: true } : { ok: false, message: error.message };
 
   const deposit = row as { user_id: string; amount: number; method_id: string | null; channel_id: string } | null;

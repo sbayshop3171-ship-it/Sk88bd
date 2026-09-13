@@ -22,10 +22,19 @@ export default function InstallPrompt() {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  // the service worker is what makes Chrome treat this as an installable app
+  // Keep the worker out of local development so a stale offline shell cannot
+  // mask a crashed or restarted dev server.
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
     if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') return;
+
+    if (process.env.NODE_ENV !== 'production') {
+      void navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => void registration.unregister());
+      });
+      return;
+    }
+
     const id = window.setTimeout(() => {
       void navigator.serviceWorker.register('/sw.js').catch(() => {
         /* an unsupported or blocked worker just means no install offer */

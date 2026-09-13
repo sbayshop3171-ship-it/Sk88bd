@@ -57,7 +57,7 @@ export async function agentNetwork(
   }
 
   const rows = signups.data ?? [];
-  const ids = rows.map((r) => r.id);
+  const ids = rows.map((r: { id: string }) => r.id);
 
   // one query for every agent's players at once — a per-agent round trip
   // would turn a ten-agent panel into twenty
@@ -76,7 +76,7 @@ export async function agentNetwork(
 
   const depositors = new Set<string>();
   const paidBy = new Map<string, number>();
-  for (const row of deposits.data ?? []) {
+  for (const row of (deposits.data ?? []) as Array<{ user_id: string; amount: number }>) {
     depositors.add(row.user_id);
     paidBy.set(row.user_id, (paidBy.get(row.user_id) ?? 0) + Number(row.amount ?? 0));
   }

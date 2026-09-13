@@ -69,6 +69,13 @@ export default function DepositPage() {
   const [account, setAccount] = useState<PublicDepositAccount | null>(null);
   const [loadingAccount, setLoadingAccount] = useState(false);
 
+  useEffect(() => {
+    const requestedAmount = Number(new URLSearchParams(window.location.search).get('amount'));
+    if (!Number.isFinite(requestedAmount) || requestedAmount <= 0) return;
+    setAmount(String(requestedAmount));
+    setErr('');
+  }, []);
+
   const n = Number(amount);
   const amountOk = Boolean(method) && Number.isFinite(n) && n >= (method?.min ?? 0) && n <= (method?.max ?? 0);
   const trxPattern = useMemo(() => {

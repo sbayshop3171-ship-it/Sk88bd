@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import Script from 'next/script';
 import InstallPrompt from '@/components/InstallPrompt';
 import { BRAND } from '@/lib/brand';
 import './globals.css';
@@ -95,17 +94,17 @@ const installPromptCatcher = `
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        <Script
+      <head>
+        <script
           id="extension-error-guard"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: extensionErrorGuard }}
         />
-        <Script
+        <script
           id="install-prompt-catcher"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: installPromptCatcher }}
         />
+      </head>
+      <body suppressHydrationWarning>
         {children}
         <InstallPrompt />
       </body>

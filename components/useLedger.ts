@@ -45,7 +45,7 @@ export function useLedger(limit = 200) {
       .select('id, kind, amount, balance_after, ref, created_at')
       .order('id', { ascending: false })
       .limit(limit)
-      .then(({ data }) => { if (live) setRows((data as LedgerRow[]) ?? []); });
+      .then((result) => { if (live) setRows((result.data as LedgerRow[] | null) ?? []); });
 
     return () => { live = false; };
   }, [supabase, session, limit]);

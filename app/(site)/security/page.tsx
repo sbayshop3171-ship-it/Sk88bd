@@ -47,9 +47,9 @@ export default function SecurityPage() {
     if (!supabase || !session) return;
     let live = true;
     void supabase.from('payout_accounts').select('id').limit(1)
-      .then(({ data }) => { if (live) setHasWallet((data?.length ?? 0) > 0); });
+      .then((result) => { if (live) setHasWallet((result.data as { length?: number } | null)?.length ? ((result.data as { length?: number }).length ?? 0) > 0 : false); });
     void supabase.rpc('has_transaction_password')
-      .then(({ data }) => { if (live) setHasTxnPassword(data === true); });
+      .then((result) => { if (live) setHasTxnPassword(result.data === true); });
     return () => { live = false; };
   }, [supabase, session]);
 

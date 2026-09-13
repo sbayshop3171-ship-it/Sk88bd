@@ -24,7 +24,7 @@ export async function GET() {
   const referred = await db.from('profiles').select('id').eq('referred_by', me.user.id);
   if (referred.error) return json({ ok: false, reason: 'db-error', message: referred.error.message }, 500);
 
-  const ids = (referred.data ?? []).map((r) => r.id as string);
+  const ids = (referred.data ?? []).map((r: Record<string, unknown>) => String(r.id ?? ''));
 
   // "active" = has at least one approved deposit; commission = rebate rows on
   // the player's own ledger (that is where a referral payout would land).
@@ -35,7 +35,7 @@ export async function GET() {
       .select('user_id')
       .in('user_id', ids)
       .eq('state', 'approved');
-    active = new Set((deps.data ?? []).map((d) => d.user_id as string)).size;
+    active = new Set((deps.data ?? []).map((d: Record<string, unknown>) => String(d.user_id ?? ''))).size;
   }
 
   const rebates = await db
@@ -43,7 +43,7 @@ export async function GET() {
     .select('amount')
     .eq('user_id', me.user.id)
     .eq('kind', 'rebate');
-  const commission = (rebates.data ?? []).reduce((sum, r) => sum + Number(r.amount ?? 0), 0);
+  const commission = (rebates.data ?? []).reduce((sum: number, r: Record<string, unknown>) => sum + Number(r.amount ?? 0), 0);
 
   return json({ ok: true, total: ids.length, active, commission });
 }

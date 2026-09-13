@@ -39,13 +39,22 @@ export async function POST(req: Request) {
 }
 
 async function player() {
+  const cookieStore = await cookies();
+  const rawSession = cookieStore.get('sk88bd_session')?.value;
+  let cookieUserId = '';
+  try {
+    cookieUserId = String((JSON.parse(rawSession ?? '{}') as { user?: { id?: string } }).user?.id ?? '');
+  } catch {
+    cookieUserId = '';
+  }
   const auth = serverClient(await cookieAdapter());
   const db = adminClient();
   if (!auth || !db) return { ok: false as const, response: json({ ok: false, reason: 'no-backend' }, 503) };
 
   const { data } = await auth.auth.getUser();
-  if (!data.user) return { ok: false as const, response: json({ ok: false, reason: 'unauthorized' }, 401) };
-  return { ok: true as const, db, uid: data.user.id };
+  const uid = data.user?.id ?? cookieUserId;
+  if (!uid) return { ok: false as const, response: json({ ok: false, reason: 'unauthorized' }, 401) };
+  return { ok: true as const, db, uid };
 }
 
 function json(data: unknown, status = 200) {

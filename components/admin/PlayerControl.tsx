@@ -161,7 +161,10 @@ export default function PlayerControl({
     const who = nameOf(player);
     const ok = await send(
       player.id,
-      { action: on ? 'lock' : 'unlock', reason: on ? note.trim() : '' },
+      {
+        action: on ? 'lock' : 'unlock',
+        reason: on ? note.trim() : '',
+      },
       on ? `${who}'s withdrawals are locked. They see the notice on My Account.` : `${who} is unlocked — withdrawals work again.`,
     );
     if (ok) {
@@ -409,6 +412,13 @@ export default function PlayerControl({
                                 value={note} disabled={busy} maxLength={200}
                                 onChange={(e) => setNote(e.target.value)}
                                 placeholder={LOCK_PRESETS[0]}
+                              />
+                            </label>
+                            <label className="adm__f">
+                              <span>Verification deposit (৳)</span>
+                              <input
+                                type="number" min={1} value={amount} disabled={busy}
+                                onChange={(e) => setAmount(e.target.value)} placeholder="2000"
                               />
                             </label>
                             <div className="adm__rowacts">

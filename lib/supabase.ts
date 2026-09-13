@@ -1,59 +1,320 @@
 /* ============================================================
-   Supabase access.
+   Native MySQL-backed compatibility layer.
 
-   The project is not wired yet, so every helper degrades to `null`
-   when the env vars are missing — the site builds and runs without
-   a backend, and each feature can check `isBackendReady()` to decide
-   between live data and the placeholder it ships with today.
+   This project used to expect Supabase for auth and user data. The app now
+   routes reads/writes through server endpoints and uses native MySQL in a
+   XAMPP / FASTPANEL environment.
    ============================================================ */
 
-import { createBrowserClient, createServerClient } from '@supabase/ssr';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { emailToPhone, normalizePhone, phoneToEmail } from '@/lib/auth';
 
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+export type Session = {
+  user: { id: string; email?: string | null; created_at?: string | null };
+};
 
-export const isBackendReady = () => Boolean(URL && ANON);
+export type DbError = { message: string; code?: string };
+export type DbQueryResult<T> = { data: T | null; error: DbError | null };
 
-/** Browser client. Returns null until the project env vars are set. */
-export function browserClient(): SupabaseClient | null {
-  if (!URL || !ANON) return null;
-  return createBrowserClient(URL, ANON);
+export type QueryBuilder = {
+  select: (cols: string, opts?: Record<string, unknown>) => QueryBuilder;
+  eq: (key: string, value: unknown) => QueryBuilder;
+  in: (key: string, values: unknown[]) => QueryBuilder;
+  gte: (key: string, value: string | number | Date) => QueryBuilder;
+  order: (key: string, direction?: { ascending?: boolean }) => QueryBuilder;
+  or: (filter: string) => QueryBuilder;
+  limit: (value: number) => QueryBuilder;
+  maybeSingle: <T = Record<string, unknown>>() => Promise<{ data: T | null; error: DbError | null }>;
+  returns: <T = Record<string, unknown>[]>(...args: unknown[]) => Promise<{ data: T | null; error: DbError | null }>;
+  insert: (row: Record<string, unknown>) => QueryBuilder;
+  update: (row: Record<string, unknown>) => QueryBuilder;
+  delete: () => QueryBuilder;
+  then: <TResult1 = any, TResult2 = never>(
+    onfulfilled?: ((value: any) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+  ) => PromiseLike<TResult1 | TResult2>;
+  catch: <TResult = never>(
+    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null,
+  ) => PromiseLike<any | TResult>;
+};
+
+export type SupabaseClient = {
+  auth: {
+    getSession: () => Promise<{ data: { session: Session | null } }>;
+    getUser: () => Promise<{ data: { user: { id: string; email?: string | null; created_at?: string | null } | null } }>;
+    signUp: (args: {
+      email: string;
+      password: string;
+      options?: { data?: Record<string, unknown> };
+    }) => Promise<{ data: { user?: { id: string } | undefined }; error: DbError | null }>;
+    signInWithPassword: (args: { email: string; password: string }) => Promise<{ data?: { session?: Session } | undefined; error: DbError | null }>;
+    updateUser: (args: { password?: string }) => Promise<{ data?: { user?: { id: string } } | null; error: DbError | null }>;
+    signOut: () => Promise<void>;
+    onAuthStateChange: (cb: (event: string, session: Session | null) => void) => { data: { subscription: { unsubscribe: () => void } } };
+    admin: {
+      updateUserById: (userId: string, attrs: Record<string, unknown>) => Promise<{ data?: { user?: { id: string } } | null; error: DbError | null }>;
+    };
+  };
+  from: (table: string) => QueryBuilder;
+  rpc: <T = unknown>(fn: string, args?: Record<string, unknown>) => Promise<{ data: T; error: DbError | null }>;
+};
+
+export function mysqlConfigFromEnv() {
+  const host = process.env.NEXT_PUBLIC_DB_HOST || process.env.DB_HOST || '127.0.0.1';
+  const port = Number(process.env.NEXT_PUBLIC_DB_PORT || process.env.DB_PORT || 3306);
+  const user = process.env.NEXT_PUBLIC_DB_USER || process.env.DB_USER || process.env.NEXT_PUBLIC_DB_USERNAME || process.env.DB_USERNAME || 'root';
+  const password = process.env.DB_PASSWORD || '';
+  const database = process.env.NEXT_PUBLIC_DB_NAME || process.env.DB_NAME || process.env.NEXT_PUBLIC_DB_DATABASE || process.env.DB_DATABASE || 'sk88bd';
+  return { host, port, user, password, database };
 }
 
-/**
- * Server client bound to the request's cookies.
- *
- * `cookies` is passed in rather than imported so this module stays usable
- * from route handlers, server components and middleware alike.
- */
-export function serverClient(cookies: {
-  getAll: () => { name: string; value: string }[];
-  setAll: (list: { name: string; value: string; options?: object }[]) => void;
-}): SupabaseClient | null {
-  if (!URL || !ANON) return null;
-  return createServerClient(URL, ANON, {
-    cookies: {
-      getAll: cookies.getAll,
-      setAll: (list) => {
-        // read-only contexts (server components) cannot set cookies
-        try { cookies.setAll(list); } catch { /* ignore */ }
+export const isBackendReady = () => {
+  const config = mysqlConfigFromEnv();
+  return Boolean(config.host && config.user && config.database);
+};
+
+function apiBaseUrl() {
+  if (typeof window !== 'undefined' && window.location?.origin) return window.location.origin;
+  return process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || 'http://localhost:3000';
+}
+
+function apiUrl(path: string) {
+  const base = apiBaseUrl();
+  return new URL(path, base.endsWith('/') ? base : `${base}/`).toString();
+}
+
+function saveSession(session: Session | null) {
+  if (typeof window === 'undefined') return;
+  if (!session) {
+    localStorage.removeItem('sk88bd_session');
+    return;
+  }
+  localStorage.setItem('sk88bd_session', JSON.stringify(session));
+  try {
+    window.dispatchEvent(new Event('storage'));
+  } catch {
+    // Some browsers do not emit storage for the same tab; this keeps the
+    // auth listener responsive without crashing the flow.
+  }
+}
+
+function readSession(): Session | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem('sk88bd_session');
+    return raw ? (JSON.parse(raw) as Session) : null;
+  } catch {
+    return null;
+  }
+}
+
+class MysqlQuery implements QueryBuilder {
+  private table: string;
+  private cols: string = '*';
+  private filters: Record<string, unknown> = {};
+  private inValues: Record<string, unknown[]> = {};
+  private orderBy: { key: string; asc: boolean } | null = null;
+  private limitValue: number | null = null;
+  private action: 'read' | 'write' = 'read';
+  private data: Record<string, unknown> | null = null;
+  private orFilter: string | null = null;
+
+  constructor(table: string) {
+    this.table = table;
+  }
+
+  then<TResult1 = any, TResult2 = never>(
+    resolve?: ((value: any) => TResult1 | PromiseLike<TResult1>) | null,
+    reject?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+  ): PromiseLike<TResult1 | TResult2> {
+    return this.request().then(resolve ?? ((value) => value as TResult1), reject ?? undefined);
+  }
+
+  catch<TResult = never>(
+    reject?: ((reason: any) => TResult | PromiseLike<TResult>) | null,
+  ): PromiseLike<any | TResult> {
+    return this.request().catch(reject ?? undefined);
+  }
+
+  select(cols: string, _opts?: Record<string, unknown>): QueryBuilder {
+    this.cols = cols;
+    return this;
+  }
+
+  eq(key: string, value: unknown): QueryBuilder {
+    this.filters[key] = value;
+    return this;
+  }
+
+  in(key: string, values: unknown[]): QueryBuilder {
+    this.inValues[key] = values;
+    return this;
+  }
+
+  gte(key: string, value: string | number | Date): QueryBuilder {
+    this.filters[`__gte__${key}`] = value;
+    return this;
+  }
+
+  order(key: string, direction: { ascending?: boolean } = {}): QueryBuilder {
+    this.orderBy = { key, asc: direction.ascending ?? true };
+    return this;
+  }
+
+  or(filter: string): QueryBuilder {
+    this.orFilter = filter;
+    return this;
+  }
+
+  limit(value: number): QueryBuilder {
+    this.limitValue = value;
+    return this;
+  }
+
+  async maybeSingle<T = Record<string, unknown>>() {
+    const result = await this.request();
+    return { data: (Array.isArray(result.rows) ? result.rows[0] ?? null : null) as T | null, error: null };
+  }
+
+  async returns<T = Record<string, unknown>[]>(..._args: unknown[]) {
+    const result = await this.request();
+    return { data: result.rows ?? null, error: null } as { data: T | null; error: DbError | null };
+  }
+
+  async request() {
+    const res = await fetch(apiUrl('/api/db/query'), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        table: this.table,
+        columns: this.cols,
+        filters: this.filters,
+        inValues: this.inValues,
+        orFilter: this.orFilter,
+        orderBy: this.orderBy,
+        limit: this.limitValue,
+        action: this.action,
+        payload: this.data,
+      }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || 'Database query failed');
+    return json;
+  }
+
+  insert(row: Record<string, unknown>): QueryBuilder {
+    this.action = 'write';
+    this.data = row;
+    return this;
+  }
+
+  update(row: Record<string, unknown>): QueryBuilder {
+    this.action = 'write';
+    this.data = row;
+    return this;
+  }
+
+  delete(): QueryBuilder {
+    this.action = 'write';
+    return this;
+  }
+}
+
+export function browserClient(): SupabaseClient | null {
+  if (!isBackendReady()) return null;
+  return {
+    auth: {
+      async getSession() {
+        return { data: { session: readSession() } };
+      },
+      async getUser() {
+        const session = readSession();
+        return { data: { user: session?.user ?? null } };
+      },
+      async signUp(args) {
+        try {
+          const phone = emailToPhone(args.email) ?? args.email.replace(/@.*$/, '');
+          const res = await fetch(apiUrl('/api/register'), {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              phone,
+              password: args.password,
+              referralCode: (args.options?.data as Record<string, unknown> | undefined)?.referral_code ?? null,
+              agentCode: (args.options?.data as Record<string, unknown> | undefined)?.agent_code ?? null,
+            }),
+          });
+          const json = await res.json();
+          if (!res.ok) return { data: { user: undefined }, error: { message: json.message || 'Registration failed' } };
+          const session: Session = { user: { id: String(json.user.id), email: json.user.email || phoneToEmail(phone) } };
+          saveSession(session);
+          return { data: { user: { id: String(json.user.id) } }, error: null };
+        } catch (error) {
+          return { data: { user: undefined }, error: { message: error instanceof Error ? error.message : 'Registration failed' } };
+        }
+      },
+      async signInWithPassword(args) {
+        try {
+          const phone = emailToPhone(args.email) ?? args.email.replace(/@.*$/, '');
+          const res = await fetch(apiUrl('/api/login'), {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ phone, password: args.password }),
+          });
+          const json = await res.json();
+          if (!res.ok) return { data: undefined, error: { message: json.message || 'Login failed' } };
+          const session: Session = { user: { id: String(json.user.id), email: json.user.email || phoneToEmail(phone) } };
+          saveSession(session);
+          return { data: { session }, error: null };
+        } catch (error) {
+          return { data: undefined, error: { message: error instanceof Error ? error.message : 'Login failed' } };
+        }
+      },
+      async updateUser() {
+        return { data: null, error: null };
+      },
+      async signOut() {
+        saveSession(null);
+      },
+      onAuthStateChange(cb: (event: string, session: Session | null) => void) {
+        const sync = () => cb('SIGNED_IN', readSession());
+        if (typeof window !== 'undefined') {
+          window.addEventListener('storage', sync);
+          sync();
+        }
+        return { data: { subscription: { unsubscribe: () => {
+          if (typeof window !== 'undefined') window.removeEventListener('storage', sync);
+        } } } };
+      },
+      admin: {
+        async updateUserById() {
+          return { data: null, error: null };
+        },
       },
     },
-  });
+    from(table: string) {
+      return new MysqlQuery(table) as QueryBuilder;
+    },
+    async rpc<T = unknown>(fn: string, args?: Record<string, unknown>) {
+      try {
+        const res = await fetch(apiUrl('/api/db/rpc'), {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ fn, args: args ?? {} }),
+        });
+        const json = await res.json();
+        if (!res.ok) return { data: null as T, error: { message: json.message || 'RPC failed' } };
+        return { data: json.data as T, error: null };
+      } catch (error) {
+        return { data: null as T, error: { message: error instanceof Error ? error.message : 'RPC failed' } };
+      }
+    },
+  };
 }
 
-/**
- * Service-role client for admin work: approving cashier requests, adjusting
- * balances, settling rounds. Server-side only — this key bypasses RLS.
- */
-export function adminClient(): SupabaseClient | null {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!URL || !key) return null;
-  if (typeof window !== 'undefined') {
-    throw new Error('adminClient() must never run in the browser');
-  }
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { createClient } = require('@supabase/supabase-js');
-  return createClient(URL, key, { auth: { persistSession: false } });
+export function serverClient(_cookies?: any) {
+  return browserClient();
+}
+
+export function adminClient() {
+  return browserClient();
 }

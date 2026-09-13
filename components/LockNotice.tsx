@@ -184,6 +184,7 @@ export default function LockNotice({
           </div>
         </div>
       )}
+
     </section>
   );
 }

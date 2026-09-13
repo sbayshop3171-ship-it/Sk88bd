@@ -9,7 +9,7 @@
     through /api/account/lock after checking their session, the admin side
     through /api/admin/players after checking the staff session. */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@/lib/supabase';
 
 export type AppealState = 'pending' | 'approved' | 'rejected';
 

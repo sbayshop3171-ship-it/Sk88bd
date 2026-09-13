@@ -13,7 +13,18 @@ export default async function AdminWithdrawals() {
   if (!session) return null;
   if (!can(session, 'withdrawals.review')) return <NoAccess what="Withdrawal requests" />;
 
-  const rows = await listCashier('withdrawals', 'pending');
+  let rows: Awaited<ReturnType<typeof listCashier>> = { ok: true, data: [] };
+
+  try {
+    rows = await listCashier('withdrawals', 'pending');
+  } catch (error) {
+    console.error('Withdrawals Page Load Error:', error);
+    rows = {
+      ok: false,
+      reason: 'db-error',
+      message: 'Could not load the requests. The database may be unavailable.',
+    };
+  }
 
   return (
     <>
