@@ -23,6 +23,25 @@ const securityHeaders = [
     key: 'Permissions-Policy',
     value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
   },
+  /* A deliberately narrow CSP: only the directives that cannot break the
+     site. It does NOT set default-src/script-src/style-src, because the
+     pages inline both scripts and styles and a real policy for those needs
+     nonces threaded through the app (a separate, larger job). What is here
+     still shuts real attacks: no plugins/objects, no <base> hijack to
+     re-point relative URLs, forms can only post back to us, nobody may
+     frame our pages (the cashier/admin), and any stray http asset is
+     upgraded to https. frame-src is left open so the game iframes still
+     load. */
+  {
+    key: 'Content-Security-Policy',
+    value: [
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+      'upgrade-insecure-requests',
+    ].join('; '),
+  },
 ];
 
 const nextConfig = {
