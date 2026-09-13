@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth-next';
 import { can } from '@/lib/admin-roles';
+import { resetPasswordByAdmin } from '@/lib/db/accounts';
 import { adjustBalance, listPlayers, setBlocked, setHeld } from '@/lib/cashier';
 import { inScope, playerScope } from '@/lib/player-scope';
 import { adminClient } from '@/lib/db/server';
@@ -78,6 +79,17 @@ export async function POST(req: Request) {
     const typed = String(record.note ?? '').trim().slice(0, 200);
     const result = await adjustBalance(userId, amount, `${session.username}: ${typed || 'adjust'}`);
     if (!result.ok) return json(result, result.reason === 'no-backend' ? 503 : 400);
+  } else if (record.action === 'reset-password') {
+    // admin resets a player's forgotten login password
+    const pw = String(record.password ?? '');
+    if (pw.length < 6 || pw.length > 64) {
+      return json({ ok: false, reason: 'invalid-password', message: 'The password must be 6–64 characters.' }, 400);
+    }
+    try {
+      await resetPasswordByAdmin(userId, pw);
+    } catch (e) {
+      return json({ ok: false, reason: 'db-error', message: e instanceof Error ? e.message : 'Could not reset the password' }, 400);
+    }
   } else if (record.action === 'block' || record.action === 'hold') {
     // why, and who — kept on the profile so the next person to open the
     // account sees it rather than having to ask around

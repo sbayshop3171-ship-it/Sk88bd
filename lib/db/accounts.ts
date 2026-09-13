@@ -145,6 +145,20 @@ export async function changePassword(uid: string, next: string): Promise<Account
   return { id: uid, phone: String(u.phone), createdAt: (u.created_at as string) ?? null, version };
 }
 
+/** An admin sets a new login password for a player who forgot theirs. No old
+    password needed; every session the account has ends, so a borrowed phone
+    is signed out too. Returns nothing — the admin typed the password, so they
+    already know it. */
+export async function resetPasswordByAdmin(uid: string, next: string): Promise<void> {
+  if (next.length < PASSWORD_MIN) throw new DbFail('The password must be at least 6 characters', 'weak-password');
+  if (next.length > PASSWORD_MAX) throw new DbFail('That password is too long', 'weak-password');
+  const u = await withConn((c) => one(c, 'SELECT id FROM users WHERE id = ?', [uid]));
+  if (!u) throw new DbFail('No such player', 'not-found');
+  const hash = await bcrypt.hash(next, 10);
+  await withConn((c) => run(c,
+    'UPDATE users SET password_hash = ?, session_version = session_version + 1 WHERE id = ?', [hash, uid]));
+}
+
 /** End every session the account has (a ban, a forced logout). */
 export async function endSessions(uid: string) {
   await withConn((c) => run(c, 'UPDATE users SET session_version = session_version + 1 WHERE id = ?', [uid]));

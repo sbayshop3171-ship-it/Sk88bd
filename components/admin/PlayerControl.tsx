@@ -15,7 +15,7 @@ const ERROR_LABEL: Record<string, string> = {
   unauthorized: 'Your session has expired — log in again.',
 };
 
-type Kind = 'balance' | 'hold' | 'ban' | 'lock' | 'appeal';
+type Kind = 'balance' | 'hold' | 'ban' | 'lock' | 'appeal' | 'password';
 
 /** Which row has its drawer open, and for what. */
 type Panel = { id: string; kind: Kind } | null;
@@ -58,6 +58,7 @@ export default function PlayerControl({
   const [panel, setPanel] = useState<Panel>(null);
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
+  const [pass, setPass] = useState('');
   const [busyId, setBusyId] = useState('');
   const [error, setError] = useState(initialError);
   const [notice, setNotice] = useState('');
@@ -116,6 +117,20 @@ export default function PlayerControl({
     setPanel(panel?.id === id && panel.kind === kind ? null : { id, kind });
     setAmount('');
     setNote('');
+    setPass('');
+  }
+
+  /** Set a new login password for a player who forgot theirs. Ends every
+      session the account has, so a borrowed phone is signed out too. */
+  async function resetPassword(player: PlayerRow) {
+    const pw = pass.trim();
+    if (pw.length < 6 || pw.length > 64) { setError('The new password must be 6–64 characters.'); return; }
+    const ok = await send(
+      player.id,
+      { action: 'reset-password', password: pw },
+      `${nameOf(player)}'s password is reset. Tell them the new one — their old sessions are signed out.`,
+    );
+    if (ok) { setPass(''); setPanel(null); }
   }
 
   async function adjust(player: PlayerRow, sign: 1 | -1) {
@@ -355,6 +370,14 @@ export default function PlayerControl({
                         )}
                         {canWrite && (
                         <button
+                          type="button" className="btn btn--ghost" disabled={busy}
+                          onClick={() => toggle(p.id, 'password')}
+                        >
+                          Password
+                        </button>
+                        )}
+                        {canWrite && (
+                        <button
                           type="button" className={`btn btn--ghost${p.isBlocked ? '' : ' adm__danger'}`}
                           disabled={busy}
                           onClick={() => (p.isBlocked ? void setStatus(p, 'ban', false) : toggle(p.id, 'ban'))}
@@ -399,6 +422,39 @@ export default function PlayerControl({
                           </div>
                           <p className="adm__hint">
                             Every adjustment is written to the ledger — who did it, and why.
+                          </p>
+                        </td>
+                      </tr>
+                    )}
+
+                    {canWrite && open === 'password' && (
+                      <tr className="adm__subrow">
+                        <td colSpan={columns}>
+                          <div className="adm__adjust">
+                            <label className="adm__f adm__f--wide">
+                              <span>New login password for {nameOf(p)}</span>
+                              <input
+                                type="text" value={pass} disabled={busy} maxLength={64}
+                                autoComplete="off"
+                                onChange={(e) => setPass(e.target.value)}
+                                placeholder="at least 6 characters"
+                              />
+                            </label>
+                            <div className="adm__rowacts">
+                              <button type="button" className="btn btn--gold" disabled={busy}
+                                      onClick={() => void resetPassword(p)}>
+                                Reset password
+                              </button>
+                              <button type="button" className="btn btn--ghost" disabled={busy}
+                                      onClick={() => setPanel(null)}>
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                          <p className="adm__hint">
+                            The player logs in with this new password right away; their old
+                            sessions are signed out. Type it in plainly and pass it to the
+                            player — it is not shown again.
                           </p>
                         </td>
                       </tr>
