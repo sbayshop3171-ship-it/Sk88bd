@@ -198,6 +198,49 @@ const mapped = new Map((await q('SELECT source_id, target_id FROM import_map')).
 const numbersHere = new Map((await q('SELECT id, player_no FROM profiles WHERE player_no IS NOT NULL'))
   .map((r) => [Number(r.player_no), String(r.id)]));
 
+/* ------------------------------------------------------- release holds ---- */
+
+/* --release-holds: lift the holds --hold-over put on (reason "Imported
+   balance under review", set by 'import'). A hold anybody else set has its
+   own reason or setter and is left alone. A player who was already on hold
+   on Supabase stays on hold, with the reason they had there. */
+if (process.argv.includes('--release-holds')) {
+  const bySource = new Map(profiles.map((p) => [String(p.id), p]));
+  const modes = new Map((await q('SELECT source_id, target_id, mode FROM import_map'))
+    .map((r) => [String(r.target_id), { source: String(r.source_id), mode: String(r.mode) }]));
+  const held = await q(`SELECT id, phone FROM profiles
+    WHERE is_held = 1 AND status_changed_by = 'import' AND hold_reason = 'Imported balance under review'`);
+
+  const out = { released: 0, releasedMerged: [], keptFromSupabase: 0 };
+  for (const h of held) {
+    const link = modes.get(String(h.id));
+    const before = link ? bySource.get(link.source) : null;
+    if (before && bool(before.is_held)) {
+      out.keptFromSupabase += 1;
+      if (APPLY) {
+        await q('UPDATE profiles SET hold_reason = ?, status_changed_by = ? WHERE id = ?',
+          [str(before.hold_reason, 255) ?? 'On hold before the move', str(before.status_changed_by, 120) ?? 'supabase', h.id]);
+      }
+      continue;
+    }
+    out.released += 1;
+    if (link?.mode === 'merged') out.releasedMerged.push(mask(String(h.phone)));
+    if (APPLY) {
+      await q(`UPDATE profiles SET is_held = 0, hold_reason = NULL, status_changed_at = NOW(3),
+               status_changed_by = 'import-release'
+               WHERE id = ? AND is_held = 1 AND status_changed_by = 'import'`, [h.id]);
+    }
+  }
+  console.log(`
+Import holds found:            ${held.length}
+  ${APPLY ? 'released' : 'to release'}:                ${out.released}
+  kept (on hold on Supabase):  ${out.keptFromSupabase}
+  of the released, accounts that existed here before the import: ${out.releasedMerged.join(', ') || 'none'}
+${APPLY ? 'Done.' : 'Dry run — nothing was written. Add --apply to release.'}`);
+  await db.end();
+  process.exit(0);
+}
+
 /* --------------------------------------------------------------- plan ---- */
 
 const plan = [];
