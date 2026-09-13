@@ -1,7 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { mkdir, readFile } from 'node:fs/promises';
-import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
+import { jsonStore } from './json-store';
 import { HOUSE_EDGE, timeToReach } from './aviator';
 
 export type SignalGame = 'aviator' | 'crash';
@@ -74,8 +73,6 @@ const CLIENT_SEED = 'prime-vai-devx-LIVE';
 const MIN_TARGET = 1.01;
 const MAX_TARGET = 400;
 const HISTORY_TARGETS = [3.03, 2.38, 1.83, 2.64, 3.02, 2.18, 6.44, 1.21];
-
-let writeQueue = Promise.resolve();
 
 export async function getAviatorSignalState(): Promise<AviatorSignalState> {
   return mutateStore((store) => {
@@ -212,29 +209,22 @@ export async function updateAviatorSignal(input: {
   });
 }
 
-function mutateStore<T>(fn: (store: SignalStore) => T): Promise<T> {
-  const next = writeQueue.then(async () => {
-    const store = await readStore();
-    const result = fn(store);
-    await writeStore(store);
-    return result;
-  });
-  writeQueue = next.then(() => undefined, () => undefined);
-  return next;
-}
+/* Held in memory and written only when a round actually changes (a new one
+   scheduled, a status flip, an admin edit) — a few times a round, not once
+   per viewer per poll. See lib/json-store.ts. */
+const cache = jsonStore<SignalStore>(
+  STORE_FILE,
+  (raw) => {
+    const parsed = raw as SignalStore;
+    if (parsed?.version !== 1 || !Array.isArray(parsed.rounds)) return null;
+    normalizeLiveLabels(parsed);
+    return parsed;
+  },
+  () => createInitialStore(Date.now()),
+);
 
-async function readStore(): Promise<SignalStore> {
-  try {
-    const raw = await readFile(STORE_FILE, 'utf8');
-    const parsed = JSON.parse(raw) as SignalStore;
-    if (parsed?.version === 1 && Array.isArray(parsed.rounds)) {
-      normalizeLiveLabels(parsed);
-      return parsed;
-    }
-  } catch {
-    // First local run: create a fresh demo store below.
-  }
-  return createInitialStore(Date.now());
+function mutateStore<T>(fn: (store: SignalStore) => T): Promise<T> {
+  return cache.mutate(fn);
 }
 
 function normalizeLiveLabels(store: SignalStore) {
@@ -243,11 +233,6 @@ function normalizeLiveLabels(store: SignalStore) {
       round.client_seed = CLIENT_SEED;
     }
   }
-}
-
-async function writeStore(store: SignalStore) {
-  await mkdir(path.dirname(STORE_FILE), { recursive: true });
-  await writeFileAtomic(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
 }
 
 function createInitialStore(now: number): SignalStore {

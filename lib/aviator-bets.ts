@@ -1,9 +1,9 @@
 /** Shape of an Aviator bet. Pure — the game screen and the API both read it.
 
-    Bets live in .data/ rather than the `aviator_bets` table because rounds are
-    served from the file-based signal store, and that table keys every row to
-    `aviator_rounds(id)`. Money still moves through the wallet ledger, so a bet
-    is auditable there as a `bet`/`win` pair. */
+    Bets live in the MySQL `aviator_bets` table (lib/aviator-bets-store.ts),
+    keyed by the round ids of the file-based signal store. Money moves
+    through the wallet ledger, so a bet is auditable there as a `bet`/`win`
+    pair. */
 
 export type AviatorBet = {
   id: string;

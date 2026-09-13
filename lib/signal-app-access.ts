@@ -1,7 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
-import { mkdir, readFile } from 'node:fs/promises';
-import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
+import { jsonStore } from './json-store';
 
 export type SignalAppKeyStatus = 'active' | 'disabled' | 'revoked';
 
@@ -145,8 +144,6 @@ const LOCKOUT_MS = 10 * 60 * 1000;
 /** the most failure buckets kept at once; the oldest go first */
 const MAX_LOCKOUT_ROWS = 2000;
 const KEY_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-
-let writeQueue = Promise.resolve();
 
 export async function getSignalAppKeyAdminState(): Promise<SignalAppKeyAdminState> {
   return mutateStore((store) => {
@@ -647,32 +644,23 @@ function timingSafeEqualText(left: string, right: string) {
   return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
 }
 
+/* Held in memory (lib/json-store.ts): every signal-app poll checks its token
+   here, and each check used to parse the whole file from disk. */
+const cache = jsonStore<SignalAppAccessStore>(
+  STORE_FILE,
+  (raw) => {
+    const parsed = raw as SignalAppAccessStore;
+    return parsed?.version === 1 && parsed.hash_secret && Array.isArray(parsed.app_keys) ? parsed : null;
+  },
+  () => createInitialStore(Date.now()),
+);
+
 function mutateStore<T>(fn: (store: SignalAppAccessStore) => T): Promise<T> {
-  const next = writeQueue.then(async () => {
-    const store = await readStore();
-    const result = fn(store);
-    await writeStore(store);
-    return result;
-  });
-  writeQueue = next.then(() => undefined, () => undefined);
-  return next;
+  return cache.mutate(fn);
 }
 
 async function readStore(): Promise<SignalAppAccessStore> {
-  try {
-    const raw = await readFile(STORE_FILE, 'utf8');
-    const parsed = JSON.parse(raw) as SignalAppAccessStore;
-    if (parsed?.version === 1 && parsed.hash_secret && Array.isArray(parsed.app_keys)) return parsed;
-  } catch {
-    // First local run: create a fresh access-control store below.
-  }
-
-  return createInitialStore(Date.now());
-}
-
-async function writeStore(store: SignalAppAccessStore) {
-  await mkdir(path.dirname(STORE_FILE), { recursive: true });
-  await writeFileAtomic(STORE_FILE, `${JSON.stringify(store, null, 2)}\n`);
+  return cache.read();
 }
 
 function createInitialStore(now: number): SignalAppAccessStore {

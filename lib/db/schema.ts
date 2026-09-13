@@ -16,6 +16,8 @@
    ============================================================ */
 
 import { randomBytes } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import { connect, one, rows, run, type Conn } from './pool';
 
 const TABLE = 'ENGINE=InnoDB DEFAULT CHARSET=utf8mb4';
@@ -414,6 +416,40 @@ const STEPS: Step[] = [
         mode ENUM('new','merged') NOT NULL,
         created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
       ) ${TABLE}`);
+    },
+  },
+  {
+    /* Aviator seats, out of the one JSON file that was rewritten whole on
+       every bet (lib/aviator-bets-store.ts). Bets still riding in that file
+       come along so nobody loses a stake to the deploy. */
+    id: '2026-09-13-aviator-bets',
+    async up(c) {
+      await run(c, `CREATE TABLE IF NOT EXISTS aviator_bets (
+        id VARCHAR(32) NOT NULL PRIMARY KEY,
+        user_id VARCHAR(64) NOT NULL,
+        round_id BIGINT NOT NULL,
+        slot TINYINT NOT NULL,
+        stake BIGINT NOT NULL,
+        cashed_at DECIMAL(10,2) NULL,
+        payout BIGINT NOT NULL DEFAULT 0,
+        placed_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+        settled_at DATETIME(3) NULL,
+        UNIQUE KEY uq_aviator_bets_seat (user_id, round_id, slot),
+        KEY idx_aviator_bets_open (settled_at, round_id)
+      ) ${TABLE}`);
+      try {
+        const file = path.join(process.cwd(), '.data', 'aviator-bets-store.json');
+        const saved = JSON.parse(await readFile(file, 'utf8')) as { bets?: Record<string, unknown>[] };
+        for (const b of saved.bets ?? []) {
+          if (b.settledAt) continue;
+          await run(c,
+            'INSERT IGNORE INTO aviator_bets (id, user_id, round_id, slot, stake, placed_at) VALUES (?, ?, ?, ?, ?, ?)',
+            [String(b.id), String(b.userId), Number(b.roundId), Number(b.slot) === 1 ? 1 : 0, Number(b.stake),
+              b.placedAt ? new Date(String(b.placedAt)) : new Date()]);
+        }
+      } catch {
+        /* no file, or nothing riding in it */
+      }
     },
   },
 ];

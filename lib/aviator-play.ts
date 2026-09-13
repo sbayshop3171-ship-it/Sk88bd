@@ -18,7 +18,9 @@ import {
   type BetResult,
   type PublicBet,
 } from './aviator-bets';
-import { betsFor, mutateBets, newBet, settleBusted } from './aviator-bets-store';
+import {
+  betsFor, closeBusted, dropBet, liftBet, newBet, restoreBet, settleBet, takeSeat, unsettleBet,
+} from './aviator-bets-store';
 import { capPayout } from './mini-games';
 import { accountBlock } from './player-status';
 import { adminClient, serverClient } from './db/server';
@@ -52,19 +54,10 @@ export async function placeBet(
   const flies = Date.parse(round.fly_at);
   if (!(now >= opens && now < flies)) return { ok: false, reason: 'betting-closed' };
 
-  // Take the seat inside the store's queue before any money moves. Two
-  // requests for one seat arriving together meet each other in there; a
-  // read outside it let both through and charged the stake twice.
+  // Take the seat before any money moves. Two requests for one seat arriving
+  // together meet at the table's unique key; the second is refused there.
   const seat = newBet({ userId: who.uid, roundId: round.round_id, slot, stake: amount });
-  const took = await mutateBets((all) => {
-    settleBusted(all, who.uid, round.round_id);
-    const taken = all.some(
-      (b) => b.userId === who.uid && b.roundId === round.round_id && b.slot === slot,
-    );
-    if (!taken) all.push(seat);
-    return !taken;
-  });
-  if (!took) return { ok: false, reason: 'already-placed' };
+  if (!(await takeSeat(seat))) return { ok: false, reason: 'already-placed' };
 
   // wallets.balance carries a >= 0 check, so an over-bet is refused by the
   // database rather than by anything we could get wrong here.
@@ -75,10 +68,7 @@ export async function placeBet(
     p_ref: `aviator:${round.round_id}:${slot}`,
   });
   if (debit.error) {
-    await mutateBets((all) => {
-      const at = all.findIndex((b) => b.id === seat.id);
-      if (at >= 0) all.splice(at, 1);
-    });
+    await dropBet(seat.id);
     if (/account (banned|held)/i.test(debit.error.message)) {
       return { ok: false, reason: /banned/i.test(debit.error.message) ? 'account-banned' : 'account-held' };
     }
@@ -112,16 +102,10 @@ export async function cancelBet(cookies: CookieStore, slot: 0 | 1): Promise<BetR
     return { ok: false, reason: open ? 'betting-closed' : 'no-open-bet' };
   }
 
-  // Lift the bet off the board inside the queue, and refund only if this
-  // request is the one that lifted it. Ten Cancels at once used to all find
-  // the bet still there and all pay the stake back.
-  const taken = await mutateBets((all) => {
-    const at = all.findIndex(
-      (b) => b.userId === who.uid && b.roundId === round.round_id
-        && b.slot === slot && b.settledAt === null,
-    );
-    return at >= 0 ? all.splice(at, 1)[0] : null;
-  });
+  // Lift the bet off the board, and refund only if this request is the one
+  // that lifted it. Ten Cancels at once used to all find the bet still there
+  // and all pay the stake back.
+  const taken = await liftBet(who.uid, round.round_id, slot);
   if (!taken) return { ok: false, reason: 'no-open-bet' };
 
   // Given back as a 'bet' credit, so it nets against the stake. Booked as
@@ -134,7 +118,7 @@ export async function cancelBet(cookies: CookieStore, slot: 0 | 1): Promise<BetR
     p_ref: `aviator:${round.round_id}:${slot}:cancel`,
   });
   if (refund.error) {
-    await mutateBets((all) => { all.push(taken); });
+    await restoreBet(taken);
     return { ok: false, reason: 'db-error', message: refund.error.message };
   }
 
@@ -160,16 +144,11 @@ export async function cashOut(cookies: CookieStore, slot: 0 | 1): Promise<BetRes
   // Reported as a success with no payout, so the screen still gets the fresh
   // balance and bet list rather than having to guess after an error.
   if (now >= busts) {
-    const bets = await mutateBets((all) => {
-      settleBusted(all, who.uid, round.round_id + 1);
-      return all
-        .filter((b) => b.userId === who.uid && b.roundId === round.round_id)
-        .map(publicBet);
-    });
+    await closeBusted(who.uid, round.round_id + 1);
     return {
       ok: true,
       balance: await currentBalance(who.db, who.uid),
-      bets,
+      bets: await mineOn(who.uid, round.round_id),
       cashedAt: 0,
       payout: 0,
     };
@@ -181,18 +160,10 @@ export async function cashOut(cookies: CookieStore, slot: 0 | 1): Promise<BetRes
   const multiplier = Math.floor(reached * 100) / 100;
   const payout = capPayout(Math.floor(open.stake * multiplier));
 
-  // Settle the bet inside the queue first, and pay only if this request is
-  // the one that settled it. Crediting first and marking it afterwards let
-  // two Cash Outs sent together both find it open and both get paid.
-  const claimed = await mutateBets((all) => {
-    const row = all.find((b) => b.id === open.id && b.settledAt === null);
-    if (!row) return false;
-    row.cashedAt = multiplier;
-    row.payout = payout;
-    row.settledAt = new Date().toISOString();
-    return true;
-  });
-  if (!claimed) return { ok: false, reason: 'no-open-bet' };
+  // Settle the bet first, and pay only if this request is the one that
+  // settled it. Crediting first and marking it afterwards let two Cash Outs
+  // sent together both find it open and both get paid.
+  if (!(await settleBet(open.id, multiplier, payout))) return { ok: false, reason: 'no-open-bet' };
 
   const credit = await who.db.rpc('wallet_apply', {
     p_user: who.uid,
@@ -202,10 +173,7 @@ export async function cashOut(cookies: CookieStore, slot: 0 | 1): Promise<BetRes
   });
   if (credit.error) {
     // put it back as it was, so the player can try again while it flies
-    await mutateBets((all) => {
-      const row = all.find((b) => b.id === open.id);
-      if (row) { row.cashedAt = null; row.payout = 0; row.settledAt = null; }
-    });
+    await unsettleBet(open.id);
     return { ok: false, reason: 'db-error', message: credit.error.message };
   }
 
