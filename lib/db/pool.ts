@@ -74,7 +74,9 @@ export async function connect(): Promise<Conn> {
   // the promise wrapper is new on every checkout; the socket underneath is not
   const socket = (c as unknown as { connection?: object }).connection ?? c;
   if (!utc.has(socket)) {
-    await c.query("SET time_zone = '+00:00'");
+    // text the query makes itself (CAST, CONCAT) compares in the tables'
+    // collation, not the driver's — MySQL 8 refuses to mix the two
+    await c.query("SET time_zone = '+00:00', collation_connection = @@collation_database");
     utc.add(socket);
   }
   return c;

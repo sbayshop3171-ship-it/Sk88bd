@@ -196,9 +196,13 @@ const STEPS: Step[] = [
       await addColumn(c, 'wallets', 'turnover_done', 'BIGINT NOT NULL DEFAULT 0');
 
       // every login has a profile and a wallet, whichever code created it
-      await run(c, `INSERT IGNORE INTO profiles (id, user_id, username, phone)
-        SELECT CAST(u.id AS CHAR), CAST(u.id AS CHAR), u.phone, u.phone FROM users u
-        WHERE NOT EXISTS (SELECT 1 FROM profiles p WHERE p.id = CAST(u.id AS CHAR))`);
+      const haveProfile = new Set((await rows(c, 'SELECT id FROM profiles')).map((r) => String(r.id)));
+      for (const u of await rows(c, 'SELECT id, phone FROM users')) {
+        const id = String(u.id);
+        if (haveProfile.has(id)) continue;
+        await run(c, 'INSERT IGNORE INTO profiles (id, user_id, username, phone) VALUES (?, ?, ?, ?)',
+          [id, id, u.phone, u.phone]);
+      }
       await run(c, `INSERT IGNORE INTO wallets (user_id)
         SELECT u.id FROM users u WHERE NOT EXISTS (SELECT 1 FROM wallets w WHERE w.user_id = u.id)`);
 
