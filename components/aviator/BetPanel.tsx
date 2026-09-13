@@ -3,10 +3,10 @@
 import { memo, useState } from 'react';
 import { type Phase } from '@/lib/aviator';
 
-const QUICK = [100, 500, 1000, 3000];
+const QUICK = [100, 1000, 5000, 30000];
 export const MIN_STAKE = 10;
 /** matches MAX_STAKE_PAISA in lib/aviator-bets.ts */
-export const MAX_STAKE = 3000;
+export const MAX_STAKE = 30000;
 /** the reference stepper moves the stake by this per tap */
 const STEP = 10;
 
