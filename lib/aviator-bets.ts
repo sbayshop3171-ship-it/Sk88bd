@@ -53,6 +53,10 @@ export type BetResult =
 /** ৳10, in paisa. Matches MIN_STAKE on the bet panel. */
 export const MIN_STAKE_PAISA = 1000;
 
+/** ৳3,000, in paisa. Aviator's own ceiling — the other mini games keep
+    MAX_STAKE_PAISA. Matches MAX_STAKE on the bet panel. */
+export const MAX_STAKE_PAISA = 300_000;
+
 export const publicBet = (bet: AviatorBet): PublicBet => ({
   slot: bet.slot,
   roundId: bet.roundId,
@@ -69,7 +73,7 @@ export const BET_ERROR: Record<BetReason, string> = {
   'already-placed': 'This seat already has a bet',
   'invalid-stake': 'That bet amount is not valid',
   'below-minimum': 'Minimum bet is ৳10',
-  'above-maximum': 'Maximum bet is ৳5,000',
+  'above-maximum': 'Maximum bet is ৳3,000',
   'account-banned': 'This account has been banned. Contact support.',
   'account-held': 'This account is on hold. Contact support.',
   'insufficient-balance': 'Not enough balance',

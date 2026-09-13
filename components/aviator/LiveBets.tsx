@@ -8,7 +8,7 @@ import { fmtAmt } from './BetPanel';
     the table is the slice of it that fits, scrolled. */
 const VISIBLE_ROWS = 40;
 
-const STAKES = [50, 100, 150, 200, 250, 300, 500, 500, 600, 800, 1000, 1000, 1200, 1500, 2000, 2500, 3000, 5000];
+const STAKES = [50, 100, 150, 200, 250, 300, 500, 500, 600, 800, 1000, 1000, 1200, 1500, 2000, 2500, 3000, 3000];
 
 const TABS = ['All Bets', 'Previous', 'Top'] as const;
 

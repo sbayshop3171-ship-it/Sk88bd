@@ -144,7 +144,7 @@ export default function AviatorSignalControl({ initialState }: { initialState: A
             <input
               type="number"
               min="1.01"
-              max="150"
+              max="400"
               step="0.01"
               value={target}
               onChange={(event) => setTarget(event.target.value)}

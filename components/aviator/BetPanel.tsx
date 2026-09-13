@@ -3,8 +3,10 @@
 import { memo, useState } from 'react';
 import { type Phase } from '@/lib/aviator';
 
-const QUICK = [100, 200, 500, 10000];
+const QUICK = [100, 500, 1000, 3000];
 export const MIN_STAKE = 10;
+/** matches MAX_STAKE_PAISA in lib/aviator-bets.ts */
+export const MAX_STAKE = 3000;
 /** the reference stepper moves the stake by this per tap */
 const STEP = 10;
 
@@ -57,7 +59,7 @@ export default memo(function BetPanel({
   const riding = slot.staked !== null && slot.cashedAt === null;
   const locked = riding || slot.queued;
   const tooPoor = slot.stake > balance;
-  const invalid = slot.stake < MIN_STAKE || tooPoor;
+  const invalid = slot.stake < MIN_STAKE || slot.stake > MAX_STAKE || tooPoor;
 
   /* The reference button has four faces: green Bet; red Cancel while the
      stake waits for the next round ("Waiting for next round" under it) or
@@ -121,7 +123,7 @@ export default memo(function BetPanel({
                   onClick={() => onPatch(i, { stake: Math.max(MIN_STAKE, slot.stake - STEP) })}>−</button>
           <StakeField value={slot.stake} disabled={locked} onChange={(v) => onPatch(i, { stake: v })} />
           <button type="button" aria-label="Increase" disabled={locked}
-                  onClick={() => onPatch(i, { stake: slot.stake + STEP })}>+</button>
+                  onClick={() => onPatch(i, { stake: Math.min(MAX_STAKE, slot.stake + STEP) })}>+</button>
         </div>
 
         <div className="av-quick">
@@ -167,7 +169,7 @@ function StakeField({ value, disabled, onChange }: {
         const raw = e.target.value.replace(/[^\d.]/g, '');
         setDraft(raw);
         const n = Number(raw);
-        if (Number.isFinite(n)) onChange(Math.max(0, Math.floor(n * 100) / 100));
+        if (Number.isFinite(n)) onChange(Math.min(MAX_STAKE, Math.max(0, Math.floor(n * 100) / 100)));
       }}
     />
   );

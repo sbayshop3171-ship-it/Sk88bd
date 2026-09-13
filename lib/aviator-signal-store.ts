@@ -72,7 +72,7 @@ const SCHEDULE_DRIFT_MS = 500;
 const STORE_FILE = path.join(process.cwd(), '.data', 'aviator-signal-store.json');
 const CLIENT_SEED = 'prime-vai-devx-LIVE';
 const MIN_TARGET = 1.01;
-const MAX_TARGET = 150;
+const MAX_TARGET = 400;
 const HISTORY_TARGETS = [3.03, 2.38, 1.83, 2.64, 3.02, 2.18, 6.44, 1.21];
 
 let writeQueue = Promise.resolve();
@@ -609,10 +609,11 @@ function addLog(store: SignalStore, action: string, message: string, now: number
   ].slice(0, 50);
 }
 
-/** A fresh random crash point between 1.01x and 150x. Drawn so that
+/** A fresh random crash point between 1.01x and 400x. Drawn so that
     P(crash ≥ m) = (1 − HOUSE_EDGE)/m — most rounds bust low, a few run
-    long — which keeps the 97% return; a flat 1–150 draw would average ~75x
-    and pay out many times the stake. The 150x cap only trims the tail. */
+    long — which keeps the 97% return; a flat 1–400 draw would average ~200x
+    and pay out many times the stake. The cap only trims the tail: about 1
+    round in 100 passes 100x and about 1 in 400 reaches the full 400x. */
 function autoTarget() {
   const r = randomBytes(6).readUIntBE(0, 6) / 2 ** 48;
   return clampTarget(Math.floor(((1 - HOUSE_EDGE) / (1 - r)) * 100) / 100);
