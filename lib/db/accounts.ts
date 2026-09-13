@@ -80,17 +80,47 @@ export async function registerAccount(input: {
   }
 }
 
+/** A player brought over from Supabase without their password hash: ask
+    Supabase whether this password is theirs. Both login domains the old
+    site used are tried. False on any doubt. */
+async function supabaseSaysYes(phone: string, password: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/+$/, '');
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return false;
+  for (const domain of ['id.sk88bd.live', 'sk88bd.local']) {
+    try {
+      const res = await fetch(`${url}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { apikey: key, 'content-type': 'application/json' },
+        body: JSON.stringify({ email: `${phone}@${domain}`, password }),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.ok) return true;
+    } catch {
+      /* Supabase unreachable: treat as a wrong password, never as a right one */
+    }
+  }
+  return false;
+}
+
 /** The account if the password is right; 'wrong' or 'banned' if not. */
 export async function verifyLogin(phoneRaw: string, password: string): Promise<Account | 'wrong' | 'banned'> {
   const phone = normalizePhone(phoneRaw.trim());
   const u = await withConn((c) => one(c,
-    'SELECT id, phone, password_hash, session_version, created_at FROM users WHERE phone = ? LIMIT 1', [phone]));
+    'SELECT id, phone, password_hash, legacy_id, session_version, created_at FROM users WHERE phone = ? LIMIT 1', [phone]));
   const hash = String(u?.password_hash ?? '');
-  if (!u || !hash) {
+  if (u && !hash && u.legacy_id) {
+    // their first login since the move: Supabase vouches once, then the
+    // password is kept here and Supabase is never asked again
+    if (!(await supabaseSaysYes(phone, password))) return 'wrong';
+    const kept = await bcrypt.hash(password, 10);
+    await withConn((c) => run(c, "UPDATE users SET password_hash = ? WHERE id = ? AND password_hash = ''", [kept, u.id]));
+  } else if (!u || !hash) {
     await bcrypt.compare(password, await dummyHash());
     return 'wrong';
+  } else if (!(await bcrypt.compare(password, hash))) {
+    return 'wrong';
   }
-  if (!(await bcrypt.compare(password, hash))) return 'wrong';
 
   const id = String(u.id);
   const p = await withConn((c) => one(c, 'SELECT is_blocked FROM profiles WHERE id = ?', [id]));

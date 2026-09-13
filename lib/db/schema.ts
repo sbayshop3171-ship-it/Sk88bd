@@ -401,4 +401,19 @@ const STEPS: Step[] = [
         SELECT ${NORM_SQL('charge_trx_id')}, 'charge', id FROM withdrawals WHERE ${NORM_SQL('charge_trx_id')} IS NOT NULL`);
     },
   },
+  {
+    /* players brought over from Supabase (scripts/import-supabase.mjs):
+       legacy_id is their old id, which the first-login password check
+       needs; import_map is what makes the import safe to run twice */
+    id: '2026-09-13-import',
+    async up(c) {
+      await addColumn(c, 'users', 'legacy_id', 'VARCHAR(64) NULL');
+      await run(c, `CREATE TABLE IF NOT EXISTS import_map (
+        source_id VARCHAR(64) NOT NULL PRIMARY KEY,
+        target_id VARCHAR(64) NOT NULL,
+        mode ENUM('new','merged') NOT NULL,
+        created_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
+      ) ${TABLE}`);
+    },
+  },
 ];
