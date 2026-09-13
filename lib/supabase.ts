@@ -1,320 +1,162 @@
 /* ============================================================
-   Native MySQL-backed compatibility layer.
+   The browser's database client.
 
-   This project used to expect Supabase for auth and user data. The app now
-   routes reads/writes through server endpoints and uses native MySQL in a
-   XAMPP / FASTPANEL environment.
+   The site ran on Supabase until 2026-09-13 and every screen was
+   written against its client, so this one keeps the same face — the
+   `auth` calls and the `.from().select().eq()` builder — while the work
+   happens on our own server:
+
+     • signing up, in and out, and changing the password go to
+       /api/auth/*, which sets an httpOnly session cookie the page itself
+       never sees;
+     • `.from()` queries go to /api/data/query, which only ever answers
+       with the signed-in player's own rows (lib/db/policy.ts);
+     • `.rpc()` goes to /api/data/rpc — the fund password, nothing else.
+
+   No server code is imported here; this file ships to the browser.
    ============================================================ */
 
-import { emailToPhone, normalizePhone, phoneToEmail } from '@/lib/auth';
+import { Query, type DbError, type QueryResult, type QuerySpec } from './db/builder';
+import { normalizePhone } from './auth';
+
+export type { DbError };
 
 export type Session = {
-  user: { id: string; email?: string | null; created_at?: string | null };
+  user: { id: string; email: string | null; created_at: string | null };
 };
 
-export type DbError = { message: string; code?: string };
-export type DbQueryResult<T> = { data: T | null; error: DbError | null };
+type AuthEvent = 'SIGNED_IN' | 'SIGNED_OUT' | 'USER_UPDATED';
+type Listener = (event: AuthEvent, session: Session | null) => void;
 
-export type QueryBuilder = {
-  select: (cols: string, opts?: Record<string, unknown>) => QueryBuilder;
-  eq: (key: string, value: unknown) => QueryBuilder;
-  in: (key: string, values: unknown[]) => QueryBuilder;
-  gte: (key: string, value: string | number | Date) => QueryBuilder;
-  order: (key: string, direction?: { ascending?: boolean }) => QueryBuilder;
-  or: (filter: string) => QueryBuilder;
-  limit: (value: number) => QueryBuilder;
-  maybeSingle: <T = Record<string, unknown>>() => Promise<{ data: T | null; error: DbError | null }>;
-  returns: <T = Record<string, unknown>[]>(...args: unknown[]) => Promise<{ data: T | null; error: DbError | null }>;
-  insert: (row: Record<string, unknown>) => QueryBuilder;
-  update: (row: Record<string, unknown>) => QueryBuilder;
-  delete: () => QueryBuilder;
-  then: <TResult1 = any, TResult2 = never>(
-    onfulfilled?: ((value: any) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
-  ) => PromiseLike<TResult1 | TResult2>;
-  catch: <TResult = never>(
-    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null,
-  ) => PromiseLike<any | TResult>;
-};
+/** There is always a database behind the site now. */
+export const isBackendReady = () => true;
 
-export type SupabaseClient = {
-  auth: {
-    getSession: () => Promise<{ data: { session: Session | null } }>;
-    getUser: () => Promise<{ data: { user: { id: string; email?: string | null; created_at?: string | null } | null } }>;
-    signUp: (args: {
-      email: string;
-      password: string;
-      options?: { data?: Record<string, unknown> };
-    }) => Promise<{ data: { user?: { id: string } | undefined }; error: DbError | null }>;
-    signInWithPassword: (args: { email: string; password: string }) => Promise<{ data?: { session?: Session } | undefined; error: DbError | null }>;
-    updateUser: (args: { password?: string }) => Promise<{ data?: { user?: { id: string } } | null; error: DbError | null }>;
-    signOut: () => Promise<void>;
-    onAuthStateChange: (cb: (event: string, session: Session | null) => void) => { data: { subscription: { unsubscribe: () => void } } };
-    admin: {
-      updateUserById: (userId: string, attrs: Record<string, unknown>) => Promise<{ data?: { user?: { id: string } } | null; error: DbError | null }>;
-    };
-  };
-  from: (table: string) => QueryBuilder;
-  rpc: <T = unknown>(fn: string, args?: Record<string, unknown>) => Promise<{ data: T; error: DbError | null }>;
-};
-
-export function mysqlConfigFromEnv() {
-  const host = process.env.NEXT_PUBLIC_DB_HOST || process.env.DB_HOST || '127.0.0.1';
-  const port = Number(process.env.NEXT_PUBLIC_DB_PORT || process.env.DB_PORT || 3306);
-  const user = process.env.NEXT_PUBLIC_DB_USER || process.env.DB_USER || process.env.NEXT_PUBLIC_DB_USERNAME || process.env.DB_USERNAME || 'root';
-  const password = process.env.DB_PASSWORD || '';
-  const database = process.env.NEXT_PUBLIC_DB_NAME || process.env.DB_NAME || process.env.NEXT_PUBLIC_DB_DATABASE || process.env.DB_DATABASE || 'sk88bd';
-  return { host, port, user, password, database };
-}
-
-export const isBackendReady = () => {
-  const config = mysqlConfigFromEnv();
-  return Boolean(config.host && config.user && config.database);
-};
-
-function apiBaseUrl() {
-  if (typeof window !== 'undefined' && window.location?.origin) return window.location.origin;
-  return process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL || 'http://localhost:3000';
-}
-
-function apiUrl(path: string) {
-  const base = apiBaseUrl();
-  return new URL(path, base.endsWith('/') ? base : `${base}/`).toString();
-}
-
-function saveSession(session: Session | null) {
-  if (typeof window === 'undefined') return;
-  if (!session) {
-    localStorage.removeItem('sk88bd_session');
-    return;
-  }
-  localStorage.setItem('sk88bd_session', JSON.stringify(session));
+async function post(url: string, body: unknown): Promise<{ status: number; json: Record<string, unknown> | null }> {
   try {
-    window.dispatchEvent(new Event('storage'));
-  } catch {
-    // Some browsers do not emit storage for the same tab; this keeps the
-    // auth listener responsive without crashing the flow.
-  }
-}
-
-function readSession(): Session | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem('sk88bd_session');
-    return raw ? (JSON.parse(raw) as Session) : null;
-  } catch {
-    return null;
-  }
-}
-
-class MysqlQuery implements QueryBuilder {
-  private table: string;
-  private cols: string = '*';
-  private filters: Record<string, unknown> = {};
-  private inValues: Record<string, unknown[]> = {};
-  private orderBy: { key: string; asc: boolean } | null = null;
-  private limitValue: number | null = null;
-  private action: 'read' | 'write' = 'read';
-  private data: Record<string, unknown> | null = null;
-  private orFilter: string | null = null;
-
-  constructor(table: string) {
-    this.table = table;
-  }
-
-  then<TResult1 = any, TResult2 = never>(
-    resolve?: ((value: any) => TResult1 | PromiseLike<TResult1>) | null,
-    reject?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
-  ): PromiseLike<TResult1 | TResult2> {
-    return this.request().then(resolve ?? ((value) => value as TResult1), reject ?? undefined);
-  }
-
-  catch<TResult = never>(
-    reject?: ((reason: any) => TResult | PromiseLike<TResult>) | null,
-  ): PromiseLike<any | TResult> {
-    return this.request().catch(reject ?? undefined);
-  }
-
-  select(cols: string, _opts?: Record<string, unknown>): QueryBuilder {
-    this.cols = cols;
-    return this;
-  }
-
-  eq(key: string, value: unknown): QueryBuilder {
-    this.filters[key] = value;
-    return this;
-  }
-
-  in(key: string, values: unknown[]): QueryBuilder {
-    this.inValues[key] = values;
-    return this;
-  }
-
-  gte(key: string, value: string | number | Date): QueryBuilder {
-    this.filters[`__gte__${key}`] = value;
-    return this;
-  }
-
-  order(key: string, direction: { ascending?: boolean } = {}): QueryBuilder {
-    this.orderBy = { key, asc: direction.ascending ?? true };
-    return this;
-  }
-
-  or(filter: string): QueryBuilder {
-    this.orFilter = filter;
-    return this;
-  }
-
-  limit(value: number): QueryBuilder {
-    this.limitValue = value;
-    return this;
-  }
-
-  async maybeSingle<T = Record<string, unknown>>() {
-    const result = await this.request();
-    return { data: (Array.isArray(result.rows) ? result.rows[0] ?? null : null) as T | null, error: null };
-  }
-
-  async returns<T = Record<string, unknown>[]>(..._args: unknown[]) {
-    const result = await this.request();
-    return { data: result.rows ?? null, error: null } as { data: T | null; error: DbError | null };
-  }
-
-  async request() {
-    const res = await fetch(apiUrl('/api/db/query'), {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        table: this.table,
-        columns: this.cols,
-        filters: this.filters,
-        inValues: this.inValues,
-        orFilter: this.orFilter,
-        orderBy: this.orderBy,
-        limit: this.limitValue,
-        action: this.action,
-        payload: this.data,
-      }),
+      body: JSON.stringify(body),
+      credentials: 'same-origin',
+      cache: 'no-store',
     });
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message || 'Database query failed');
-    return json;
-  }
-
-  insert(row: Record<string, unknown>): QueryBuilder {
-    this.action = 'write';
-    this.data = row;
-    return this;
-  }
-
-  update(row: Record<string, unknown>): QueryBuilder {
-    this.action = 'write';
-    this.data = row;
-    return this;
-  }
-
-  delete(): QueryBuilder {
-    this.action = 'write';
-    return this;
+    let json: Record<string, unknown> | null = null;
+    try { json = (await res.json()) as Record<string, unknown>; } catch { /* not JSON */ }
+    return { status: res.status, json };
+  } catch {
+    return { status: 0, json: null };
   }
 }
 
-export function browserClient(): SupabaseClient | null {
-  if (!isBackendReady()) return null;
+const offline: DbError = { message: 'Could not reach the server — check the connection and try again' };
+
+async function transport(spec: QuerySpec): Promise<QueryResult> {
+  const { json } = await post('/api/data/query', spec);
+  if (json && 'error' in json) {
+    return {
+      data: json.data ?? null,
+      error: (json.error as DbError | null) ?? null,
+      count: typeof json.count === 'number' ? json.count : null,
+    };
+  }
+  return { data: null, error: offline, count: null };
+}
+
+/** The phone part of the <phone>@id.sk88bd.live login the screens pass. */
+const phoneOf = (email: string) => normalizePhone(String(email ?? '').split('@')[0]);
+
+function createClient() {
+  let loaded: Promise<Session | null> | null = null;
+  const listeners = new Set<Listener>();
+
+  const settle = (event: AuthEvent, session: Session | null) => {
+    loaded = Promise.resolve(session);
+    listeners.forEach((listener) => listener(event, session));
+  };
+
+  const load = () => {
+    loaded ??= fetch('/api/auth/session', { cache: 'no-store', credentials: 'same-origin' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json: { session?: Session | null } | null) => json?.session ?? null)
+      .catch(() => {
+        loaded = null; // ask again next time rather than remember a failure
+        return null;
+      });
+    return loaded;
+  };
+
+  // the 2026-09-13 build kept a fake session here; it means nothing now
+  try { localStorage.removeItem('sk88bd_session'); } catch { /* private mode */ }
+
   return {
     auth: {
       async getSession() {
-        return { data: { session: readSession() } };
+        return { data: { session: await load() } };
       },
       async getUser() {
-        const session = readSession();
-        return { data: { user: session?.user ?? null } };
+        return { data: { user: (await load())?.user ?? null } };
       },
-      async signUp(args) {
-        try {
-          const phone = emailToPhone(args.email) ?? args.email.replace(/@.*$/, '');
-          const res = await fetch(apiUrl('/api/register'), {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({
-              phone,
-              password: args.password,
-              referralCode: (args.options?.data as Record<string, unknown> | undefined)?.referral_code ?? null,
-              agentCode: (args.options?.data as Record<string, unknown> | undefined)?.agent_code ?? null,
-            }),
-          });
-          const json = await res.json();
-          if (!res.ok) return { data: { user: undefined }, error: { message: json.message || 'Registration failed' } };
-          const session: Session = { user: { id: String(json.user.id), email: json.user.email || phoneToEmail(phone) } };
-          saveSession(session);
-          return { data: { user: { id: String(json.user.id) } }, error: null };
-        } catch (error) {
-          return { data: { user: undefined }, error: { message: error instanceof Error ? error.message : 'Registration failed' } };
+      async signUp(args: { email: string; password: string; options?: { data?: Record<string, unknown> } }) {
+        const meta = args.options?.data ?? {};
+        const { json } = await post('/api/auth/register', {
+          phone: phoneOf(args.email),
+          password: args.password,
+          referralCode: meta.referral_code ?? null,
+          agentCode: meta.agent_code ?? null,
+        });
+        const session = (json?.ok ? json.session : null) as Session | null;
+        if (!session) {
+          return { data: { user: null, session: null }, error: { message: String(json?.message ?? offline.message) } };
         }
+        settle('SIGNED_IN', session);
+        return { data: { user: session.user, session }, error: null };
       },
-      async signInWithPassword(args) {
-        try {
-          const phone = emailToPhone(args.email) ?? args.email.replace(/@.*$/, '');
-          const res = await fetch(apiUrl('/api/login'), {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ phone, password: args.password }),
-          });
-          const json = await res.json();
-          if (!res.ok) return { data: undefined, error: { message: json.message || 'Login failed' } };
-          const session: Session = { user: { id: String(json.user.id), email: json.user.email || phoneToEmail(phone) } };
-          saveSession(session);
-          return { data: { session }, error: null };
-        } catch (error) {
-          return { data: undefined, error: { message: error instanceof Error ? error.message : 'Login failed' } };
+      async signInWithPassword(args: { email: string; password: string }) {
+        const { json } = await post('/api/auth/login', { phone: phoneOf(args.email), password: args.password });
+        const session = (json?.ok ? json.session : null) as Session | null;
+        if (!session) {
+          return { data: { user: null, session: null }, error: { message: String(json?.message ?? offline.message) } };
         }
+        settle('SIGNED_IN', session);
+        return { data: { user: session.user, session }, error: null };
       },
-      async updateUser() {
-        return { data: null, error: null };
+      async updateUser(args: { password?: string }) {
+        const { json } = await post('/api/auth/password', { password: args.password ?? '' });
+        const session = (json?.ok ? json.session : null) as Session | null;
+        if (!session) return { data: { user: null }, error: { message: String(json?.message ?? offline.message) } };
+        settle('USER_UPDATED', session);
+        return { data: { user: session.user }, error: null };
       },
       async signOut() {
-        saveSession(null);
+        await post('/api/auth/logout', {});
+        settle('SIGNED_OUT', null);
+        return { error: null };
       },
-      onAuthStateChange(cb: (event: string, session: Session | null) => void) {
-        const sync = () => cb('SIGNED_IN', readSession());
-        if (typeof window !== 'undefined') {
-          window.addEventListener('storage', sync);
-          sync();
-        }
-        return { data: { subscription: { unsubscribe: () => {
-          if (typeof window !== 'undefined') window.removeEventListener('storage', sync);
-        } } } };
-      },
-      admin: {
-        async updateUserById() {
-          return { data: null, error: null };
-        },
+      onAuthStateChange(listener: Listener) {
+        listeners.add(listener);
+        return { data: { subscription: { unsubscribe: () => { listeners.delete(listener); } } } };
       },
     },
-    from(table: string) {
-      return new MysqlQuery(table) as QueryBuilder;
-    },
-    async rpc<T = unknown>(fn: string, args?: Record<string, unknown>) {
-      try {
-        const res = await fetch(apiUrl('/api/db/rpc'), {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ fn, args: args ?? {} }),
-        });
-        const json = await res.json();
-        if (!res.ok) return { data: null as T, error: { message: json.message || 'RPC failed' } };
-        return { data: json.data as T, error: null };
-      } catch (error) {
-        return { data: null as T, error: { message: error instanceof Error ? error.message : 'RPC failed' } };
+
+    from: (table: string) => new Query(table, transport),
+
+    async rpc(fn: string, args: Record<string, unknown> = {}): Promise<QueryResult> {
+      const { json } = await post('/api/data/rpc', { fn, args });
+      if (json && 'error' in json) {
+        return { data: json.data ?? null, error: (json.error as DbError | null) ?? null, count: null };
       }
+      return { data: null, error: offline, count: null };
     },
   };
 }
 
-export function serverClient(_cookies?: any) {
-  return browserClient();
-}
+export type SupabaseClient = ReturnType<typeof createClient>;
 
-export function adminClient() {
-  return browserClient();
+let client: SupabaseClient | null = null;
+
+/** One client for the tab. Null while rendering on the server. */
+export function browserClient(): SupabaseClient | null {
+  if (typeof window === 'undefined') return null;
+  client ??= createClient();
+  return client;
 }

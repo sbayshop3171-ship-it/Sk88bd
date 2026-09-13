@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { getCashierConfig } from '@/lib/cashier-config-store';
 import { chargeBase, withdrawCharge } from '@/lib/cashier-config';
 import { accountBlock } from '@/lib/player-status';
-import { adminClient, serverClient } from '@/lib/supabase';
+import { adminClient, serverClient } from '@/lib/db/server';
 import { lockStatus } from '@/lib/withdraw-lock';
 
 export const runtime = 'nodejs';

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import AviatorCanvas from '@/components/aviator/AviatorCanvas';
-import BetPanel, { MIN_STAKE, emptySlot, fmtAmt, type Slot } from '@/components/aviator/BetPanel';
+import BetPanel, { MAX_STAKE, MIN_STAKE, emptySlot, fmtAmt, type Slot } from '@/components/aviator/BetPanel';
 import HistoryStrip from '@/components/aviator/HistoryStrip';
 import LiveBets from '@/components/aviator/LiveBets';
 import { useCrowdCount } from '@/components/aviator/useCrowdCount';
@@ -144,7 +144,7 @@ function Board() {
     slotsRef.current.forEach((slot, i) => {
       if (!slot.queued && !slot.auto) return;
       if (slot.staked !== null) return;
-      if (slot.stake < MIN_STAKE || slot.stake > balance) {
+      if (slot.stake < MIN_STAKE || slot.stake > MAX_STAKE || slot.stake > balance) {
         patch(i as 0 | 1, { queued: false });
         return;
       }
@@ -210,6 +210,7 @@ function Board() {
     if (!gateRef.current()) return;      // watching is free; staking is not
     const slot = slotsRef.current[i];
     if (slot.stake < MIN_STAKE) { toast(`Minimum bet is ${money(MIN_STAKE)}`); return; }
+    if (slot.stake > MAX_STAKE) { toast(`Maximum bet is ${money(MAX_STAKE)}`); return; }
     if (slot.stake > balanceRef.current) { toast('Not enough balance'); return; }
 
     if (phaseRef.current !== 'betting') {

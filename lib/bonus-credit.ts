@@ -8,7 +8,7 @@
     has been staked. Server-side only: the multiplier lives in the bonus
     config file. */
 
-import type { SupabaseClient } from '@/lib/supabase';
+import type { Db as SupabaseClient } from '@/lib/db/server';
 import { getBonusConfig } from './bonus-config-store';
 
 export async function creditBonus(

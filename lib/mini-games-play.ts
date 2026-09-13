@@ -47,7 +47,7 @@ import {
 import { MAX_ROUND_X, slotRoundFromHash } from './slots';
 import { endRound, mutateRounds, openRound, startRound } from './mini-rounds-store';
 import { accountBlock } from './player-status';
-import { adminClient, serverClient } from './supabase';
+import { adminClient, serverClient } from './db/server';
 
 type CookieStore = {
   getAll: () => { name: string; value: string }[];

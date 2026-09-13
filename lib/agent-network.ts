@@ -7,7 +7,7 @@
 
 import type { AdminStaff } from './admin-roles';
 import { isMissingColumn, type CashierResult } from './cashier';
-import { adminClient } from './supabase';
+import { adminClient } from './db/server';
 
 export type AgentSummary = {
   id: string;

@@ -9,7 +9,7 @@
     Money moves only through the SQL functions in supabase/004_cashier_actions
     so an approval and its ledger entry land together. */
 
-import { adminClient } from './supabase';
+import { adminClient } from './db/server';
 import { latestAppeals, type Appeal } from './withdraw-lock';
 
 export type RequestState = 'pending' | 'approved' | 'rejected' | 'cancelled';

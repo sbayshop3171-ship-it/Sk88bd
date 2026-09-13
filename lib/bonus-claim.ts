@@ -24,7 +24,7 @@ import {
 } from './bonus-config';
 import { creditBonus } from './bonus-credit';
 import { accountBlock } from './player-status';
-import { adminClient, serverClient } from './supabase';
+import { adminClient, serverClient } from './db/server';
 
 type CookieStore = Parameters<typeof serverClient>[0];
 

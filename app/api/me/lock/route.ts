@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { adminClient, serverClient } from '@/lib/supabase';
+import { adminClient, serverClient } from '@/lib/db/server';
 import { lockStatus, sendAppeal } from '@/lib/withdraw-lock';
 
 export const runtime = 'nodejs';
@@ -39,20 +39,12 @@ export async function POST(req: Request) {
 }
 
 async function player() {
-  const cookieStore = await cookies();
-  const rawSession = cookieStore.get('sk88bd_session')?.value;
-  let cookieUserId = '';
-  try {
-    cookieUserId = String((JSON.parse(rawSession ?? '{}') as { user?: { id?: string } }).user?.id ?? '');
-  } catch {
-    cookieUserId = '';
-  }
   const auth = serverClient(await cookieAdapter());
   const db = adminClient();
   if (!auth || !db) return { ok: false as const, response: json({ ok: false, reason: 'no-backend' }, 503) };
 
   const { data } = await auth.auth.getUser();
-  const uid = data.user?.id ?? cookieUserId;
+  const uid = data.user?.id;
   if (!uid) return { ok: false as const, response: json({ ok: false, reason: 'unauthorized' }, 401) };
   return { ok: true as const, db, uid };
 }

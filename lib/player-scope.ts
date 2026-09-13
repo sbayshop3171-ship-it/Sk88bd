@@ -7,7 +7,7 @@
 
 import { can, type AdminPermission } from './admin-roles';
 import { findStaffById } from './admin-users-store';
-import { adminClient } from './supabase';
+import { adminClient } from './db/server';
 
 /** undefined = everybody; otherwise the agent code to filter on. */
 export async function playerScope(session: { uid: string; permissions: readonly AdminPermission[] }): Promise<string | undefined> {

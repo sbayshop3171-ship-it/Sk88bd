@@ -6,9 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "db:mysql": "node scripts/mysql-setup.mjs",
-    "db:mysql:reset": "node scripts/mysql-setup.mjs"
+    "lint": "next lint"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

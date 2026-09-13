@@ -15,7 +15,7 @@
     (migration 012), so a player who skips this server entirely meets the
     same answer. */
 
-import type { SupabaseClient } from '@/lib/supabase';
+import type { Db as SupabaseClient } from '@/lib/db/server';
 
 export type AccountBlock = 'banned' | 'held';
 

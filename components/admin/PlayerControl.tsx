@@ -414,13 +414,6 @@ export default function PlayerControl({
                                 placeholder={LOCK_PRESETS[0]}
                               />
                             </label>
-                            <label className="adm__f">
-                              <span>Verification deposit (৳)</span>
-                              <input
-                                type="number" min={1} value={amount} disabled={busy}
-                                onChange={(e) => setAmount(e.target.value)} placeholder="2000"
-                              />
-                            </label>
                             <div className="adm__rowacts">
                               <button type="button" className="btn btn--ghost adm__danger" disabled={busy}
                                       onClick={() => void lock(p, true)}>

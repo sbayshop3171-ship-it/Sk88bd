@@ -78,8 +78,9 @@ type BackendPayload = {
 /**
  * Drives backend-controlled waiting -> betting -> flying -> crashed.
  *
- * The local browser no longer decides the crash point. It reads the scheduled
- * demo round from `/api/aviator/current`, then only animates toward that target.
+ * The local browser neither decides nor knows the crash point. It reads the
+ * round's timing from `/api/aviator/current`, flies with no ceiling, and learns
+ * the bust from the server when it happens.
  */
 export function useAviatorRound(clientSeed: string, onCrash?: (crashAt: number) => void) {
   const [state, setState] = useState<RoundState>({
@@ -177,6 +178,20 @@ export function useAviatorRound(clientSeed: string, onCrash?: (crashAt: number) 
       });
     };
 
+    const accept = (payload: BackendPayload) => {
+      // a slow ordinary poll sent before the bust must not land after the
+      // bust answer and put the plane back in the air
+      if (backend && Date.parse(payload.serverTime) < Date.parse(backend.serverTime)) return;
+      backend = payload;
+      const nextHistory = historyFrom(payload);
+      if (!sameHistory(history, nextHistory)) history = nextHistory;
+      offsetTarget = Date.parse(payload.serverTime) - Date.now();
+      if (!offsetReady) {
+        serverOffset = offsetTarget;
+        offsetReady = true;
+      }
+    };
+
     const refreshBackend = async () => {
       if (localMode) return;
       try {
@@ -184,16 +199,31 @@ export function useAviatorRound(clientSeed: string, onCrash?: (crashAt: number) 
         if (!res.ok) throw new Error(`round api ${res.status}`);
         const payload = (await res.json()) as BackendPayload;
         if (!payload.ok || !payload.round) throw new Error('round api empty');
-        backend = payload;
-        const nextHistory = historyFrom(payload);
-        if (!sameHistory(history, nextHistory)) history = nextHistory;
-        offsetTarget = Date.parse(payload.serverTime) - Date.now();
-        if (!offsetReady) {
-          serverOffset = offsetTarget;
-          offsetReady = true;
-        }
+        accept(payload);
       } catch {
         startLocalFallback();
+      }
+    };
+
+    /* The crash point is not sent while the plane flies, so one request per
+       flight is held open by the server and answered the moment it busts.
+       If it fails, the two-second poll still brings the bust. */
+    let awaitingId = 0;
+    const awaitBust = async (id: number) => {
+      if (awaitingId === id || localMode) return;
+      awaitingId = id;
+      try {
+        while (!cancelled) {
+          const res = await fetch(`/api/aviator/current?wait=${id}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const payload = (await res.json()) as BackendPayload;
+          if (!payload.ok || !payload.round) return;
+          accept(payload);
+          const r = payload.round;
+          if (Number(r.id ?? r.round_id) !== id || r.status !== 'flying') return;
+        }
+      } catch {
+        // the ordinary poll carries on
       }
     };
 
@@ -211,6 +241,9 @@ export function useAviatorRound(clientSeed: string, onCrash?: (crashAt: number) 
         if (!shown || changed(shown, next)) {
           shown = next;
           setState(next);
+        }
+        if (next.phase === 'flying' && next.round && !next.round.crashAt) {
+          void awaitBust(next.round.id);
         }
         if (next.phase === 'crashed' && next.round && next.round.id !== notifiedCrashId) {
           notifiedCrashId = next.round.id;
@@ -265,10 +298,14 @@ function sameHistory(a: HistoryEntry[], b: HistoryEntry[]) {
 function stateFromBackend(payload: BackendPayload, now: number, history: HistoryEntry[]): RoundState {
   const source = payload.round!;
   const id = Number(source.id ?? source.round_id ?? 0);
-  const target = clampMultiplier(source.targetX ?? source.target_x);
+  // the server sends the crash point only once the round has busted
+  const known = source.targetX ?? source.target_x;
+  const target = known === undefined ? null : clampMultiplier(known);
   const bettingAt = readTime(source.bettingAt ?? source.betting_at, now);
   const flyAt = readTime(source.flyAt ?? source.fly_at, now + BETTING_MS);
-  const crashAt = readTime(source.crashAtTime ?? source.crash_at, flyAt + timeToReach(target));
+  const crashAt = target === null
+    ? Infinity
+    : readTime(source.crashAtTime ?? source.crash_at, flyAt + timeToReach(target));
   const serverSeedHash = String(source.serverSeedHash ?? source.server_seed_hash ?? '');
   const nonce = Number(source.nonce ?? id);
   const backendClientSeed = String(source.clientSeed ?? 'prime-vai-devx-LIVE');
@@ -277,16 +314,17 @@ function stateFromBackend(payload: BackendPayload, now: number, history: History
   let multiplier = 1;
   let bettingLeft = Math.max(0, bettingAt - now);
 
-  if (now >= bettingAt && now < flyAt) {
-    phase = 'betting';
-    bettingLeft = Math.max(0, flyAt - now);
-  } else if (now >= flyAt && now < crashAt) {
-    phase = 'flying';
-    multiplier = Math.min(target, multiplierAt(now - flyAt));
-    bettingLeft = 0;
-  } else if (now >= crashAt) {
+  if (target !== null && (source.status === 'crashed' || now >= crashAt)) {
+    // the server's word that it busted beats a local clock running behind
     phase = 'crashed';
     multiplier = target;
+    bettingLeft = 0;
+  } else if (now >= bettingAt && now < flyAt) {
+    phase = 'betting';
+    bettingLeft = Math.max(0, flyAt - now);
+  } else if (now >= flyAt) {
+    phase = 'flying';
+    multiplier = target === null ? multiplierAt(now - flyAt) : Math.min(target, multiplierAt(now - flyAt));
     bettingLeft = 0;
   }
 
@@ -295,8 +333,8 @@ function stateFromBackend(payload: BackendPayload, now: number, history: History
     nonce,
     serverSeedHash,
     clientSeed: backendClientSeed,
-    crashAt: target,
-    durationMs: timeToReach(target),
+    crashAt: target ?? 0,
+    durationMs: target === null ? 0 : timeToReach(target),
     serverSeed: phase === 'crashed' ? source.serverSeed : undefined,
   };
 

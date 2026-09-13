@@ -3,7 +3,7 @@ import { requireAdmin } from '@/lib/admin-auth-next';
 import { can } from '@/lib/admin-roles';
 import { adjustBalance, listPlayers, setBlocked, setHeld } from '@/lib/cashier';
 import { inScope, playerScope } from '@/lib/player-scope';
-import { adminClient } from '@/lib/supabase';
+import { adminClient } from '@/lib/db/server';
 import { rejectAppeal, setWithdrawLock } from '@/lib/withdraw-lock';
 
 export const runtime = 'nodejs';

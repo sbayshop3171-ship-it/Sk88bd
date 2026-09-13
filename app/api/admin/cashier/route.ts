@@ -4,7 +4,7 @@ import type { AdminSession } from '@/lib/admin-auth';
 import { can } from '@/lib/admin-roles';
 import { listCashier, reviewRequest, type RequestState } from '@/lib/cashier';
 import { inScope, playerScope } from '@/lib/player-scope';
-import { adminClient } from '@/lib/supabase';
+import { adminClient } from '@/lib/db/server';
 import { DEFAULT_LOCK_REASON, setWithdrawLock } from '@/lib/withdraw-lock';
 
 export const runtime = 'nodejs';

@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { mkdir, readFile } from 'node:fs/promises';
 import { writeFileAtomic } from './atomic-write';
 import path from 'node:path';
-import { timeToReach } from './aviator';
+import { HOUSE_EDGE, timeToReach } from './aviator';
 
 export type SignalGame = 'aviator' | 'crash';
 export type AviatorRoundStatus = 'scheduled' | 'revealed' | 'betting' | 'flying' | 'crashed';
@@ -71,7 +71,8 @@ const SCHEDULE_DRIFT_MS = 500;
 
 const STORE_FILE = path.join(process.cwd(), '.data', 'aviator-signal-store.json');
 const CLIENT_SEED = 'prime-vai-devx-LIVE';
-const AUTO_TARGETS = [2.64, 3.02, 2.18, 6.44, 1.21, 3.03, 12.34, 1.83, 4.78, 8.92, 1.55, 15.76];
+const MIN_TARGET = 1.01;
+const MAX_TARGET = 400;
 const HISTORY_TARGETS = [3.03, 2.38, 1.83, 2.64, 3.02, 2.18, 6.44, 1.21];
 
 let writeQueue = Promise.resolve();
@@ -192,7 +193,7 @@ export async function updateAviatorSignal(input: {
 
     if (input.action === 'regenerate') {
       const signal = getEditableSignalRound(store, now);
-      const targetX = autoTarget(store.next_round_id + signal.round_id);
+      const targetX = autoTarget();
       const round = applyTargetToSignalRound(store, targetX, now, 'auto');
       store.settings.active_mode = store.settings.auto_mode ? 'AUTO' : 'BASS';
       store.settings.updated_at = iso(now);
@@ -412,7 +413,7 @@ function findPlayableRound(store: SignalStore, now: number) {
 }
 
 function scheduleNextRound(store: SignalStore, flyAt: number, now: number) {
-  const round = makeRound(store.next_round_id, autoTarget(store.next_round_id), flyAt, 'auto', now);
+  const round = makeRound(store.next_round_id, autoTarget(), flyAt, 'auto', now);
   store.next_round_id += 1;
   store.rounds.push(round);
   addLog(store, 'schedule', `Round #${round.round_id} scheduled for ${round.target_x.toFixed(2)}x`, now);
@@ -513,13 +514,67 @@ function publicRound(round: StoredAviatorRound) {
   };
 }
 
-/** What anyone may read at /api/aviator/current: the round in play and the
-    history. The rounds queued after it and the audit log ("Signal #N locked
-    at X") are the admin's — the signal app is held to one round, and the
-    public endpoint was giving away five. */
+/** The round as a player may see it. Until the plane has gone its crash
+    point stays on the server, and so does the time it busts — timeToReach
+    inverts, so the bust time gives the multiplier away just as surely. Both
+    arrive with the seed once the round has crashed. */
+function openRound(round: StoredAviatorRound) {
+  const done = round.status === 'crashed';
+  return {
+    round_id: round.round_id,
+    id: round.round_id,
+    betting_at: round.betting_at,
+    bettingAt: round.betting_at,
+    fly_at: round.fly_at,
+    flyAt: round.fly_at,
+    status: round.status,
+    serverSeedHash: round.server_seed_hash,
+    server_seed_hash: round.server_seed_hash,
+    clientSeed: round.client_seed,
+    nonce: round.nonce,
+    ...(done
+      ? {
+          target_x: round.target_x,
+          targetX: round.target_x,
+          crash_at: round.crash_at,
+          crashAtTime: round.crash_at,
+          serverSeed: round.server_seed,
+        }
+      : {}),
+  };
+}
+
+/** What anyone may read at /api/aviator/current: the round in play, without
+    its crash point until it busts, and the history. It used to carry the
+    live round's target and the app's next signal (`appSignalRound`) in the
+    clear, so anyone with DevTools knew where the plane would go. The signal
+    app has its own keyed snapshot and keeps seeing the number there. */
 export function publicAviatorState(state: AviatorSignalState) {
-  const { previewRounds: _preview, auditLogs: _logs, ...open } = adminAviatorState(state);
-  return open;
+  return {
+    ok: true,
+    serverTime: state.serverTime,
+    timeline: {
+      signalLeadMs: SIGNAL_LEAD_MS,
+      bettingLeadMs: BETTING_LEAD_MS,
+      crashedHoldMs: CRASHED_HOLD_MS,
+    },
+    round: openRound(state.currentRound),
+    history: historyRows(state),
+    demoControlled: true,
+  };
+}
+
+function historyRows(state: AviatorSignalState) {
+  return state.history.map((round) => ({
+    id: round.round_id,
+    round_id: round.round_id,
+    crashAt: round.target_x,
+    target_x: round.target_x,
+    serverSeed: round.server_seed,
+    clientSeed: round.client_seed,
+    nonce: round.nonce,
+    happenedAt: round.crash_at,
+  }));
 }
 
 /** Everything, for /admin/aviator-signal. */
@@ -536,16 +591,7 @@ export function adminAviatorState(state: AviatorSignalState) {
     round: publicRound(state.currentRound),
     appSignalRound: publicRound(state.appSignalRound),
     previewRounds: state.previewRounds.map(publicRound),
-    history: state.history.map((round) => ({
-      id: round.round_id,
-      round_id: round.round_id,
-      crashAt: round.target_x,
-      target_x: round.target_x,
-      serverSeed: round.server_seed,
-      clientSeed: round.client_seed,
-      nonce: round.nonce,
-      happenedAt: round.crash_at,
-    })),
+    history: historyRows(state),
     auditLogs: state.auditLogs,
     demoControlled: true,
   };
@@ -563,14 +609,20 @@ function addLog(store: SignalStore, action: string, message: string, now: number
   ].slice(0, 50);
 }
 
-function autoTarget(roundId: number) {
-  return AUTO_TARGETS[(roundId - 1) % AUTO_TARGETS.length];
+/** A fresh random crash point between 1.01x and 400x. Drawn so that
+    P(crash ≥ m) = (1 − HOUSE_EDGE)/m — most rounds bust low, a few run
+    long — which keeps the 97% return; a flat 1–400 draw would average ~200x
+    and pay out many times the stake. The cap only trims the tail: about 1
+    round in 100 passes 100x and about 1 in 400 reaches the full 400x. */
+function autoTarget() {
+  const r = randomBytes(6).readUIntBE(0, 6) / 2 ** 48;
+  return clampTarget(Math.floor(((1 - HOUSE_EDGE) / (1 - r)) * 100) / 100);
 }
 
 function clampTarget(value: unknown) {
   const num = Number(value);
   if (!Number.isFinite(num)) return 2;
-  return Math.round(Math.min(99.99, Math.max(1.01, num)) * 100) / 100;
+  return Math.round(Math.min(MAX_TARGET, Math.max(MIN_TARGET, num)) * 100) / 100;
 }
 
 function sha256(input: string) {

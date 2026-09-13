@@ -203,14 +203,23 @@ const CHANNEL_ICON: Record<string, string> = {
    bKash or Nagad menu they like: the pay type decides which kind of operator
    number is handed out (cash out → agent, send money → personal, payment →
    merchant). The ids `bkash` and `nagad` are the methods that stood here
-   before, kept so a deposit filed under them still finds its bonus. */
+   before, kept so a deposit filed under them still finds its bonus. Rocket
+   comes last, one tile whose menu the admin switches between Send Money and
+   Cash Out at /admin/cashier (see rocketTileName). */
 const CK_METHODS: { id: string; name: string; channelId: string; payType: PayType; channelLabel: string; icon: string }[] = [
   { id: 'nagad-vip', name: 'NAGAD VIP CASH OUT', channelId: 'nagad', payType: 'cashout', channelLabel: 'Nagad VIP', icon: '/payments/nagad-vip.png' },
   { id: 'bkash-send', name: 'Bkash SEND MONEY', channelId: 'bkash', payType: 'sendmoney', channelLabel: 'Bkash Send Money', icon: '/payments/bkash-send.png' },
   { id: 'nagad', name: 'NAGAD SEND MONEY', channelId: 'nagad', payType: 'sendmoney', channelLabel: 'Nagad Send Money', icon: '/payments/nagad-send.png' },
   { id: 'nagad-fast', name: 'NAGAD FAST PAYMENT', channelId: 'nagad', payType: 'payment', channelLabel: 'Nagad Fast', icon: '/payments/nagad-vip.png' },
   { id: 'bkash', name: 'BKASH VIP CASH OUT', channelId: 'bkash', payType: 'cashout', channelLabel: 'Bkash VIP', icon: '/payments/bkash-vip.png' },
+  { id: 'rocket', name: 'ROCKET CASH OUT', channelId: 'rocket', payType: 'cashout', channelLabel: 'Rocket Cash Out', icon: '/payments/rocket.svg' },
 ];
+
+/** The Rocket tile's name and channel card for the menu the admin picked. */
+export function rocketTileName(payType: 'sendmoney' | 'cashout') {
+  const label = PAY_TYPE_LABEL[payType];
+  return { name: `ROCKET ${label.toUpperCase()}`, channelLabel: `Rocket ${label}` };
+}
 
 export const CASHIER_DEFAULTS: CashierConfig = {
   deposit: {
@@ -228,7 +237,7 @@ export const CASHIER_DEFAULTS: CashierConfig = {
         active: true,
       })),
       // the other channels stay on the list, switched off, for the admin to bring back
-      ...DEPOSIT_CHANNELS.filter((c) => c.id !== 'bkash' && c.id !== 'nagad').map((c) => ({
+      ...DEPOSIT_CHANNELS.filter((c) => !CK_METHODS.some((m) => m.id === c.id)).map((c) => ({
         id: c.id,
         name: c.name.toUpperCase(),
         channelId: c.id,

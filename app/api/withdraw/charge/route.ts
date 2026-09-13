@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { getCashierConfig } from '@/lib/cashier-config-store';
 import { chargeBase, withdrawCharge } from '@/lib/cashier-config';
-import { adminClient, serverClient } from '@/lib/supabase';
+import { adminClient, serverClient } from '@/lib/db/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';

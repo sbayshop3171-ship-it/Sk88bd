@@ -65,46 +65,14 @@ export default function RegisterPage() {
     if (Object.keys(next).length) return;
 
     setBusy(true);
-    try {
-      const res = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phone: f.phone.trim(),
-          password: f.pass,
-          referralCode: ref || undefined,
-          agentCode: agent || undefined,
-        }),
-      });
+    const message = await signUp(f.phone.trim(), f.pass, ref || undefined, agent || undefined);
+    setBusy(false);
 
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || json.ok === false) {
-        setErr({ form: json?.message || 'Registration failed. Please try again.' });
-        return;
-      }
-
-      const userId = json?.user?.id ? String(json.user.id) : '';
-      const session = {
-        user: {
-          id: userId,
-          email: `${f.phone.trim()}@local-user`,
-          created_at: new Date().toISOString(),
-        },
-      };
-
-      try {
-        localStorage.setItem('sk88bd_session', JSON.stringify(session));
-        window.dispatchEvent(new Event('storage'));
-        localStorage.removeItem(AGENT_KEY);
-      } catch { /* private mode */ }
-
-      toast('Account created');
-      router.push('/member');
-    } catch (error) {
-      setErr({ form: error instanceof Error ? error.message : 'Network error. Please try again.' });
-    } finally {
-      setBusy(false);
-    }
+    if (message) { setErr({ form: message }); return; }
+    // credited now; a second account from the same phone is not this agent's
+    try { localStorage.removeItem(AGENT_KEY); } catch { /* private mode */ }
+    toast('Account created');
+    router.push('/member');
   };
 
   return (
