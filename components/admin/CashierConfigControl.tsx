@@ -5,6 +5,7 @@ import {
   bonusBadge,
   CHARGE_BASIS_LABEL,
   PAY_TYPE_LABEL,
+  rocketTileName,
   type AmountPreset,
   type ChargeBasis,
   type CashierConfig,
@@ -27,6 +28,13 @@ const ERROR_LABEL: Record<string, string> = {
 };
 
 const PAY_TYPES = Object.keys(PAY_TYPE_LABEL) as PayType[];
+
+const ROCKET_MODES = ['off', 'sendmoney', 'cashout'] as const;
+type RocketMode = (typeof ROCKET_MODES)[number];
+
+/** a Rocket tile still wearing a name this switch wrote, so switching may
+    rename it; anything the admin typed themselves is left alone */
+const AUTO_ROCKET_NAME = /^ROCKET( SEND MONEY| CASH OUT)?$/i;
 
 const DEPOSIT_TEXTS: [keyof CashierConfig['deposit'], string, boolean][] = [
   ['noticeTitle', 'Minimum-deposit notice heading (leave blank to hide the notice)', false],
@@ -119,6 +127,32 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
   const patchAmount = (i: number, patch: Partial<AmountPreset>) =>
     setDep({ amounts: form.deposit.amounts.map((a, j) => (j === i ? { ...a, ...patch } : a)) });
 
+  const rocketIndex = form.deposit.methods.findIndex((m) => m.channelId === 'rocket');
+  const rocket = form.deposit.methods[rocketIndex];
+  const rocketMode: RocketMode | '' = !rocket?.active ? 'off'
+    : rocket.payType === 'sendmoney' || rocket.payType === 'cashout' ? rocket.payType : '';
+
+  const setRocket = (mode: RocketMode) => {
+    if (mode === 'off') {
+      if (rocket) patchDepMethod(rocketIndex, { active: false });
+      return;
+    }
+    const names = rocketTileName(mode);
+    if (!rocket) {
+      setDep({ methods: [...form.deposit.methods, {
+        ...blankDeposit('rocket'), id: 'rocket', icon: '/payments/rocket.svg', color: '#8a3ab9', tag: 'SK88PAY',
+        active: true, payType: mode, ...names,
+      }] });
+      return;
+    }
+    patchDepMethod(rocketIndex, {
+      active: true,
+      payType: mode,
+      ...(AUTO_ROCKET_NAME.test(rocket.name) ? { name: names.name } : {}),
+      ...(!rocket.channelLabel || /^Rocket( Send Money| Cash Out)?$/i.test(rocket.channelLabel) ? { channelLabel: names.channelLabel } : {}),
+    });
+  };
+
   const move = <T,>(list: T[], i: number, dir: -1 | 1): T[] => {
     const j = i + dir;
     if (j < 0 || j >= list.length) return list;
@@ -166,6 +200,22 @@ export default function CashierConfigControl({ initial, channels }: { initial: C
 
       {side === 'deposit' && (
         <>
+          <div className="adm__card">
+            <h2 className="adm__cardh">Rocket</h2>
+            <div className="adm__seg" style={{ marginBottom: 6 }}>
+              {ROCKET_MODES.map((mode) => (
+                <button type="button" key={mode} className={rocketMode === mode ? 'on' : ''} disabled={busy} onClick={() => setRocket(mode)}>
+                  {mode === 'off' ? 'Off' : PAY_TYPE_LABEL[mode]}
+                </button>
+              ))}
+            </div>
+            <p className="adm__hint">
+              Which Rocket menu the deposit page offers. Send Money hands the player a Rocket
+              personal number, Cash Out an agent number — add them under Admin → Payments.
+              Press Save below to put it live.
+            </p>
+          </div>
+
           <div className="adm__card">
             <h2 className="adm__cardh">Deposit Methods</h2>
             <div className="adm__tablewrap" style={{ marginBottom: 6 }}>
