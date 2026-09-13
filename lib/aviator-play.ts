@@ -155,6 +155,9 @@ export async function cashOut(cookies: CookieStore, slot: 0 | 1): Promise<BetRes
       bets: await mineOn(who.uid, round.round_id),
       cashedAt: 0,
       payout: 0,
+      // the round is over, so its bust point is public now — the screen says
+      // where the plane went instead of going quiet
+      crashAt: Number(round.target_x),
     };
   }
 

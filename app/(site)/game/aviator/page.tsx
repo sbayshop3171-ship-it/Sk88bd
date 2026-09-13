@@ -118,7 +118,7 @@ function Board() {
         body: JSON.stringify({ action, slot: i, stake: stake === undefined ? undefined : toPaisa(stake) }),
       });
       const data = (await res.json()) as
-        | { ok: true; cashedAt?: number; payout?: number }
+        | { ok: true; cashedAt?: number; payout?: number; crashAt?: number }
         | { ok: false; reason: BetReason };
 
       // the balance catches up in the background — the seat answers now,
@@ -174,6 +174,12 @@ function Board() {
     const m = res.cashedAt ?? 0;
     patch(i, { cashedAt: m });
     if (m > 0) toast(`You have cashed out! ${fmtX(m)} — ${money(toTaka(res.payout ?? 0))}`);
+    // The plane on a phone flies on for a moment after the real bust, until
+    // the news arrives; a tap in that moment reached the server too late.
+    // Say so — this used to end in silence, which read as a broken button.
+    else toast(res.crashAt
+      ? `Too late — it flew away at ${fmtX(res.crashAt)} before your cash out arrived`
+      : 'Too late — the plane had already flown away');
   }, [patch, send, toast]);
 
   /* The red Cancel: a seat waiting for the next round just stops waiting; a

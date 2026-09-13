@@ -47,7 +47,9 @@ export type BetReason =
   | 'db-error';
 
 export type BetResult =
-  | { ok: true; balance: number; bets: PublicBet[]; cashedAt?: number; payout?: number }
+  | { ok: true; balance: number; bets: PublicBet[]; cashedAt?: number; payout?: number;
+      /** a cash-out that arrived after the bust: where the plane went */
+      crashAt?: number }
   | { ok: false; reason: BetReason; message?: string };
 
 /** ৳10, in paisa. Matches MIN_STAKE on the bet panel. */
