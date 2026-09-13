@@ -36,6 +36,10 @@ export async function POST(req: Request) {
           : null;
 
   if (!result) return json({ ok: false, reason: 'invalid-action' }, 400);
+  if (!result.ok && result.reason !== 'unauthorized') {
+    // what players are refused, and why — the screen only shows a toast
+    console.warn(`[aviator] ${String(record.action)} seat ${slot} refused: ${result.reason}${result.message ? ` (${result.message})` : ''}`);
+  }
   return result.ok ? json(result) : json(result, result.reason === 'unauthorized' ? 401 : 400);
 }
 

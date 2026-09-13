@@ -138,12 +138,16 @@ export async function cashOut(cookies: CookieStore, slot: 0 | 1): Promise<BetRes
     (b) => b.slot === slot && b.settledAt === null,
   );
   if (!open) return { ok: false, reason: 'no-open-bet' };
-  if (now < flies) return { ok: false, reason: 'not-flying' };
+  if (now < flies) {
+    console.warn(`[aviator] cash-out ${flies - now}ms before take-off, round ${round.round_id}`);
+    return { ok: false, reason: 'not-flying' };
+  }
 
   // Too late: the stake is already gone, so this only marks the bet closed.
   // Reported as a success with no payout, so the screen still gets the fresh
   // balance and bet list rather than having to guess after an error.
   if (now >= busts) {
+    console.warn(`[aviator] cash-out ${now - busts}ms after the bust, round ${round.round_id}, player ${who.uid}`);
     await closeBusted(who.uid, round.round_id + 1);
     return {
       ok: true,
