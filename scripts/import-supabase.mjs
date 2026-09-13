@@ -43,6 +43,10 @@ const argList = (flag) => process.argv
   .filter(Boolean);
 /** the two test accounts from 2026-09-06, and any the caller names */
 const SKIP = new Set(['01700000099', '01700000097', ...argList('--skip')]);
+/** --hold-over=TAKA: a player whose Supabase balance is above this arrives
+    ON HOLD — they can log in and see it, nothing moves until an admin
+    releases them at /admin/users */
+const HOLD_OVER = Number(argList('--hold-over')[0] ?? NaN) * 100;
 
 /* ---------------------------------------------------------------- env ---- */
 
@@ -234,6 +238,23 @@ for (const x of merged) {
   console.log(`  merge ${mask(x.phone)}  +${taka(int(x.wallet.balance))}`);
 }
 
+/* what each player actually paid in and took out, next to what they hold —
+   a balance far above both did not come from the cashier */
+const paidIn = (sid) => (deposits.get(sid) ?? []).filter((d) => d.state === 'approved').reduce((n, d) => n + int(d.amount), 0);
+const paidOut = (sid) => (withdrawals.get(sid) ?? []).filter((w) => w.state === 'approved').reduce((n, w) => n + int(w.amount), 0);
+const band = (min) => plan.filter((x) => int(x.wallet.balance) > min * 100).length;
+console.log(`
+Balances over ৳10,000: ${band(10_000)}   over ৳1,00,000: ${band(100_000)}   over ৳10,00,000: ${band(1_000_000)}
+Largest balances (deposited / withdrawn, approved):`);
+for (const x of [...plan].sort((a, b) => int(b.wallet.balance) - int(a.wallet.balance)).slice(0, 25)) {
+  const sid = String(x.p.id);
+  console.log(`  ${x.mode === 'new' ? 'new  ' : 'merge'} ${mask(x.phone)}  ID ${x.p.player_no ?? '—'}  balance ${taka(int(x.wallet.balance))}`
+    + `  (in ${taka(paidIn(sid))} / out ${taka(paidOut(sid))})${x.p.is_blocked ? '  BANNED' : x.p.is_held ? '  HELD' : ''}`);
+}
+if (Number.isFinite(HOLD_OVER)) {
+  console.log(`\n--hold-over: ${plan.filter((x) => int(x.wallet.balance) > HOLD_OVER).length} players arrive ON HOLD`);
+}
+
 if (!APPLY) {
   console.log('\nDry run — nothing was written. Run again with --apply to import.');
   await db.end();
@@ -364,6 +385,11 @@ async function importNew({ p, phone, wallet: w }) {
   await q('INSERT INTO wallets (user_id, balance, bonus_balance, turnover_need, turnover_done) VALUES (?, ?, ?, ?, ?)',
     [res.insertId, int(w.balance), int(w.bonus_balance), int(w.turnover_need), int(w.turnover_done)]);
 
+  if (Number.isFinite(HOLD_OVER) && int(w.balance) > HOLD_OVER) {
+    await q(`UPDATE profiles SET is_held = 1, hold_reason = 'Imported balance under review',
+             status_changed_at = NOW(3), status_changed_by = 'import' WHERE id = ?`, [uid]);
+  }
+
   await bringHistory(sid, uid, true);
   await q("INSERT INTO import_map (source_id, target_id, mode) VALUES (?, ?, 'new')", [sid, uid]);
   mapped.set(sid, uid);
@@ -413,6 +439,10 @@ async function importMerged({ p, phone, wallet: w, target }) {
     bool(p.withdraw_locked), bool(p.withdraw_locked) ? str(p.lock_reason, 255) : null,
     bool(p.withdraw_locked) ? ts(p.locked_at) : null, bool(p.withdraw_locked) ? str(p.locked_by, 120) : null, uid]);
   await q('UPDATE users SET legacy_id = COALESCE(legacy_id, ?) WHERE id = ?', [sid, uid]);
+  if (Number.isFinite(HOLD_OVER) && add > HOLD_OVER) {
+    await q(`UPDATE profiles SET is_held = 1, hold_reason = COALESCE(hold_reason, 'Imported balance under review'),
+             status_changed_at = NOW(3), status_changed_by = 'import' WHERE id = ?`, [uid]);
+  }
 
   await bringHistory(sid, uid, false);
   await q("INSERT INTO import_map (source_id, target_id, mode) VALUES (?, ?, 'merged')", [sid, uid]);
