@@ -76,7 +76,14 @@ function parseToken(token: string | null | undefined): { uid: string; version: n
   }
 }
 
-export type SessionUser = { id: string; phone: string; email: string | null; created_at: string | null };
+export type SessionUser = {
+  id: string;
+  phone: string;
+  email: string | null;
+  created_at: string | null;
+  /** an admin reset the password; the player has to choose their own */
+  mustChange: boolean;
+};
 
 const emailOf = (phone: string) => {
   try {
@@ -91,18 +98,26 @@ export async function userFromToken(token: string | null | undefined): Promise<S
   const t = parseToken(token);
   if (!t) return null;
   const row = await withConn((c) => one(c,
-    `SELECT u.id, u.phone, u.session_version, u.created_at, p.is_blocked
+    `SELECT u.id, u.phone, u.session_version, u.created_at, u.must_change_password, p.is_blocked
        FROM users u LEFT JOIN profiles p ON p.id = ?
       WHERE u.id = ? LIMIT 1`,
     [t.uid, t.uid]));
   if (!row || Number(row.session_version) !== t.version || row.is_blocked) return null;
   const phone = String(row.phone);
-  return { id: String(row.id), phone, email: emailOf(phone), created_at: (row.created_at as string) ?? null };
+  return {
+    id: String(row.id),
+    phone,
+    email: emailOf(phone),
+    created_at: (row.created_at as string) ?? null,
+    mustChange: Boolean(row.must_change_password),
+  };
 }
 
-/** The shape the browser's session object has always had. */
+/** The shape the browser's session object has always had, plus whether the
+    player still has to replace a password an admin reset. */
 export const publicSession = (a: Account) => ({
   user: { id: a.id, email: emailOf(a.phone), created_at: a.createdAt },
+  mustChangePassword: Boolean(a.mustChange),
 });
 
 export function sessionCookie(a: Account) {

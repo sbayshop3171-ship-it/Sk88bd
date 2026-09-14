@@ -17,7 +17,14 @@ export async function GET(req: Request) {
   }
 
   const res = NextResponse.json(
-    { session: user ? { user: { id: user.id, email: user.email, created_at: user.created_at } } : null },
+    {
+      session: user
+        ? {
+          user: { id: user.id, email: user.email, created_at: user.created_at },
+          mustChangePassword: user.mustChange,
+        }
+        : null,
+    },
     { headers: { 'cache-control': 'no-store' } },
   );
   if (token && !user) res.cookies.set(clearedCookie);

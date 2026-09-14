@@ -460,4 +460,12 @@ const STEPS: Step[] = [
       await addColumn(c, 'profiles', 'verification_deposit_amount', 'BIGINT NOT NULL DEFAULT 0');
     },
   },
+  {
+    /* set when an admin resets a forgotten password: the player signs in
+       with the temporary one and must choose their own before playing */
+    id: '2026-09-14-must-change-password',
+    async up(c) {
+      await addColumn(c, 'users', 'must_change_password', 'TINYINT(1) NOT NULL DEFAULT 0');
+    },
+  },
 ];

@@ -23,6 +23,9 @@ export type { DbError };
 
 export type Session = {
   user: { id: string; email: string | null; created_at: string | null };
+  /** an admin reset the password; every page sends the player to choose
+      their own until they do */
+  mustChangePassword?: boolean;
 };
 
 type AuthEvent = 'SIGNED_IN' | 'SIGNED_OUT' | 'USER_UPDATED';

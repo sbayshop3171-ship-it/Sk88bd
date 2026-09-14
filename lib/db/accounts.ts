@@ -16,7 +16,14 @@ import { one, run, tx, withConn, write, type Conn } from './pool';
 export const PASSWORD_MIN = 6;
 export const PASSWORD_MAX = 64;
 
-export type Account = { id: string; phone: string; createdAt: string | null; version: number };
+export type Account = {
+  id: string;
+  phone: string;
+  createdAt: string | null;
+  version: number;
+  /** an admin reset the password; the player has to choose their own */
+  mustChange?: boolean;
+};
 
 /* a wrong number takes as long to refuse as a wrong password, so the
    answer's timing does not say which numbers have accounts */
@@ -107,7 +114,7 @@ async function supabaseSaysYes(phone: string, password: string) {
 export async function verifyLogin(phoneRaw: string, password: string): Promise<Account | 'wrong' | 'banned'> {
   const phone = normalizePhone(phoneRaw.trim());
   const u = await withConn((c) => one(c,
-    'SELECT id, phone, password_hash, legacy_id, session_version, created_at FROM users WHERE phone = ? LIMIT 1', [phone]));
+    'SELECT id, phone, password_hash, legacy_id, session_version, created_at, must_change_password FROM users WHERE phone = ? LIMIT 1', [phone]));
   const hash = String(u?.password_hash ?? '');
   if (u && !hash && u.legacy_id) {
     // their first login since the move: Supabase vouches once, then the
@@ -125,7 +132,13 @@ export async function verifyLogin(phoneRaw: string, password: string): Promise<A
   const id = String(u.id);
   const p = await withConn((c) => one(c, 'SELECT is_blocked FROM profiles WHERE id = ?', [id]));
   if (p?.is_blocked) return 'banned';
-  return { id, phone: String(u.phone), createdAt: (u.created_at as string) ?? null, version: Number(u.session_version) };
+  return {
+    id,
+    phone: String(u.phone),
+    createdAt: (u.created_at as string) ?? null,
+    version: Number(u.session_version),
+    mustChange: Boolean(u.must_change_password),
+  };
 }
 
 /** A new login password. Every other session on the account ends. */
@@ -138,17 +151,21 @@ export async function changePassword(uid: string, next: string): Promise<Account
 
   const hash = await bcrypt.hash(next, 10);
   const version = await tx(async (c) => {
-    await run(c, 'UPDATE users SET password_hash = ?, session_version = session_version + 1 WHERE id = ?', [hash, uid]);
+    // the player's own choice now, so a reset's "choose your own" is done
+    await run(c,
+      'UPDATE users SET password_hash = ?, must_change_password = 0, session_version = session_version + 1 WHERE id = ?',
+      [hash, uid]);
     const r = await one(c, 'SELECT session_version FROM users WHERE id = ?', [uid]);
     return Number(r?.session_version ?? 0);
   });
-  return { id: uid, phone: String(u.phone), createdAt: (u.created_at as string) ?? null, version };
+  return { id: uid, phone: String(u.phone), createdAt: (u.created_at as string) ?? null, version, mustChange: false };
 }
 
-/** An admin sets a new login password for a player who forgot theirs. No old
-    password needed; every session the account has ends, so a borrowed phone
-    is signed out too. Returns nothing — the admin typed the password, so they
-    already know it. */
+/** An admin sets a temporary login password for a player who forgot theirs.
+    No old password needed; every session the account has ends, so a borrowed
+    phone is signed out too. The player signs in with it and is then made to
+    choose their own (must_change_password), so the one the admin knows does
+    not stay in use. */
 export async function resetPasswordByAdmin(uid: string, next: string): Promise<void> {
   if (next.length < PASSWORD_MIN) throw new DbFail('The password must be at least 6 characters', 'weak-password');
   if (next.length > PASSWORD_MAX) throw new DbFail('That password is too long', 'weak-password');
@@ -156,7 +173,8 @@ export async function resetPasswordByAdmin(uid: string, next: string): Promise<v
   if (!u) throw new DbFail('No such player', 'not-found');
   const hash = await bcrypt.hash(next, 10);
   await withConn((c) => run(c,
-    'UPDATE users SET password_hash = ?, session_version = session_version + 1 WHERE id = ?', [hash, uid]));
+    'UPDATE users SET password_hash = ?, must_change_password = 1, session_version = session_version + 1 WHERE id = ?',
+    [hash, uid]));
 }
 
 /** End every session the account has (a ban, a forced logout). */
